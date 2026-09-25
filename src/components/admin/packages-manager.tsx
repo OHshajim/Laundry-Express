@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Package, Plus, Trash2, Edit2, Check, X, Sparkles } from "lucide-react";
+import { Package, Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -18,54 +18,23 @@ export interface PackageConfig {
 }
 
 const INITIAL_PACKAGES: PackageConfig[] = [
-  {
-    id: "pkg-saver-5",
-    name: "5-Bag Saver Bundle",
-    description: "5 standard wash & fold pickups with free delivery.",
-    unit_type: "bag",
-    capacity: 5,
-    original_price: 75.0,
-    discounted_price: 65.0,
-    is_active: true,
-  },
-  {
-    id: "pkg-family-10",
-    name: "10-Bag Family Pass",
-    description: "10 standard wash & fold pickups with priority turnaround.",
-    unit_type: "bag",
-    capacity: 10,
-    original_price: 150.0,
-    discounted_price: 125.0,
-    is_active: true,
-  },
-  {
-    id: "pkg-bulk-25kg",
-    name: "25-KG Bulk Pass",
-    description: "Bulky bedsheets, comforters, and salon linen wash.",
-    unit_type: "kg",
-    capacity: 25,
-    original_price: 68.75,
-    discounted_price: 60.0,
-    is_active: true,
-  },
+  { id: "pkg-saver-5", name: "5-Bag Saver Bundle", description: "5 standard wash & fold pickups with free delivery.", unit_type: "bag", capacity: 5, original_price: 75.0, discounted_price: 65.0, is_active: true },
+  { id: "pkg-family-10", name: "10-Bag Family Pass", description: "10 standard wash & fold pickups with priority turnaround.", unit_type: "bag", capacity: 10, original_price: 150.0, discounted_price: 125.0, is_active: true },
+  { id: "pkg-bulk-25kg", name: "25-KG Bulk Pass", description: "Bulky bedsheets, comforters, and salon linen wash.", unit_type: "kg", capacity: 25, original_price: 68.75, discounted_price: 60.0, is_active: true },
 ];
 
 /**
  * PackagesManager Component
- *
  * Administrative interface to manage pre-paid discount packages.
- * Supports adding, editing rates/descriptions, and toggling active visibility.
  */
 export function PackagesManager() {
   const [packages, setPackages] = React.useState<PackageConfig[]>(INITIAL_PACKAGES);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
-  // Edit fields
   const [editName, setEditName] = React.useState("");
   const [editPrice, setEditPrice] = React.useState<number>(0);
   const [editDesc, setEditDesc] = React.useState("");
 
-  // New package fields
   const [newName, setNewName] = React.useState("");
   const [newDesc, setNewDesc] = React.useState("");
   const [newPrice, setNewPrice] = React.useState<number>(50);
@@ -102,9 +71,7 @@ export function PackagesManager() {
   const saveEdit = (id: string) => {
     setPackages((prev) =>
       prev.map((p) =>
-        p.id === id
-          ? { ...p, name: editName.trim(), discounted_price: editPrice, description: editDesc.trim() }
-          : p
+        p.id === id ? { ...p, name: editName.trim(), discounted_price: editPrice, description: editDesc.trim() } : p
       )
     );
     setEditingId(null);
@@ -130,12 +97,9 @@ export function PackagesManager() {
             <p className="text-xs text-slate-500">Configure pre-paid customer bundles and discount rates.</p>
           </div>
         </div>
-        <span className="text-xs font-semibold text-slate-500">
-          {packages.length} Packages Configured
-        </span>
+        <span className="text-xs font-semibold text-slate-500">{packages.length} Packages Configured</span>
       </div>
 
-      {/* Add New Package Form */}
       <form onSubmit={handleAddPackage} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
         <span className="font-bold text-slate-800 block uppercase">Create New Saver Package</span>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -173,21 +137,16 @@ export function PackagesManager() {
         </div>
         <div className="flex justify-end">
           <Button type="submit" variant="primary" size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Package
+            <Plus className="h-4 w-4 mr-1" /> Add Package
           </Button>
         </div>
       </form>
 
-      {/* Packages Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {packages.map((pkg) => {
           const isEditing = editingId === pkg.id;
           return (
-            <div
-              key={pkg.id}
-              className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between space-y-3 text-xs"
-            >
+            <div key={pkg.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between space-y-3 text-xs">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Badge variant={pkg.is_active ? "success" : "secondary"}>
@@ -225,12 +184,8 @@ export function PackagesManager() {
                     <h5 className="font-bold text-slate-900 text-sm">{pkg.name}</h5>
                     <p className="text-slate-500 text-[11px] mt-1">{pkg.description}</p>
                     <div className="mt-2">
-                      <span className="text-lg font-black text-slate-900">
-                        {formatCurrency(pkg.discounted_price)}
-                      </span>
-                      <span className="text-[11px] text-slate-400 line-through ml-2">
-                        {formatCurrency(pkg.original_price)}
-                      </span>
+                      <span className="text-lg font-black text-slate-900">{formatCurrency(pkg.discounted_price)}</span>
+                      <span className="text-[11px] text-slate-400 line-through ml-2">{formatCurrency(pkg.original_price)}</span>
                     </div>
                   </>
                 )}

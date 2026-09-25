@@ -12,6 +12,8 @@ export interface UserProfile {
   updated_at: string;
 }
 
+export type User = UserProfile;
+
 export type PricingMode = "per_bag" | "per_kg" | "package";
 
 export interface PricingConfig {

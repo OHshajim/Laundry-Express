@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Tag, Plus, Trash2, Edit2, Check, X, ShieldAlert } from "lucide-react";
+import { Tag, Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,36 +15,14 @@ export interface CouponItem {
 }
 
 const INITIAL_COUPONS: CouponItem[] = [
-  {
-    id: "cpn-1",
-    code: "HEROFRESH",
-    discount: "15% OFF Subtotal",
-    discount_amount: 15,
-    discount_type: "percentage",
-    active: true,
-  },
-  {
-    id: "cpn-2",
-    code: "FREESHIP",
-    discount: "Free 1-Bag Delivery ($10 OFF)",
-    discount_amount: 10,
-    discount_type: "free_delivery",
-    active: true,
-  },
-  {
-    id: "cpn-3",
-    code: "WELCOME5",
-    discount: "$5.00 Flat Discount",
-    discount_amount: 5,
-    discount_type: "fixed_amount",
-    active: false,
-  },
+  { id: "cpn-1", code: "HEROFRESH", discount: "15% OFF Subtotal", discount_amount: 15, discount_type: "percentage", active: true },
+  { id: "cpn-2", code: "FREESHIP", discount: "Free 1-Bag Delivery ($10 OFF)", discount_amount: 10, discount_type: "free_delivery", active: true },
+  { id: "cpn-3", code: "WELCOME5", discount: "$5.00 Flat Discount", discount_amount: 5, discount_type: "fixed_amount", active: false },
 ];
 
 /**
  * CouponsManager Component
- *
- * Dedicated admin control panel to create, edit, toggle, and DELETE promo coupons.
+ * Admin control panel to create, edit, toggle, and DELETE promo coupons.
  */
 export function CouponsManager() {
   const [coupons, setCoupons] = React.useState<CouponItem[]>(INITIAL_COUPONS);
@@ -52,7 +30,6 @@ export function CouponsManager() {
   const [editCode, setEditCode] = React.useState("");
   const [editDiscount, setEditDiscount] = React.useState("");
 
-  // New coupon state
   const [newCode, setNewCode] = React.useState("");
   const [newDiscount, setNewDiscount] = React.useState("");
   const [newType, setNewType] = React.useState<"percentage" | "fixed_amount" | "free_delivery">("percentage");
@@ -95,9 +72,7 @@ export function CouponsManager() {
     if (!editCode.trim()) return;
     setCoupons((prev) =>
       prev.map((c) =>
-        c.id === id
-          ? { ...c, code: editCode.trim().toUpperCase(), discount: editDiscount.trim() }
-          : c
+        c.id === id ? { ...c, code: editCode.trim().toUpperCase(), discount: editDiscount.trim() } : c
       )
     );
     setEditingId(null);
@@ -113,12 +88,9 @@ export function CouponsManager() {
             <p className="text-xs text-slate-500">Create, edit, toggle active status, or delete coupon codes.</p>
           </div>
         </div>
-        <span className="text-xs font-semibold text-slate-500">
-          {coupons.length} Coupons Configured
-        </span>
+        <span className="text-xs font-semibold text-slate-500">{coupons.length} Coupons Configured</span>
       </div>
 
-      {/* Add New Coupon Form */}
       <form onSubmit={handleAddCoupon} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
         <span className="font-bold text-slate-800 block uppercase">Create New Promo Coupon</span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -150,13 +122,11 @@ export function CouponsManager() {
         </div>
         <div className="flex justify-end">
           <Button type="submit" variant="primary" size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Coupon Code
+            <Plus className="h-4 w-4 mr-1" /> Add Coupon Code
           </Button>
         </div>
       </form>
 
-      {/* Coupons Table List */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
@@ -199,11 +169,7 @@ export function CouponsManager() {
                   </td>
                   <td className="p-3 text-slate-500 capitalize">{c.discount_type.replace("_", " ")}</td>
                   <td className="p-3">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleActive(c.id)}
-                      className="cursor-pointer"
-                    >
+                    <button type="button" onClick={() => handleToggleActive(c.id)} className="cursor-pointer">
                       <Badge variant={c.active ? "success" : "secondary"}>
                         {c.active ? "Active" : "Disabled"}
                       </Badge>
@@ -221,20 +187,10 @@ export function CouponsManager() {
                       </>
                     ) : (
                       <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => startEdit(c)}
-                          title="Edit coupon details"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => startEdit(c)} title="Edit coupon details">
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDeleteCoupon(c.id)}
-                          title="Delete coupon permanently"
-                        >
+                        <Button variant="danger" size="sm" onClick={() => handleDeleteCoupon(c.id)} title="Delete coupon permanently">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </>

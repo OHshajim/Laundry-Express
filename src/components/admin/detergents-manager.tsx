@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Plus, Trash2, Edit2, Check, X, Shield } from "lucide-react";
+import { Sparkles, Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -18,54 +18,23 @@ export interface DetergentConfig {
 }
 
 const INITIAL_DETERGENTS: DetergentConfig[] = [
-  {
-    id: "det-tide-pods",
-    name: "Tide Original Power Pods",
-    brand: "Tide",
-    type: "Deep Stain Defense",
-    description: "3-in-1 detergent, stain remover, and color protector.",
-    extra_cost: 0.0,
-    in_stock: true,
-    is_active: true,
-  },
-  {
-    id: "det-eco-plant",
-    name: "Seventh Generation Eco-Plant",
-    brand: "Seventh Generation",
-    type: "Plant-Based Biodegradable",
-    description: "100% bio-based enzymes, zero artificial fragrances or dyes.",
-    extra_cost: 0.0,
-    in_stock: true,
-    is_active: true,
-  },
-  {
-    id: "det-fragrance-free",
-    name: "All Free & Clear Hypoallergenic",
-    brand: "All",
-    type: "Sensitive Skin & Baby Safe",
-    description: "Dermatologist recommended for sensitive skin and allergies.",
-    extra_cost: 0.0,
-    in_stock: true,
-    is_active: true,
-  },
+  { id: "det-tide-pods", name: "Tide Original Power Pods", brand: "Tide", type: "Deep Stain Defense", description: "3-in-1 detergent, stain remover, and color protector.", extra_cost: 0.0, in_stock: true, is_active: true },
+  { id: "det-eco-plant", name: "Seventh Generation Eco-Plant", brand: "Seventh Generation", type: "Plant-Based Biodegradable", description: "100% bio-based enzymes, zero artificial fragrances or dyes.", extra_cost: 0.0, in_stock: true, is_active: true },
+  { id: "det-fragrance-free", name: "All Free & Clear Hypoallergenic", brand: "All", type: "Sensitive Skin & Baby Safe", description: "Dermatologist recommended for sensitive skin and allergies.", extra_cost: 0.0, in_stock: true, is_active: true },
 ];
 
 /**
  * DetergentsManager Component
- *
  * Admin catalog control for customer wash formulas.
- * Allows adding new detergent options, editing descriptions, and setting in-stock status.
  */
 export function DetergentsManager() {
   const [detergents, setDetergents] = React.useState<DetergentConfig[]>(INITIAL_DETERGENTS);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
-  // Edit fields
   const [editName, setEditName] = React.useState("");
   const [editType, setEditType] = React.useState("");
   const [editCost, setEditCost] = React.useState<number>(0);
 
-  // New detergent fields
   const [newName, setNewName] = React.useState("");
   const [newBrand, setNewBrand] = React.useState("");
   const [newType, setNewType] = React.useState("");
@@ -105,9 +74,7 @@ export function DetergentsManager() {
   const saveEdit = (id: string) => {
     setDetergents((prev) =>
       prev.map((d) =>
-        d.id === id
-          ? { ...d, name: editName.trim(), type: editType.trim(), extra_cost: editCost }
-          : d
+        d.id === id ? { ...d, name: editName.trim(), type: editType.trim(), extra_cost: editCost } : d
       )
     );
     setEditingId(null);
@@ -133,12 +100,9 @@ export function DetergentsManager() {
             <p className="text-xs text-slate-500">Configure detergents available for customer selection during checkout.</p>
           </div>
         </div>
-        <span className="text-xs font-semibold text-slate-500">
-          {detergents.length} Formulas Active
-        </span>
+        <span className="text-xs font-semibold text-slate-500">{detergents.length} Formulas Active</span>
       </div>
 
-      {/* Add New Detergent Form */}
       <form onSubmit={handleAddDetergent} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
         <span className="font-bold text-slate-800 block uppercase">Add New Detergent Option</span>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -175,21 +139,16 @@ export function DetergentsManager() {
         </div>
         <div className="flex justify-end">
           <Button type="submit" variant="primary" size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Detergent
+            <Plus className="h-4 w-4 mr-1" /> Add Detergent
           </Button>
         </div>
       </form>
 
-      {/* Detergents Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {detergents.map((det) => {
           const isEditing = editingId === det.id;
           return (
-            <div
-              key={det.id}
-              className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between space-y-3 text-xs"
-            >
+            <div key={det.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between space-y-3 text-xs">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Badge variant={det.in_stock ? "success" : "danger"}>

@@ -83,6 +83,12 @@ export function PromoBanner() {
           <span className="hidden md:inline-flex items-center gap-1 text-emerald-300 font-bold">
             ⚡ 2+ Bags = Always FREE Delivery ($0.00)
           </span>
+
+          <span className="hidden lg:inline text-slate-500">•</span>
+
+          <span className="hidden lg:inline text-slate-300 text-[11px]">
+            Operating Daily 8am–12pm &amp; 1pm–6pm
+          </span>
         </div>
 
         <button
