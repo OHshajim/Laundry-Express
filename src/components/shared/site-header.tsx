@@ -71,7 +71,7 @@ export function SiteHeader() {
             </Link>
 
             <Link href="/order">
-              <Button variant="hero" size="sm" className="shadow-sky-500/20">
+              <Button variant="hero" size="sm" className="shadow-pink-500/20">
                 Book Pickup
               </Button>
             </Link>

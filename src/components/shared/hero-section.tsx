@@ -59,7 +59,7 @@ export function HeroSection() {
             {/* Call to Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-3">
               <Link href="/order" className="w-full sm:w-auto">
-                <Button variant="hero" size="lg" className="w-full sm:w-auto shadow-rose-500/25">
+                <Button variant="hero" size="lg" className="w-full sm:w-auto shadow-pink-500/25">
                   Schedule Your Pickup
                   <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
                 </Button>

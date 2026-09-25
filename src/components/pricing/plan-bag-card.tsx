@@ -120,7 +120,7 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
 
       {/* CTA to Order with chosen count */}
       <Link href={`/order?mode=per_bag&bags=${bagCount}`} className="block">
-        <Button variant="hero" size="lg" className="w-full shadow-lg shadow-sky-500/25">
+        <Button variant="hero" size="lg" className="w-full shadow-lg shadow-pink-500/25">
           <span>Continue with {bagCount} Bag{bagCount > 1 ? "s" : ""}</span>
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>

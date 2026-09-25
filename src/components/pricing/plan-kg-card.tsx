@@ -93,7 +93,7 @@ export function PlanKgCard({ weightKg, onWeightKgChange }: PlanKgCardProps) {
       </div>
 
       <Link href={`/order?mode=per_kg&weight=${weightKg}`} className="block">
-        <Button variant="hero" size="lg" className="w-full shadow-lg shadow-sky-500/25">
+        <Button variant="hero" size="lg" className="w-full shadow-lg shadow-pink-500/25">
           <span>Continue with {weightKg} KG</span>
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>

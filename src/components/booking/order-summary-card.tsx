@@ -197,7 +197,7 @@ export function OrderSummaryCard({
         disabled={disabled || isProcessing}
         isLoading={isProcessing}
         onClick={onProceedToCheckout}
-        className="w-full shadow-lg shadow-sky-500/25"
+        className="w-full shadow-lg shadow-pink-500/25"
       >
         <CreditCard className="h-4 w-4 mr-2" />
         {isProcessing ? "Processing Stripe Payment..." : `Pay ${formatCurrency(total_amount)} & Confirm`}
