@@ -3,8 +3,7 @@
 **Project:** Laundry Express Web Application & Operations Platform  
 **Document Ref:** PLAN-LE-002  
 **Service Provider:** STRIX DEVS (*Modern Software Solutions*)  
-**Client / Brand:** Laundry Express  
-**Live Design Reference:** [laundry-express-go.lovable.app](https://laundry-express-go.lovable.app/)  
+**Client / Brand:** Laundry Express   
 **Target Directory:** `D:\projects\laundry-express`  
 
 ---

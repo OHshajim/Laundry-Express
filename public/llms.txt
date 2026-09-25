@@ -1,0 +1,37 @@
+# Laundry Express — AI & LLM Service Guide
+
+> Superhero fast doorstep laundry pickup, professional wash & fold, and scheduled delivery.
+
+## Business Overview
+- Brand: Laundry Express
+- Service Type: On-demand and scheduled residential/commercial laundry wash & fold service.
+- Operating Hours: Daily across two operational pickup & delivery windows:
+  - Morning Window: 8:00 AM – 12:00 PM
+  - Afternoon Window: 1:00 PM – 6:00 PM
+
+## Core Pricing Rules
+1. Per-Bag Standard Service:
+   - Base Price: $15.00 per standard laundry bag.
+   - 1 Bag = $10.00 standard delivery fee.
+   - 2 or More Bags (>= 2 Bags) = 100% FREE ($0.00) delivery fee.
+2. Per-Kilogram (Weight) Service:
+   - Base Rate: $2.75 per KG.
+   - Minimum Weight Threshold: 5.0 KG.
+   - Initial booking authorizes estimated weight; final weight reconciled at facility scale.
+3. Bundle Packages:
+   - 5-Bag Superhero Saver Pack: $65.00 (Includes 5 bags with free delivery, valid 60 days).
+   - Monthly 25KG Family Tier: $55.00 (Monthly recurring allowance).
+
+## Doorstep Presence Verification
+- Home: Driver rings bell during the scheduled slot.
+- Out of Home / Away: Customer must confirm their laundry bag is safely placed outside the door or porch.
+
+## Proof-of-Service Guarantee
+- Pickup Photo Proof: Driver captures timestamped photo when taking custody of laundry.
+- Drop-Off Photo Proof: Driver captures timestamped photo upon returning clean, folded laundry outside the door.
+- Both photos are immediately viewable in real-time by the customer and administrators.
+
+## Customer Reviews & Moderation
+- Eligibility: Reviews can strictly be submitted only after an order is marked 'Completed'.
+- Content: 1 to 5 star rating, written feedback, and up to 3 optional photos.
+- Moderation: All customer reviews are reviewed and approved by administrators before public display.

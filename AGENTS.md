@@ -52,6 +52,11 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 
 ## 4. Session History Log
 
+### [2026-09-26 01:54] | Step: Full Project Build, Reusable Components & Admin Suite
+- **Prompt:** Build the project.
+- **Output:** Bootstrapped Next.js 16 App Router with TypeScript and Tailwind CSS; installed `lucide-react`, `@supabase/supabase-js`, `@supabase/ssr`, `stripe`, `@stripe/stripe-js`, `clsx`, `tailwind-merge`. Created `src/lib/constants.ts`, `src/lib/utils.ts`, `src/types/index.ts`, `src/lib/stripe/pricing-calc.ts`, `src/lib/seo/jsonld-schemas.ts`, `public/llms.txt`, and PostgreSQL migration `supabase/migrations/001_initial_schema.sql`. Built atomic UI components (`Button`, `Badge`, `Card`, `Dialog`), shared brand components (`SiteHeader`, `SiteFooter`, `MascotBadge`, `PromoBanner`, `HeroSection`, `PricingSection`, `PackagesSection`, `FaqSection`), interactive multi-step `BookingWizard` with Bag vs KG vs Package pricing, customer reviews with 3-photo uploads, and `/admin` operations suite (Order Pipeline, Weight Scale intake, Photo Proofs, Pricing/Offers manager, Review Moderation, and Master Audit Trail). Verified production build and live server running on `http://localhost:3000`.
+- **Why:** Deliver complete, senior-level implementation strictly adhering to 100-250 line modularity, single icon standard, brand mascot alignment, and business requirements.
+
 ### [2026-09-26 01:05] | Step: Architecture Modularization, Single Iconography & Brand/SEO/LLM Alignment
 - **Prompt:** Add file structure with maximum 100 to 250 lines per file, build pages/components with reusable components, use only one library for icons (`lucide-react`), make SEO and LLM friendly, and make design professional matching the superhero bubble mascot/icon.
 - **Output:** Updated `IMPLEMENTATION_PLAN.md` with Sections 4, 5, and 6 detailing directory tree with line caps, `lucide-react` icon catalog mapping, color tokens matching the superhero bubble mascot, Schema.org JSON-LD microdata, and `llms.txt` spec. Updated `AGENTS.md`.
@@ -86,3 +91,13 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 - **Prompt:** Create formal contract agreement in DOCX format with 30-day post-launch maintenance based on STRIX DEVS invoice SD-LE-002 ($700 total, $200 paid, $500 balance).
 - **Output:** Created Python generator `create_docx.py` using `python-docx` and built `Laundry_Express_Project_Agreement_STRIX_DEVS.docx`.
 - **Why:** Produce client-ready legal/commercial deliverable with exact business terms and signatures.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
