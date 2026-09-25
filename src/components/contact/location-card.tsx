@@ -1,169 +1,208 @@
-import * as React from "react";
-import { MapPin, Clock, Phone, Mail, Navigation, ShieldCheck, CheckCircle2, Globe, ExternalLink } from "lucide-react";
-import { APP_CONFIG } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
+"use client";
 
-const SERVICE_ZONES = [
-  "Lake in the Hills (Central)",
-  "Algonquin & Fox River Grove",
-  "Crystal Lake & Cary",
-  "Huntley & Lakewood",
-  "McHenry & Woodstock",
-  "Carpentersville & Dundee",
-  "Elgin & South Elgin",
-  "Barrington & Inverness",
-  "Schaumburg & Hoffman Estates",
-  "30-Mile Radius Northwest IL",
-];
+import * as React from "react";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { APP_CONFIG } from "@/lib/constants";
+
+interface ContactLocationInfo {
+  id: "long-beach" | "lake-in-the-hills";
+  title: string;
+  address: string;
+  phone: string;
+  email: string;
+  hours: {
+    weekdays: string;
+    saturday: string;
+    sunday: string;
+  };
+  mapsUrl: string;
+  coordinates: { lat: number; lng: number };
+}
+
+const LOCATIONS: Record<string, ContactLocationInfo> = {
+  "long-beach": {
+    id: "long-beach",
+    title: "Long Beach Operations & Express Facility",
+    address: "5210 Long Beach Blvd, Long Beach, CA 90805, United States",
+    phone: "+15623805780",
+    email: "laundryroomcd@gmail.com",
+    hours: {
+      weekdays: "6:00 AM – 10:00 PM",
+      saturday: "6:00 AM – 10:00 PM",
+      sunday: "7:00 AM – 9:00 PM",
+    },
+    mapsUrl: "https://maps.google.com/?q=33.8369,-118.1988",
+    coordinates: { lat: 33.8369, lng: -118.1988 },
+  },
+  "lake-in-the-hills": {
+    id: "lake-in-the-hills",
+    title: "Lake in the Hills Central Hub (30-Mile Radius)",
+    address: "United States, IL · McHenry Co. · Lake in the Hills (42.1903, -88.383743)",
+    phone: APP_CONFIG.supportPhone,
+    email: APP_CONFIG.supportEmail,
+    hours: {
+      weekdays: "8:00 AM – 6:00 PM",
+      saturday: "8:00 AM – 6:00 PM",
+      sunday: "8:00 AM – 6:00 PM",
+    },
+    mapsUrl: "https://maps.google.com/?q=42.1903,-88.383743",
+    coordinates: { lat: 42.1903, lng: -88.383743 },
+  },
+};
+
+interface LocationCardProps {
+  activeLocationId?: "long-beach" | "lake-in-the-hills";
+  onLocationChange?: (loc: ContactLocationInfo) => void;
+}
 
 /**
  * LocationCard Component
- * Displays physical laundry operations hub, operating pickup/delivery windows,
- * live dispatch status, coverage zones, and contact credentials.
+ *
+ * Implements the contact showcase matching the client specification:
+ * 1. Physical Address with "Get Directions →"
+ * 2. Click-to-call Phone with direct dialing
+ * 3. Support Email
+ * 4. Structured Hours of Operation
+ * 5. Full-width Call Now action button
  */
-export function LocationCard() {
+export function LocationCard({
+  activeLocationId = "long-beach",
+  onLocationChange,
+}: LocationCardProps) {
+  const [selectedId, setSelectedId] = React.useState<"long-beach" | "lake-in-the-hills">(
+    activeLocationId
+  );
+
+  const loc = LOCATIONS[selectedId];
+
+  const handleSelect = (id: "long-beach" | "lake-in-the-hills") => {
+    setSelectedId(id);
+    if (onLocationChange) {
+      onLocationChange(LOCATIONS[id]);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-      <div>
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Badge variant="outline" className="text-sky-700 bg-sky-50 border-sky-200">
-            Operations &amp; Dispatch Facility
-          </Badge>
-          <Badge variant="outline" className="text-rose-700 bg-rose-50 border-rose-200">
-            30-Mile Service Radius
-          </Badge>
-        </div>
-        <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Laundry Express Central Hub
-        </h3>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Doorstep laundry pickup and delivery serving McHenry County and Northwest Suburbs of Illinois.
-        </p>
+    <div className="space-y-6">
+      {/* Location Facility Switcher Tabs */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200/80 max-w-fit">
+        <button
+          type="button"
+          onClick={() => handleSelect("long-beach")}
+          className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+            selectedId === "long-beach"
+              ? "bg-[#1E88C7] text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Long Beach, CA
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSelect("lake-in-the-hills")}
+          className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+            selectedId === "lake-in-the-hills"
+              ? "bg-[#1E88C7] text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Lake in the Hills, IL
+        </button>
       </div>
 
-      {/* Physical Address & Coordinates */}
-      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3">
-        <div className="h-10 w-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
-          <MapPin className="h-5 w-5" />
-        </div>
-        <div className="text-xs space-y-1">
-          <span className="font-bold text-slate-900 block">Hub Location &amp; Region:</span>
-          <p className="text-slate-700 font-semibold">
-            United States, IL · McHenry Co. · Lake in the Hills
-          </p>
-          <p className="text-slate-500 font-medium">
-            Northwest Suburbs of Illinois · Coordinates: 42.1903° N, 88.383743° W
-          </p>
-          <div className="pt-1 flex flex-wrap items-center gap-2">
+      {/* Main Details Stack */}
+      <div className="space-y-6 text-slate-800">
+        {/* Item 1: Address */}
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+            <MapPin className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="font-bold text-slate-900 text-base">Address</h4>
+            <p className="text-sm text-slate-500 leading-snug">{loc.address}</p>
             <a
-              href="https://maps.google.com/?q=42.1903,-88.383743"
+              href={loc.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-sky-600 hover:text-sky-700 font-bold hover:underline"
+              className="inline-block text-xs font-semibold text-[#1E88C7] hover:underline pt-0.5"
             >
-              <Navigation className="h-3 w-3" />
-              View on Google Maps (42.1903, -88.383743)
-              <ExternalLink className="h-2.5 w-2.5" />
+              Get Directions →
             </a>
           </div>
         </div>
-      </div>
 
-      {/* Operating Pickup & Delivery Windows */}
-      <div className="p-4 rounded-2xl bg-sky-50/50 border border-sky-100 space-y-3">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-sky-600 shrink-0" />
-          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
-            Daily Operating Windows
-          </h4>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-          <div className="p-3 bg-white rounded-xl border border-sky-100 shadow-2xs">
-            <span className="font-bold text-slate-900 block">Morning Slot</span>
-            <span className="text-sky-700 font-extrabold text-sm">8:00 AM – 12:00 PM</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Monday through Sunday</span>
+        {/* Item 2: Phone */}
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+            <Phone className="h-5 w-5" />
           </div>
-
-          <div className="p-3 bg-white rounded-xl border border-sky-100 shadow-2xs">
-            <span className="font-bold text-slate-900 block">Afternoon Slot</span>
-            <span className="text-sky-700 font-extrabold text-sm">1:00 PM – 6:00 PM</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Monday through Sunday</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Direct Contact Phone & Email */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-        <a
-          href={`tel:${APP_CONFIG.supportPhone}`}
-          className="p-3.5 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-colors flex items-center gap-3 group"
-        >
-          <div className="h-8 w-8 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0 group-hover:bg-sky-600 group-hover:text-white transition-colors">
-            <Phone className="h-4 w-4" />
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 font-semibold block">Direct Hotline</span>
-            <span className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors">
-              {APP_CONFIG.supportPhone}
-            </span>
-          </div>
-        </a>
-
-        <a
-          href={`mailto:${APP_CONFIG.supportEmail}`}
-          className="p-3.5 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-colors flex items-center gap-3 group"
-        >
-          <div className="h-8 w-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors">
-            <Mail className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10px] text-slate-400 font-semibold block">Customer Service</span>
-            <span className="font-bold text-slate-800 group-hover:text-rose-600 transition-colors truncate block">
-              {APP_CONFIG.supportEmail}
-            </span>
-          </div>
-        </a>
-      </div>
-
-      {/* Facebook Social Profile */}
-      <a
-        href={APP_CONFIG.facebookUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 hover:bg-blue-50 hover:border-blue-300 transition-colors flex items-center justify-between group text-xs"
-      >
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-base shadow-2xs">
-            f
-          </div>
-          <div>
-            <span className="font-bold text-slate-900 group-hover:text-blue-700 block">
-              Connect on Facebook
-            </span>
-            <span className="text-[11px] text-slate-500">
-              Latest promotions, customer photos &amp; announcements
+          <div className="space-y-0.5">
+            <h4 className="font-bold text-slate-900 text-base">Phone</h4>
+            <a
+              href={`tel:${loc.phone}`}
+              className="font-black text-[#1E88C7] text-2xl tracking-tight block hover:opacity-85 transition-opacity"
+            >
+              {loc.phone}
+            </a>
+            <span className="text-xs text-slate-400 block font-normal">
+              Tap to call directly
             </span>
           </div>
         </div>
-        <ExternalLink className="h-4 w-4 text-blue-600 shrink-0" />
-      </a>
 
-      {/* Coverage Zones */}
-      <div>
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-          <span>Active 30-Mile Service Zones (Northwest Suburbs IL)</span>
-        </h4>
-        <div className="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
-          {SERVICE_ZONES.map((zone) => (
-            <div key={zone} className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              <span className="truncate">{zone}</span>
+        {/* Item 3: Email */}
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+            <Mail className="h-5 w-5" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="font-bold text-slate-900 text-base">Email</h4>
+            <a
+              href={`mailto:${loc.email}`}
+              className="text-sm text-[#1E88C7] hover:underline font-medium block"
+            >
+              {loc.email}
+            </a>
+          </div>
+        </div>
+
+        {/* Item 4: Hours of Operation */}
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+            <Clock className="h-5 w-5" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <h4 className="font-bold text-slate-900 text-base">Hours of Operation</h4>
+            <div className="space-y-1.5 text-xs text-slate-600 max-w-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Monday – Friday</span>
+                <span className="font-bold text-slate-900">{loc.hours.weekdays}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Saturday</span>
+                <span className="font-bold text-slate-900">{loc.hours.saturday}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Sunday</span>
+                <span className="font-bold text-slate-900">{loc.hours.sunday}</span>
+              </div>
             </div>
-          ))}
+          </div>
+        </div>
+
+        {/* Item 5: Full-Width Prominent Call Now Button */}
+        <div className="pt-2">
+          <a
+            href={`tel:${loc.phone}`}
+            className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-[#1E88C7] hover:bg-[#1670a5] text-white font-black text-base shadow-lg shadow-sky-600/20 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
+          >
+            <Phone className="h-5 w-5 shrink-0" />
+            <span>Call Now — {loc.phone}</span>
+          </a>
         </div>
       </div>
     </div>
   );
 }
+
+export default LocationCard;

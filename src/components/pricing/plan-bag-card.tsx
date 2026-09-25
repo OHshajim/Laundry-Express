@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus, Minus, ArrowRight, Sparkles, Truck } from "lucide-react";
+import { Plus, Minus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -29,8 +29,7 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
     <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-sky-200 shadow-xl max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 mb-2">
-            <Sparkles className="h-3 w-3 text-sky-600" />
+          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 mb-2 uppercase tracking-wide">
             Most Popular Choice
           </span>
           <h3 className="text-2xl font-black text-slate-900">Standard 13-Gallon Bags</h3>
@@ -84,7 +83,7 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
           }`}
         >
           <div className="flex items-center gap-2">
-            <Truck className="h-4 w-4 shrink-0 text-emerald-600" />
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
             <span>
               {bagCount >= 2 ? (
                 <strong>Awesome! 2+ Bags qualify for 100% FREE delivery.</strong>

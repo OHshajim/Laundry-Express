@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Menu, X, Sparkles, Shield, Clock } from "lucide-react";
+import { Phone, Menu, X } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 
@@ -11,12 +11,12 @@ export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/85 backdrop-blur-md border-b border-sky-100 shadow-xs">
+    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-sky-100 shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand Emblem */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-sm border border-sky-100 group-hover:scale-105 transition-transform duration-200">
+            <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-xs border border-sky-100 group-hover:scale-105 transition-transform duration-200">
               <Image
                 src="/brand/logo-badge.jpg"
                 alt="Laundry Express Logo"
@@ -66,14 +66,12 @@ export function SiteHeader() {
 
             <Link href="/admin">
               <Button variant="ghost" size="sm" className="text-xs font-semibold">
-                <Shield className="h-3.5 w-3.5 text-slate-500 mr-1" />
                 Admin
               </Button>
             </Link>
 
             <Link href="/order">
               <Button variant="hero" size="sm" className="shadow-sky-500/20">
-                <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-300" />
                 Book Pickup
               </Button>
             </Link>
@@ -132,14 +130,12 @@ export function SiteHeader() {
             <Link
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2 px-3 rounded-lg hover:bg-sky-50 flex items-center gap-2"
+              className="py-2 px-3 rounded-lg hover:bg-sky-50"
             >
-              <Shield className="h-4 w-4 text-sky-600" />
               Admin Operations
             </Link>
           </div>
-          <div className="pt-2 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
-            <Clock className="h-4 w-4 text-sky-600" />
+          <div className="pt-2 border-t border-slate-100 text-xs text-slate-500">
             <span>Open Daily: 8am-12pm &amp; 1pm-6pm</span>
           </div>
         </div>

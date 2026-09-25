@@ -113,9 +113,9 @@ export function ProcessSection() {
         {/* CTA Strip */}
         <div className="mt-12 text-center">
           <Link href="/order">
-            <Button variant="hero" size="lg" className="shadow-lg shadow-sky-500/25">
+            <Button variant="hero" size="lg" className="shadow-lg shadow-rose-500/25">
               <span>Book Your Pickup Today</span>
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
             </Button>
           </Link>
           <p className="text-xs text-slate-500 mt-2">

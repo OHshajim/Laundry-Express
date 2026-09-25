@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, ShieldCheck, MapPin, Sparkles, Heart, Phone, Mail, ExternalLink } from "lucide-react";
+import { Phone, Mail, ExternalLink } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 import { MascotBadge } from "@/components/shared/mascot-badge";
 
@@ -14,16 +14,14 @@ export function SiteFooter() {
             <p className="text-xs text-slate-400 leading-relaxed">
               Laundry Express is your reliable doorstep wash &amp; fold hero. Pickup in minutes, washed with premium care, and returned fresh to your doorstep.
             </p>
-            <div className="flex items-center gap-2 text-xs text-sky-400">
-              <ShieldCheck className="h-4 w-4" />
-              <span>100% Satisfaction &amp; Clean Guarantee</span>
-            </div>
+            <p className="text-xs text-sky-400 font-semibold">
+              100% Satisfaction &amp; Clean Guarantee
+            </p>
           </div>
 
-          {/* Operating Windows (Strict SEO Hours) */}
+          {/* Operating Windows */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-white tracking-wide uppercase flex items-center gap-2">
-              <Clock className="h-4 w-4 text-sky-400" />
+            <h4 className="text-sm font-bold text-white tracking-wide uppercase">
               Pickup &amp; Delivery Windows
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
@@ -40,8 +38,7 @@ export function SiteFooter() {
 
           {/* Pricing Summary */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-white tracking-wide uppercase flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" />
+            <h4 className="text-sm font-bold text-white tracking-wide uppercase">
               Transparent Pricing
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
@@ -61,10 +58,9 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          {/* Service Area & Support */}
+          {/* Service Area & Direct Contact */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-white tracking-wide uppercase flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-rose-400" />
+            <h4 className="text-sm font-bold text-white tracking-wide uppercase">
               Location &amp; Service Radius
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -112,15 +108,17 @@ export function SiteFooter() {
             <Link href="/#faq" className="hover:text-slate-300">
               FAQ
             </Link>
-            <Link href="/llms.txt" className="hover:text-slate-300">
-              llms.txt
-            </Link>
-            <Link href="/admin" className="hover:text-slate-300">
-              Admin Gateway
-            </Link>
           </div>
-          <p className="flex items-center gap-1 text-[11px] text-slate-600">
-            Powered with <Heart className="h-3 w-3 text-rose-600 fill-rose-600" /> by STRIX DEVS
+          <p className="text-[11px] text-slate-500">
+            Powered by{" "}
+            <a
+              href="https://strixdevs.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-slate-300 hover:text-white underline underline-offset-2 transition-colors"
+            >
+              STRIX DEVS
+            </a>
           </p>
         </div>
       </div>

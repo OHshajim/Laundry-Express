@@ -43,23 +43,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer";
+      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E88C7] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer whitespace-nowrap shrink-0 max-w-full";
 
     const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        "bg-sky-600 text-white hover:bg-sky-700 shadow-sm hover:shadow-sky-500/20 active:bg-sky-800",
+        "bg-[#1E88C7] text-white hover:bg-[#1670a5] hover:text-white shadow-sm active:bg-[#125c88]",
       hero:
-        "bg-gradient-to-r from-sky-600 via-blue-600 to-rose-500 text-white hover:from-sky-700 hover:to-rose-600 shadow-lg shadow-sky-500/25 active:shadow-md",
+        "bg-[#D63A3A] text-white hover:bg-[#b82e2e] hover:text-white shadow-lg shadow-rose-500/25 active:shadow-md",
       secondary:
-        "bg-sky-50 text-sky-900 hover:bg-sky-100 border border-sky-200/80 active:bg-sky-200/60",
+        "bg-[#B9E1F5]/40 text-[#141B2E] hover:bg-[#B9E1F5] hover:text-[#141B2E] border border-[#B9E1F5] active:bg-[#B9E1F5]/70",
       outline:
-        "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100",
+        "border border-slate-300 bg-white text-[#141B2E] hover:bg-slate-100 hover:text-[#1E88C7] hover:border-slate-400 active:bg-slate-200",
       ghost:
-        "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:bg-slate-200/60",
+        "text-[#141B2E] hover:text-[#1E88C7] hover:bg-[#B9E1F5]/30 active:bg-[#B9E1F5]/50",
       danger:
-        "bg-rose-600 text-white hover:bg-rose-700 shadow-sm hover:shadow-rose-500/20 active:bg-rose-800",
+        "bg-[#D63A3A] text-white hover:bg-[#b82e2e] hover:text-white shadow-sm active:bg-[#a82525]",
       accent:
-        "bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-md shadow-amber-400/20 font-black",
+        "bg-[#F5A623] text-[#141B2E] hover:bg-[#e09216] hover:text-[#141B2E] shadow-md shadow-amber-400/20 font-black active:bg-[#c97f0a]",
     };
 
     const sizeStyles: Record<ButtonSize, string> = {
@@ -68,7 +68,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       md: "min-h-[44px] px-5 text-sm gap-2",
       lg: "min-h-[48px] px-6 text-base gap-2.5",
       xl: "min-h-[56px] px-8 text-lg gap-3 rounded-2xl",
-      icon: "h-11 w-11 p-0",
+      icon: "h-11 w-11 p-0 shrink-0",
     };
 
     return (
@@ -80,7 +80,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+            className="animate-spin -ml-1 mr-2 h-4 w-4 shrink-0 text-current"
             fill="none"
             viewBox="0 0 24 24"
             aria-hidden="true"
@@ -100,12 +100,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             />
           </svg>
         ) : (
-          leftIcon && <span className="shrink-0">{leftIcon}</span>
+          leftIcon && <span className="shrink-0 inline-flex items-center justify-center">{leftIcon}</span>
         )}
 
-        <span>{children}</span>
+        <span className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0">
+          {children}
+        </span>
 
-        {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
+        {!isLoading && rightIcon && (
+          <span className="shrink-0 inline-flex items-center justify-center">{rightIcon}</span>
+        )}
       </button>
     );
   }

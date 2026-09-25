@@ -115,9 +115,9 @@ export function FabricCareSection() {
           </div>
 
           <Link href="/order" className="shrink-0 w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto bg-white text-sky-700 hover:bg-sky-50 font-bold shadow-md">
+            <Button size="lg" className="w-full sm:w-auto bg-white text-[#1E88C7] hover:bg-slate-100 hover:text-[#141B2E] font-bold shadow-md transition-colors">
               <span>Choose Your Detergent</span>
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
             </Button>
           </Link>
         </div>

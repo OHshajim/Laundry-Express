@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Zap, Clock, ShieldCheck, Sparkles, ArrowRight, Star, MapPin } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
@@ -13,29 +13,17 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Hero Content (7 Cols) */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            {/* Top Badges with Animated Coverage Highlight */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-sky-200 shadow-xs text-xs font-bold text-slate-800">
-                <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                <span>Doorstep Laundry Heroes</span>
-                <span className="text-slate-300">•</span>
-                <span className="text-sky-600 font-extrabold">2+ Bags = FREE Delivery</span>
-              </div>
-
-              {/* Animated Location Coverage Radar Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-sky-50 via-white to-blue-50 border border-sky-300 shadow-xs text-xs font-bold text-slate-800">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
-                </span>
-                <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                <span className="text-sky-900 font-extrabold">
-                  Lake in the Hills (30-Mile Radius)
-                </span>
-                <span className="text-[10px] font-bold text-sky-700 bg-sky-100/90 px-1.5 py-0.5 rounded">
-                  IL Northwest Suburbs
-                </span>
-              </div>
+            {/* Unified Top Animated Badge: Location Highlight + Free Delivery */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-sky-200 shadow-xs text-xs font-medium text-slate-800">
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-600" />
+              </span>
+              <span className="font-bold text-sky-900">
+                Lake in the Hills (30-Mile Radius)
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="text-sky-600 font-extrabold">2+ Bags = FREE Delivery</span>
             </div>
 
             {/* Main Headline */}
@@ -52,33 +40,32 @@ export function HeroSection() {
               Skip laundry day. Schedule a morning (8am–12pm) or afternoon (1pm–6pm) window. We wash, fold, and return your clothes fresh to your doorstep with guaranteed photo proof.
             </p>
 
-            {/* Core Perks Badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 max-w-lg mx-auto lg:mx-0 text-xs">
-              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2 text-slate-700 font-semibold">
-                <Zap className="h-4 w-4 text-rose-500 shrink-0" />
-                <span>2+ Bags FREE Delivery</span>
+            {/* Core Perks */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 max-w-lg mx-auto lg:mx-0 text-xs">
+              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs text-center sm:text-left">
+                <span className="font-bold text-slate-900 block text-sm">2+ Bags</span>
+                <span className="text-slate-500 font-medium">Free Doorstep Delivery</span>
               </div>
-              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2 text-slate-700 font-semibold">
-                <Clock className="h-4 w-4 text-sky-600 shrink-0" />
-                <span>8am-12pm &amp; 1pm-6pm</span>
+              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs text-center sm:text-left">
+                <span className="font-bold text-slate-900 block text-sm">Daily Windows</span>
+                <span className="text-slate-500 font-medium">8am-12pm &amp; 1pm-6pm</span>
               </div>
-              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1 flex items-center gap-2 text-slate-700 font-semibold">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Photo Proof Guaranteed</span>
+              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs text-center sm:text-left">
+                <span className="font-bold text-slate-900 block text-sm">Photo Proof</span>
+                <span className="text-slate-500 font-medium">Pickup &amp; Drop-off</span>
               </div>
             </div>
 
             {/* Call to Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-              <Link href="/order">
-                <Button variant="hero" size="lg" className="w-full sm:w-auto shadow-sky-500/25">
-                  <Sparkles className="h-4 w-4 mr-2 text-amber-300" />
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-3">
+              <Link href="/order" className="w-full sm:w-auto">
+                <Button variant="hero" size="lg" className="w-full sm:w-auto shadow-rose-500/25">
                   Schedule Your Pickup
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
                 </Button>
               </Link>
 
-              <Link href="/pricing">
+              <Link href="/pricing" className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
                   View Plans &amp; Pricing
                 </Button>
@@ -86,10 +73,10 @@ export function HeroSection() {
             </div>
 
             {/* Social Trust Bar */}
-            <div className="pt-4 flex items-center justify-center lg:justify-start gap-3 text-xs text-slate-500">
+            <div className="pt-2 flex items-center justify-center lg:justify-start gap-2.5 text-xs text-slate-500">
               <div className="flex items-center text-amber-400">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="h-4 w-4 fill-amber-400" />
+                  <Star key={s} className="h-3.5 w-3.5 fill-amber-400" />
                 ))}
               </div>
               <span className="font-semibold text-slate-800">4.9 / 5.0 Rating</span>

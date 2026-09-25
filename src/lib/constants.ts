@@ -46,11 +46,13 @@ export const APP_CONFIG = {
     maxOrdersPerSlotDefault: 15,
   },
   brandColors: {
-    skyBlue: "#0284c7",
-    capeRed: "#ef4444",
-    amberGold: "#f59e0b",
-    foamWhite: "#f8fafc",
-    slateNavy: "#0f172a",
+    bubbleSky: "#B9E1F5",
+    deepHero: "#1E88C7",
+    capeRed: "#D63A3A",
+    heroAmber: "#F5A623",
+    inkNavy: "#141B2E",
+    foamWhite: "#FFFFFF",
+    punchPink: "#E91E63",
   },
 } as const;
 

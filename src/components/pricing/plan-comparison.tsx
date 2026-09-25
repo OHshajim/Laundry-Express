@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { Check, ShieldCheck, Sparkles, HelpCircle, ArrowRight } from "lucide-react";
+import { ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const COMPARISON_FEATURES = [

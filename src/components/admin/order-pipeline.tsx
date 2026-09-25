@@ -1,13 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Camera, CheckCircle, Clock, Scale, Eye, RefreshCw, Upload } from "lucide-react";
+import { Camera } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
-import { ORDER_STATUSES } from "@/lib/constants";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-
 import { OrderTableRow } from "./order-table-row";
 
 interface OrderPipelineProps {
@@ -48,8 +46,37 @@ export function OrderPipeline({
     setProofModalOpen(false);
   };
 
+  const totalRevenue = orders.reduce((acc, o) => acc + o.total_amount, 0);
+  const activeCount = orders.filter((o) => o.order_status !== "completed" && o.order_status !== "cancelled").length;
+  const inWashCount = orders.filter((o) => o.order_status === "in_wash" || o.order_status === "picked_up").length;
+  const completedCount = orders.filter((o) => o.order_status === "completed").length;
+
   return (
     <div className="space-y-6">
+      {/* Executive KPI Stats Bar */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Today's Pipeline</span>
+          <span className="text-2xl font-black text-slate-900 mt-1 block">{formatCurrency(totalRevenue)}</span>
+          <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">{orders.length} Orders Logged</span>
+        </div>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Active In-Flight</span>
+          <span className="text-2xl font-black text-sky-600 mt-1 block">{activeCount}</span>
+          <span className="text-[11px] text-slate-500 font-medium mt-1 block">Scheduled &amp; In-Route</span>
+        </div>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">In Wash &amp; Dry</span>
+          <span className="text-2xl font-black text-amber-500 mt-1 block">{inWashCount}</span>
+          <span className="text-[11px] text-slate-500 font-medium mt-1 block">Active Machine Cycles</span>
+        </div>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Completed</span>
+          <span className="text-2xl font-black text-emerald-600 mt-1 block">{completedCount}</span>
+          <span className="text-[11px] text-slate-500 font-medium mt-1 block">Photo Proofed &amp; Delivered</span>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold text-slate-900">Active Order Pipeline</h3>

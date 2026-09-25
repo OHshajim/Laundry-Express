@@ -8,7 +8,12 @@ import { MascotBadge } from "@/components/shared/mascot-badge";
  * HomeCtaBanner Component
  *
  * Full-width, high-conversion visual banner positioned above the global footer.
- * Features Electric Blue, Amber, and Coral accents matching the Bubble Hero mascot.
+ * Features Deep Hero Blue (#1E88C7), Hero Amber (#F5A623), and Cape Red (#D63A3A) accents.
+ *
+ * Fully responsive across mobile, tablet, and desktop:
+ * - Anti-overflow button layouts
+ * - Guaranteed contrast on hover
+ * - Minimal decorative iconography
  */
 export function HomeCtaBanner() {
   return (
@@ -70,11 +75,10 @@ export function HomeCtaBanner() {
             <Link href="/order" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-amber-400 hover:bg-amber-300 text-slate-950 font-black shadow-lg shadow-amber-500/30 text-sm sm:text-base px-8 py-6 h-auto"
+                className="w-full sm:w-auto bg-[#F5A623] hover:bg-[#e09216] text-[#141B2E] hover:text-[#141B2E] font-black shadow-lg shadow-amber-500/30 text-sm sm:text-base px-8 py-5 h-auto"
               >
-                <Sparkles className="h-5 w-5 mr-2 text-slate-900" />
                 <span>Book Pickup Now</span>
-                <ArrowRight className="h-5 w-5 ml-2 text-slate-900" />
+                <ArrowRight className="h-5 w-5 ml-2 shrink-0 text-[#141B2E]" />
               </Button>
             </Link>
 
@@ -82,7 +86,7 @@ export function HomeCtaBanner() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border-white/30 text-sm font-bold"
+                className="w-full sm:w-auto bg-white/10 hover:bg-white text-white hover:text-slate-900 border-white/40 text-sm font-bold transition-colors"
               >
                 <span>Compare Plans &amp; Bags</span>
               </Button>

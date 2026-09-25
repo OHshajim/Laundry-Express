@@ -6,8 +6,6 @@ import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { PlanSelector } from "@/components/pricing/plan-selector";
 import { PlanComparison } from "@/components/pricing/plan-comparison";
 import { FaqSection } from "@/components/shared/faq-section";
-import { Badge } from "@/components/ui/badge";
-import { Truck, Sparkles } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -36,6 +34,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * PricingPage Component
+ *
+ * Dedicated plans and pricing breakdown page.
+ * Displays standard 13-gallon bag options, weighed bulk laundry by the KG,
+ * prepaid saver packages, and detailed plan comparison matrix.
+ */
 export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden pb-16 md:pb-0">
@@ -49,10 +54,9 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {/* Header Title & Core Delivery Fee Rule Callout */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200">
-              <Truck className="h-3.5 w-3.5 text-sky-600" />
-              <span>Free Delivery On 2+ Bags Guaranteed</span>
-            </div>
+            <span className="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 uppercase tracking-wide">
+              Free Delivery On 2+ Bags Guaranteed
+            </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
               Simple, Transparent Plans.{" "}

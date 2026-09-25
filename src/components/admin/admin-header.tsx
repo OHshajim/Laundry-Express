@@ -76,9 +76,9 @@ export function AdminHeader({
             <Button
               variant="outline"
               size="sm"
-              className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700"
+              className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 hover:text-white transition-colors"
             >
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              <ArrowLeft className="h-4 w-4 mr-1.5 shrink-0" />
               <span>Live Site</span>
             </Button>
           </Link>

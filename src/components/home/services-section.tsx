@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { Shirt, Scale, Bed, Clock, ArrowRight, Check } from "lucide-react";
+import { Shirt, Scale, Bed, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -146,7 +146,7 @@ export function ServicesSection() {
                     <ul className="space-y-1.5">
                       {srv.features.map((feat, i) => (
                         <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                          <Check className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-sky-500 mt-1.5 shrink-0" />
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -157,9 +157,9 @@ export function ServicesSection() {
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-sm font-extrabold text-slate-900">{srv.priceText}</span>
                   <Link href={srv.ctaHref}>
-                    <Button variant="outline" size="sm" className="text-xs group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600">
+                    <Button variant="outline" size="sm" className="text-xs group-hover:bg-[#1E88C7] group-hover:text-white group-hover:border-[#1E88C7] hover:bg-[#1E88C7] hover:text-white transition-colors">
                       <span>{srv.ctaText}</span>
-                      <ArrowRight className="h-3 w-3 ml-1" />
+                      <ArrowRight className="h-3 w-3 ml-1 shrink-0" />
                     </Button>
                   </Link>
                 </div>

@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { ShieldCheck, Truck, Sparkles, HeartHandshake, XCircle, CheckCircle, ArrowRight } from "lucide-react";
+import { ShieldCheck, Truck, Sparkles, HeartHandshake, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -108,13 +108,13 @@ export function ExperienceSection() {
                 key={i}
                 className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50/70 border border-slate-100 items-center text-xs"
               >
-                <div className="font-bold text-slate-800">{row.feature}</div>
+                <div className="font-bold text-slate-900">{row.feature}</div>
                 <div className="flex items-center gap-2 text-slate-500">
-                  <XCircle className="h-4 w-4 text-rose-500 shrink-0" />
+                  <span className="text-rose-500 font-bold shrink-0">✕</span>
                   <span>{row.traditional}</span>
                 </div>
                 <div className="flex items-center gap-2 font-semibold text-sky-700">
-                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span className="text-emerald-600 font-bold shrink-0">✓</span>
                   <span>{row.express}</span>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export function ExperienceSection() {
             <Link href="/pricing">
               <Button variant="hero" size="lg">
                 <span>View Plans &amp; Pricing</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
               </Button>
             </Link>
           </div>
