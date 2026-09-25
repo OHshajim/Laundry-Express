@@ -13,10 +13,27 @@ import { OrderSummaryCard } from "./order-summary-card";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export function BookingWizard() {
-  const [pricingMode, setPricingMode] = React.useState<PricingMode>("per_bag");
-  const [bagCount, setBagCount] = React.useState<number>(2); // Default 2 bags for free delivery!
-  const [weightKg, setWeightKg] = React.useState<number>(8.0);
+import type { User } from "@/types";
+
+export interface BookingWizardProps {
+  initialMode?: PricingMode;
+  initialBagCount?: number;
+  initialWeightKg?: number;
+  initialPackageId?: string;
+  currentUser?: User | null;
+}
+
+export function BookingWizard({
+  initialMode = "per_bag",
+  initialBagCount = 2,
+  initialWeightKg = 8.0,
+  initialPackageId = "pkg-saver-5",
+  currentUser = null,
+}: BookingWizardProps) {
+  const [pricingMode, setPricingMode] = React.useState<PricingMode>(initialMode);
+  const [bagCount, setBagCount] = React.useState<number>(initialBagCount);
+  const [weightKg, setWeightKg] = React.useState<number>(initialWeightKg);
+  const [selectedPackageId, setSelectedPackageId] = React.useState<string>(initialPackageId);
   const [selectedDetergentId, setSelectedDetergentId] = React.useState<string>("det-tide-pods");
   const [selectedDate, setSelectedDate] = React.useState<string>(() => {
     return new Date().toISOString().split("T")[0];
@@ -141,8 +158,8 @@ export function BookingWizard() {
         <Dialog
           open={!!successOrder}
           onOpenChange={() => setSuccessOrder(null)}
-          title="🎉 Pickup Booked Successfully!"
-          description="Your superhero laundry pickup has been scheduled."
+          title="💳 Upfront Payment Processed &amp; Pickup Confirmed!"
+          description="Your Stripe payment succeeded and your pickup window is secured."
         >
           <div className="text-center space-y-4 py-2">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
@@ -155,10 +172,12 @@ export function BookingWizard() {
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-left space-y-1.5 text-slate-700">
+              <p><strong>Customer:</strong> {currentUser?.full_name || "Customer"} ({currentUser?.email})</p>
+              <p><strong>Payment Status:</strong> Paid upfront via Stripe (${successOrder.total.toFixed(2)})</p>
               <p><strong>Scheduled Slot:</strong> {selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM"} on {selectedDate}</p>
               <p><strong>Pickup Address:</strong> {address}</p>
               <p><strong>Presence Mode:</strong> {isOutOfHome ? "Away (Contactless Doorstep Pickup)" : "Home (Doorbell rings)"}</p>
-              <p><strong>Photo Proof Guarantee:</strong> Our superhero driver will upload a photo upon pickup and drop-off!</p>
+              <p><strong>Photo Proof Guarantee:</strong> Our driver will upload a photo upon pickup and drop-off!</p>
             </div>
 
             <Button

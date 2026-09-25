@@ -53,7 +53,7 @@ export function HeroSection() {
 
             {/* Call to Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-              <Link href="#book-now">
+              <Link href="/order">
                 <Button variant="hero" size="lg" className="w-full sm:w-auto shadow-sky-500/25">
                   <Sparkles className="h-4 w-4 mr-2 text-amber-300" />
                   Schedule Your Pickup
@@ -61,9 +61,9 @@ export function HeroSection() {
                 </Button>
               </Link>
 
-              <Link href="#pricing">
+              <Link href="/pricing">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  View Transparent Pricing
+                  View Plans &amp; Pricing
                 </Button>
               </Link>
             </div>

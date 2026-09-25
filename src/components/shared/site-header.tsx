@@ -42,18 +42,15 @@ export function SiteHeader() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <Link href="#pricing" className="hover:text-sky-600 transition-colors">
-              Pricing &amp; Bags
+          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
+            <Link href="/" className="hover:text-sky-600 transition-colors">
+              Home
             </Link>
-            <Link href="#packages" className="hover:text-sky-600 transition-colors">
-              Saver Packages
+            <Link href="/pricing" className="hover:text-sky-600 transition-colors">
+              Plans &amp; Bags
             </Link>
-            <Link href="#reviews" className="hover:text-sky-600 transition-colors">
-              Customer Reviews
-            </Link>
-            <Link href="#faq" className="hover:text-sky-600 transition-colors">
-              FAQ
+            <Link href="/contact" className="hover:text-sky-600 transition-colors">
+              Contact Us
             </Link>
           </nav>
 
@@ -74,7 +71,7 @@ export function SiteHeader() {
               </Button>
             </Link>
 
-            <Link href="/#book-now">
+            <Link href="/order">
               <Button variant="hero" size="sm" className="shadow-sky-500/20">
                 <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-300" />
                 Book Pickup
@@ -84,7 +81,7 @@ export function SiteHeader() {
 
           {/* Mobile Menu Button */}
           <div className="flex sm:hidden items-center gap-2">
-            <Link href="/#book-now">
+            <Link href="/order">
               <Button variant="hero" size="sm">
                 Book
               </Button>
@@ -105,25 +102,32 @@ export function SiteHeader() {
         <div className="sm:hidden border-t border-sky-100 bg-white/95 px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2">
           <div className="flex flex-col gap-2 font-medium text-sm text-slate-700">
             <Link
-              href="#pricing"
+              href="/"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 px-3 rounded-lg hover:bg-sky-50"
             >
-              Pricing &amp; Bags ($10 or Free)
+              Home
             </Link>
             <Link
-              href="#packages"
+              href="/pricing"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 px-3 rounded-lg hover:bg-sky-50"
             >
-              Saver Packages &amp; Bundles
+              Plans &amp; Bags ($10 or Free)
             </Link>
             <Link
-              href="#reviews"
+              href="/contact"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 px-3 rounded-lg hover:bg-sky-50"
             >
-              Verified Customer Reviews
+              Contact Us &amp; Location
+            </Link>
+            <Link
+              href="/order"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 px-3 rounded-lg hover:bg-sky-50 text-sky-700 font-bold"
+            >
+              Schedule Pickup &amp; Pay
             </Link>
             <Link
               href="/admin"
@@ -131,7 +135,7 @@ export function SiteHeader() {
               className="py-2 px-3 rounded-lg hover:bg-sky-50 flex items-center gap-2"
             >
               <Shield className="h-4 w-4 text-sky-600" />
-              Admin Portal
+              Admin Operations
             </Link>
           </div>
           <div className="pt-2 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">

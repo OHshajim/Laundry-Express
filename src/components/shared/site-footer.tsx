@@ -82,12 +82,24 @@ export function SiteFooter() {
         {/* Bottom Credits & Legal */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>&copy; {new Date().getFullYear()} Laundry Express. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <Link href="#faq" className="hover:text-slate-300">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+            <Link href="/" className="hover:text-slate-300">
+              Home
+            </Link>
+            <Link href="/pricing" className="hover:text-slate-300">
+              Plans &amp; Bags
+            </Link>
+            <Link href="/contact" className="hover:text-slate-300">
+              Contact Us
+            </Link>
+            <Link href="/order" className="hover:text-slate-300">
+              Book Pickup
+            </Link>
+            <Link href="/#faq" className="hover:text-slate-300">
               FAQ
             </Link>
             <Link href="/llms.txt" className="hover:text-slate-300">
-              llms.txt (AI Spec)
+              llms.txt
             </Link>
             <Link href="/admin" className="hover:text-slate-300">
               Admin Gateway

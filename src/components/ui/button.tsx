@@ -1,12 +1,32 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+export type ButtonVariant =
+  | "primary"
+  | "hero"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "danger"
+  | "accent";
+
+export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "icon";
+
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "hero" | "secondary" | "outline" | "ghost" | "danger";
-  size?: "sm" | "md" | "lg" | "icon";
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   isLoading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
+/**
+ * Button Component
+ *
+ * Primary interactive element across Laundry Express.
+ * Implements accessible touch targets (min 44px for sm/md/lg),
+ * micro-interactions (active:scale-[0.98]), and brand theme gradients.
+ */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -15,48 +35,55 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = "md",
       isLoading = false,
       disabled,
+      leftIcon,
+      rightIcon,
       children,
       ...props
     },
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98]";
+      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer";
 
-    const variants = {
+    const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        "bg-sky-600 text-white hover:bg-sky-700 shadow-sm hover:shadow-sky-500/20 shadow-md",
+        "bg-sky-600 text-white hover:bg-sky-700 shadow-sm hover:shadow-sky-500/20 active:bg-sky-800",
       hero:
-        "bg-gradient-to-r from-sky-600 via-sky-500 to-rose-500 text-white hover:from-sky-700 hover:to-rose-600 shadow-lg shadow-sky-500/25 font-semibold",
+        "bg-gradient-to-r from-sky-600 via-blue-600 to-rose-500 text-white hover:from-sky-700 hover:to-rose-600 shadow-lg shadow-sky-500/25 active:shadow-md",
       secondary:
-        "bg-sky-50 text-sky-900 hover:bg-sky-100 border border-sky-200/60",
+        "bg-sky-50 text-sky-900 hover:bg-sky-100 border border-sky-200/80 active:bg-sky-200/60",
       outline:
-        "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300",
+        "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100",
       ghost:
-        "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70",
+        "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:bg-slate-200/60",
       danger:
-        "bg-rose-600 text-white hover:bg-rose-700 shadow-sm hover:shadow-rose-500/20",
+        "bg-rose-600 text-white hover:bg-rose-700 shadow-sm hover:shadow-rose-500/20 active:bg-rose-800",
+      accent:
+        "bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-md shadow-amber-400/20 font-black",
     };
 
-    const sizes = {
-      sm: "h-9 px-3 text-xs gap-1.5",
-      md: "h-11 px-5 text-sm gap-2",
-      lg: "h-13 px-7 text-base gap-2.5",
-      icon: "h-10 w-10 p-0",
+    const sizeStyles: Record<ButtonSize, string> = {
+      xs: "min-h-[32px] px-2.5 text-[11px] gap-1 rounded-lg",
+      sm: "min-h-[38px] px-3.5 text-xs gap-1.5",
+      md: "min-h-[44px] px-5 text-sm gap-2",
+      lg: "min-h-[48px] px-6 text-base gap-2.5",
+      xl: "min-h-[56px] px-8 text-lg gap-3 rounded-2xl",
+      icon: "h-11 w-11 p-0",
     };
 
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={cn(baseStyles, variantStyles[variant], sizeStyles[size], className)}
         {...props}
       >
-        {isLoading && (
+        {isLoading ? (
           <svg
             className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
             fill="none"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle
               className="opacity-25"
@@ -72,8 +99,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
+        ) : (
+          leftIcon && <span className="shrink-0">{leftIcon}</span>
         )}
-        {children}
+
+        <span>{children}</span>
+
+        {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
       </button>
     );
   }

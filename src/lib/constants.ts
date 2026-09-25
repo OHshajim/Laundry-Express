@@ -6,6 +6,7 @@ export const APP_CONFIG = {
   url: "https://laundryexpress.com",
   supportPhone: "+1 (800) 555-WASH",
   supportEmail: "support@laundryexpress.com",
+  address: "1244 Hero Way, Suite 400, Metro Central, NY 10001",
   operatingHours: {
     slot1: {
       id: "8am-12pm",
@@ -28,6 +29,7 @@ export const APP_CONFIG = {
     freeDeliveryThresholdBags: 2, // >= 2 bags is $0.00
     baseKgPrice: 2.75,
     minKgOrder: 5.0,
+    freeKgDeliveryThresholdSubtotal: 40.0,
     maxOrdersPerSlotDefault: 15,
   },
   brandColors: {
@@ -42,8 +44,10 @@ export const APP_CONFIG = {
 export const ORDER_STATUSES = {
   pending: { label: "Pending", color: "bg-amber-100 text-amber-800 border-amber-300" },
   confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-800 border-blue-300" },
+  driver_assigned: { label: "Driver Assigned", color: "bg-cyan-100 text-cyan-800 border-cyan-300" },
   picked_up: { label: "Picked Up", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
   in_wash: { label: "In Wash", color: "bg-sky-100 text-sky-800 border-sky-300" },
+  drying_folding: { label: "Drying/Folding", color: "bg-teal-100 text-teal-800 border-teal-300" },
   out_for_delivery: { label: "Out for Delivery", color: "bg-purple-100 text-purple-800 border-purple-300" },
   completed: { label: "Completed", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
   cancelled: { label: "Cancelled", color: "bg-rose-100 text-rose-800 border-rose-300" },
@@ -63,7 +67,7 @@ export const DEFAULT_DETERGENTS = [
     id: "det-eco-plant",
     name: "Seventh Generation Eco-Clean",
     description: "100% plant-based, hypoallergenic & gentle on fabrics",
-    price_adjustment: 1.5,
+    price_adjustment: 0.0,
     is_active: true,
   },
   {
@@ -77,7 +81,45 @@ export const DEFAULT_DETERGENTS = [
     id: "det-gain-fresh",
     name: "Gain Original Refresh",
     description: "Long-lasting fragrance burst with fabric softening",
-    price_adjustment: 0.5,
+    price_adjustment: 0.0,
     is_active: true,
   },
+] as const;
+
+export const DEFAULT_PACKAGES = [
+  {
+    id: "pkg-saver-5",
+    name: "5-Bag Saver Bundle",
+    capacity: 5,
+    unit: "bag",
+    price: 65.0,
+    original_price: 75.0,
+    savings: "$10.00",
+  },
+  {
+    id: "pkg-family-10",
+    name: "10-Bag Family Pass",
+    capacity: 10,
+    unit: "bag",
+    price: 125.0,
+    original_price: 150.0,
+    savings: "$25.00",
+  },
+  {
+    id: "pkg-bulk-25kg",
+    name: "25-KG Bulk Pass",
+    capacity: 25,
+    unit: "kg",
+    price: 60.0,
+    original_price: 68.75,
+    savings: "$8.75",
+  },
+] as const;
+
+export const SITE_NAVIGATION_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/pricing", label: "Plans & Bags" },
+  { href: "/contact", label: "Contact Us" },
+  { href: "/order", label: "Book Pickup" },
+  { href: "/admin", label: "Admin Operations" },
 ] as const;

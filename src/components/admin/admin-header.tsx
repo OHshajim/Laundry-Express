@@ -4,30 +4,51 @@ import { Shield, ArrowLeft, Activity, Sliders, MessageSquare, ListOrdered } from
 import { Button } from "@/components/ui/button";
 
 interface AdminHeaderProps {
-  activeTab: "orders" | "pricing" | "reviews" | "logs";
-  onTabChange: (tab: "orders" | "pricing" | "reviews" | "logs") => void;
+  activeTab: "orders" | "pricing" | "reviews";
+  onTabChange: (tab: "orders" | "pricing" | "reviews") => void;
   pendingReviewsCount: number;
 }
 
+/**
+ * AdminHeader Component
+ *
+ * Dedicated control bar for the Laundry Express operational management suite.
+ * Supports tabs:
+ * 1. Live Order Pipeline
+ * 2. Pricing, Packages & Offers
+ * 3. Review Moderation
+ *
+ * (Audit Trail removed per instructions).
+ */
 export function AdminHeader({
   activeTab,
   onTabChange,
   pendingReviewsCount,
 }: AdminHeaderProps) {
   const tabs = [
-    { id: "orders" as const, label: "Live Order Pipeline", icon: ListOrdered },
-    { id: "pricing" as const, label: "Pricing, Packages & Offers", icon: Sliders },
+    {
+      id: "orders" as const,
+      label: "Live Order Pipeline",
+      icon: ListOrdered,
+      description: "Manage pickup, wash, and delivery proofs",
+    },
+    {
+      id: "pricing" as const,
+      label: "Pricing & Offers",
+      icon: Sliders,
+      description: "Configure bag, kg, and discount rates",
+    },
     {
       id: "reviews" as const,
       label: "Review Moderation",
       icon: MessageSquare,
       badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined,
+      description: "Approve customer ratings and 3-photo uploads",
     },
-    { id: "logs" as const, label: "Master Audit Trail", icon: Activity },
   ];
 
   return (
-    <div className="bg-slate-900 text-white border-b border-slate-800">
+    <header role="banner" className="bg-slate-900 text-white border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18 border-b border-slate-800">
           <div className="flex items-center gap-3">
@@ -52,15 +73,19 @@ export function AdminHeader({
           </div>
 
           <Link href="/">
-            <Button variant="outline" size="sm" className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700"
+            >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Live Site
+              <span>Live Site</span>
             </Button>
           </Link>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 pt-3 overflow-x-auto">
+        <div className="flex gap-2 pt-3 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -69,7 +94,7 @@ export function AdminHeader({
                 key={tab.id}
                 type="button"
                 onClick={() => onTabChange(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl border-t border-x transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl border-t border-x transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-sky-500 ${
                   isActive
                     ? "bg-slate-950 text-sky-400 border-slate-800 border-b-2 border-b-sky-400"
                     : "text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-800/40"
@@ -78,7 +103,7 @@ export function AdminHeader({
                 <Icon className="h-4 w-4" />
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && (
-                  <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px]">
+                  <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-extrabold">
                     {tab.badge}
                   </span>
                 )}
@@ -87,6 +112,6 @@ export function AdminHeader({
           })}
         </div>
       </div>
-    </div>
+    </header>
   );
 }

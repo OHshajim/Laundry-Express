@@ -5,8 +5,7 @@ import { AdminHeader } from "@/components/admin/admin-header";
 import { OrderPipeline } from "@/components/admin/order-pipeline";
 import { PricingManager } from "@/components/admin/pricing-manager";
 import { ReviewModerator } from "@/components/admin/review-moderator";
-import { AuditLogsViewer } from "@/components/admin/audit-logs-viewer";
-import type { Order, OrderReview, ActivityLog, OrderStatus } from "@/types";
+import type { Order, OrderReview, OrderStatus } from "@/types";
 
 const INITIAL_ORDERS: Order[] = [
   {
@@ -97,68 +96,15 @@ const INITIAL_REVIEWS: OrderReview[] = [
   },
 ];
 
-const INITIAL_LOGS: ActivityLog[] = [
-  {
-    id: "log-1",
-    user_role: "customer",
-    action: "order.created",
-    entity_type: "order",
-    entity_id: "LX-2026-0043",
-    description: "Marcus Rodriguez booked 1 Bag laundry pickup for 1pm-6pm ($26.50)",
-    metadata: { bag_count: 1, delivery_fee: 10.0 },
-    created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-  },
-  {
-    id: "log-2",
-    user_role: "admin",
-    action: "proof.uploaded",
-    entity_type: "order",
-    entity_id: "LX-2026-0042",
-    description: "Admin/Driver snapped pickup photo proof for Sarah Jenkins",
-    metadata: { proof_type: "pickup" },
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: "log-3",
-    user_role: "customer",
-    action: "review.submitted",
-    entity_type: "review",
-    entity_id: "rev-pending-1",
-    description: "David Miller submitted a 5-star review with 1 photo (pending moderation)",
-    created_at: new Date(Date.now() - 1800000).toISOString(),
-  },
-  {
-    id: "log-4",
-    user_role: "admin",
-    action: "pricing.updated",
-    entity_type: "pricing",
-    description: "Admin configured free delivery threshold at 2 bags ($0.00 delivery fee)",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
-
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = React.useState<"orders" | "pricing" | "reviews" | "logs">("orders");
+  const [activeTab, setActiveTab] = React.useState<"orders" | "pricing" | "reviews">("orders");
   const [orders, setOrders] = React.useState<Order[]>(INITIAL_ORDERS);
   const [reviews, setReviews] = React.useState<OrderReview[]>(INITIAL_REVIEWS);
-  const [logs, setLogs] = React.useState<ActivityLog[]>(INITIAL_LOGS);
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus, updated_at: new Date().toISOString() } : o))
     );
-    setLogs((prev) => [
-      {
-        id: `log-${Date.now()}`,
-        user_role: "admin",
-        action: "order.status_updated",
-        entity_type: "order",
-        entity_id: orderId,
-        description: `Order ${orderId} transitioned to ${newStatus}`,
-        created_at: new Date().toISOString(),
-      },
-      ...prev,
-    ]);
   };
 
   const handleUpdateFinalWeight = (orderId: string, finalWeight: number) => {
@@ -186,7 +132,17 @@ export default function AdminPage() {
         const existing = o.proofs || [];
         return {
           ...o,
-          proofs: [...existing, { id: `prf-${Date.now()}`, order_id: orderId, proof_type: proofType, image_url: imageUrl, uploaded_by: "admin", created_at: new Date().toISOString() }],
+          proofs: [
+            ...existing,
+            {
+              id: `prf-${Date.now()}`,
+              order_id: orderId,
+              proof_type: proofType,
+              image_url: imageUrl,
+              uploaded_by: "admin",
+              created_at: new Date().toISOString(),
+            },
+          ],
         };
       })
     );
@@ -194,10 +150,6 @@ export default function AdminPage() {
 
   const handleApproveReview = (reviewId: string) => {
     setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status: "approved" as const } : r)));
-    setLogs((prev) => [
-      { id: `log-${Date.now()}`, user_role: "admin", action: "review.approved", entity_type: "review", entity_id: reviewId, description: `Approved customer review #${reviewId}`, created_at: new Date().toISOString() },
-      ...prev,
-    ]);
   };
 
   const handleRejectReview = (reviewId: string) => {
@@ -233,8 +185,6 @@ export default function AdminPage() {
             onReject={handleRejectReview}
           />
         )}
-
-        {activeTab === "logs" && <AuditLogsViewer logs={logs} />}
       </main>
     </div>
   );

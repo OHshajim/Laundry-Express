@@ -26,6 +26,14 @@ const FAQS = [
     a: "Yes! Choose 'By Weight (Per KG)' during booking. Our base rate is $2.75/KG with a 5KG minimum. You provide an estimated weight upfront, and our driver verifies the final weight with a calibrated scale.",
   },
   {
+    q: "What kind of bag should I use for my laundry pickup?",
+    a: "You can use any standard 13-gallon kitchen trash bag, disposable bag, or your own hamper. When our driver delivers your clean laundry, it will be returned neatly folded and sealed in protective, weather-resistant Laundry Express bags.",
+  },
+  {
+    q: "Which detergents are available, and is there an extra fee?",
+    a: "You can choose between Tide Original Power Pods, Seventh Generation Plant-Based Eco, or All Free & Clear Hypoallergenic for sensitive skin. All detergents are included at zero extra surcharge!",
+  },
+  {
     q: "How does the customer review system work?",
     a: "Once your order is marked 'Completed', you can leave a 1–5 star rating, write feedback, and upload up to 3 photos of your clean laundry. Reviews are verified and moderated by our team.",
   },
@@ -80,6 +88,16 @@ export function FaqSection() {
               </div>
             );
           })}
+        </div>
+
+        {/* Still have questions prompt */}
+        <div className="mt-10 text-center text-xs text-slate-500">
+          <p>
+            Have a custom inquiry or large hotel/commercial request?{" "}
+            <a href="tel:5551234567" className="text-sky-600 font-bold hover:underline">
+              Call our support superheroes at (555) 123-4567
+            </a>
+          </p>
         </div>
       </div>
     </section>
