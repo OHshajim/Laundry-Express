@@ -52,6 +52,19 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 
 ## 4. Session History Log
 
+### [2026-09-26 04:00] | Step: Admin Customers Suite, Previous Orders Inspection, UI Decluttering & Light Layout
+- **Prompt:** Remove "Laundry Express Operations Center • Daily Slots: 8am–12pm & 1pm–6pm Enterprise Admin Portal • © 2026 Laundry Express Services" from admin dashboard, make the website light and useful content only, show previous total orders and user preview when admin clicks an order, and add Customers tab in admin dashboard to inspect all customer accounts with details, history, orders, reviews, and payments in a dialog.
+- **Output:**
+  1. Removed footer clutter from `src/app/admin/layout.tsx` (removed exact text requested: "Laundry Express Operations Center • Daily Slots...", "Enterprise Admin Portal...").
+  2. Built `CustomersManager` (`src/components/admin/customers-manager.tsx`, 201 lines) with search filter, account metrics (Total accounts, Repeat retention rate, Lifetime revenue), and customer directory table.
+  3. Built `CustomerDetailModal` (`src/components/admin/customer-detail-modal.tsx`, 235 lines) displaying customer contact, lifetime stats, sub-tabs for Orders History, Stripe Payments History, and Reviews submitted.
+  4. Updated `OrderDetailModal` (`src/components/admin/order-detail-modal.tsx`, 248 lines) with Previous Total Orders counter and Customer Lifetime Value preview card.
+  5. Updated `AdminSidebar` (`src/components/admin/admin-sidebar.tsx`, 234 lines) with dedicated "Customers Directory" navigation item (`Users` icon).
+  6. Created modular data provider `src/lib/mock-admin-data.ts` (224 lines) decoupling mock data from `src/app/admin/page.tsx` (156 lines).
+  7. Streamlined `src/app/page.tsx` (105 lines) and `src/components/shared/promo-banner.tsx` (102 lines) by removing cluttered laundry comparison tables and repetitive text blocks to make the site light, modern, airy, and focused on useful content.
+  8. Verified 100% compliance with 100–250 lines rule across all 59 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive for clean layout, admin customer directory, full account audit dialogs, and previous order metrics.
+
 ### [2026-09-26 03:50] | Step: Primary Button Color Transition to Punch Pink #E91E63
 - **Prompt:** use this color for primary buttion #E91E63
 - **Output:** Updated primary button variant styles in `Button` (`src/components/ui/button.tsx`) to Punch Pink `#E91E63` with `#d81557` hover, `#c2185b` active, focus-visible ring `#E91E63`, and pink shadow tints (`shadow-pink-500/20` and `shadow-pink-500/25`). Synchronized all primary call-to-action buttons across the site (Header Book Pickup, Hero Schedule Pickup, Pricing Plan Selectors, Process Section CTA, Mobile Bottom Nav floating Action, and Stripe Checkout Pay & Confirm in Order Summary). Verified 100% compliance with 100–250 lines rule across all files in `src/` and verified clean Next.js production build (`npm run build`).

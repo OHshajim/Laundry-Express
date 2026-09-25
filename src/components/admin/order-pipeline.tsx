@@ -210,6 +210,7 @@ export function OrderPipeline({
         onClose={() => setDetailOrderId(null)}
         onUpdateStatus={handleStatusChangeWithNotification}
         onOpenProofModal={handleOpenProofModal}
+        allOrders={orders}
       />
     </div>
   );

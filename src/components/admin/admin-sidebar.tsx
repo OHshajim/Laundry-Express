@@ -13,11 +13,13 @@ import {
   ArrowLeft,
   Menu,
   X,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type AdminSection =
   | "orders"
+  | "customers"
   | "rates"
   | "packages"
   | "detergents"
@@ -28,6 +30,7 @@ interface AdminSidebarProps {
   activeSection: AdminSection;
   onSelectSection: (section: AdminSection) => void;
   ordersCount?: number;
+  customersCount?: number;
   pendingReviewsCount?: number;
 }
 
@@ -42,13 +45,14 @@ interface NavItem {
  * AdminSidebar Component
  *
  * Dedicated vertical operations navigation replacing legacy horizontal tabs.
- * Provides instant switching across Order Pipeline, Base Rates/Free Delivery,
- * Packages, Detergent Catalog, Promo Coupons, and Review Moderation.
+ * Provides instant switching across Orders, Customers, Rates, Packages,
+ * Detergents, Promo Coupons, and Review Moderation.
  */
 export function AdminSidebar({
   activeSection,
   onSelectSection,
   ordersCount = 0,
+  customersCount = 0,
   pendingReviewsCount = 0,
 }: AdminSidebarProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -59,6 +63,12 @@ export function AdminSidebar({
       label: "Orders Pipeline",
       icon: ListOrdered,
       badge: ordersCount > 0 ? ordersCount : undefined,
+    },
+    {
+      id: "customers",
+      label: "Customers Directory",
+      icon: Users,
+      badge: customersCount > 0 ? customersCount : undefined,
     },
     { id: "rates", label: "Rates & Free Delivery", icon: Sliders },
     { id: "packages", label: "Packages & Bundles", icon: Package },
@@ -96,7 +106,7 @@ export function AdminSidebar({
               Laundry Express
             </span>
             <span className="text-[11px] text-[#B9E1F5] font-semibold block">
-              Operations Center
+              Admin Dashboard
             </span>
           </div>
         </div>
@@ -188,7 +198,7 @@ export function AdminSidebar({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-black text-sm text-white">Operations Center</span>
+          <span className="font-black text-sm text-white">Admin Dashboard</span>
         </div>
 
         <Link href="/">

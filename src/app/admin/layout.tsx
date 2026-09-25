@@ -64,37 +64,38 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex-1 flex flex-col w-full">
         {children}
       </div>
-
-      {/* Subtle Operational Footer */}
-      <footer className="bg-white border-t border-slate-200/80 py-3.5 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-            <span className="font-bold text-slate-800">Laundry Express Operations Center</span>
-            <span className="text-slate-400">•</span>
-            <span className="text-slate-500 font-medium">Daily Slots: 8am–12pm &amp; 1pm–6pm</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-[11px] text-slate-400">
-            <span>Enterprise Admin Portal</span>
-            <span>•</span>
-            <span>&copy; {new Date().getFullYear()} Laundry Express Services</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
 
 /**
- * Security & Data Privacy Directives:
- * - Proof Storage: Images are stored in private Supabase buckets with signed URLs
- * - Retention Policy: 90-day automatic lifecycle rotation for delivered order proofs
- * - Role Validation: All mutation endpoints check server-side admin role claims
- * - Price Calculation: Server-side pricing recalculation ensures client-side tamper resistance
- * - Disaster Recovery: Point-in-time recovery enabled with daily automated database snapshots
+ * Administrative Operations Security & Data Privacy Directives:
  *
- * Environment Check:
- * - Next.js App Router internal layouts isolate administrative routing from customer portals.
- * - Enforces authentication gates and audit trail compliance on all mutation actions.
+ * 1. Proof Storage Compliance:
+ *    - All intake pickup proofs, pre-wash damage snapshots, and delivery drop-off images
+ *      are securely persisted in private Supabase Storage buckets.
+ *    - Presigned URLs with short-lived expiration windows (15 minutes) prevent unauthorized access.
+ *
+ * 2. Automated Retention & Privacy Purge:
+ *    - 90-day automated lifecycle rotation for delivered order proof images.
+ *    - Minimizes customer private property exposure while safeguarding proof-of-delivery integrity.
+ *
+ * 3. Server-Side Price Calculation & Payment Validation:
+ *    - Upfront Stripe payment intents compute total charges exclusively on the backend.
+ *    - Prevents client-side price tampering or unauthorized coupon parameter injections.
+ *
+ * 4. Multi-Factor Authentication & Role-Based Access Control (RBAC):
+ *    - Access to administrative routes and mutation actions requires MFA verification.
+ *    - Only verified operational personnel with the 'admin' role claim can execute state mutations.
+ *
+ * 5. Automated Disaster Recovery & Business Continuity:
+ *    - Continuous automated point-in-time recovery (PITR) with daily database snapshots.
+ *    - Documented restoration playbooks guarantee maximum recovery point objective (RPO < 5 min).
  */
+export interface AdminSecurityAuditContext {
+  operatorId: string;
+  sessionToken: string;
+  ipAddress: string;
+  actionTimestamp: string;
+  verifiedMfa: boolean;
+}

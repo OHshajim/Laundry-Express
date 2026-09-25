@@ -4,8 +4,6 @@ import { PromoBanner } from "@/components/shared/promo-banner";
 import { HeroSection } from "@/components/shared/hero-section";
 import { ServicesSection } from "@/components/home/services-section";
 import { ProcessSection } from "@/components/home/process-section";
-import { ExperienceSection } from "@/components/home/experience-section";
-import { FabricCareSection } from "@/components/home/fabric-care-section";
 import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { FaqSection } from "@/components/shared/faq-section";
 import { HomeCtaBanner } from "@/components/home/home-cta-banner";
@@ -39,6 +37,12 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Laundry Express — Doorstep Laundry Service",
+    description: "2+ Bags = FREE Delivery. Daily slots: 8am–12pm & 1pm–6pm.",
+    images: ["/brand/logo-badge.jpg"],
+  },
 };
 
 export default function HomePage() {
@@ -63,7 +67,7 @@ export default function HomePage() {
       {/* Global Navigation Header */}
       <SiteHeader />
 
-      {/* Main Content Sections */}
+      {/* Main Content Sections — Streamlined & Useful */}
       <main className="flex-1">
         {/* Superhero Mascot & Core Proposition Hero */}
         <HeroSection />
@@ -75,12 +79,6 @@ export default function HomePage() {
 
         {/* 4-Step Process & Photo Proof Journey */}
         <ProcessSection />
-
-        {/* Guarantees & Why Laundry Express Beats Laundromats */}
-        <ExperienceSection />
-
-        {/* Fabric Science & Detergent Selection */}
-        <FabricCareSection />
 
         {/* Moderated Customer Reviews & Photos */}
         <div id="reviews">

@@ -3,108 +3,28 @@
 import * as React from "react";
 import { AdminSidebar, AdminSection } from "@/components/admin/admin-sidebar";
 import { OrderPipeline } from "@/components/admin/order-pipeline";
+import { CustomersManager } from "@/components/admin/customers-manager";
 import { PricingManager } from "@/components/admin/pricing-manager";
 import { ReviewModerator } from "@/components/admin/review-moderator";
+import { INITIAL_ORDERS, INITIAL_REVIEWS, INITIAL_CUSTOMERS } from "@/lib/mock-admin-data";
 import type { Order, OrderReview, OrderStatus } from "@/types";
+import type { CustomerAccount } from "@/components/admin/customer-detail-modal";
 
-const INITIAL_ORDERS: Order[] = [
-  {
-    id: "ord-1",
-    order_number: "LX-2026-0042",
-    user_id: "u-1",
-    pricing_mode: "per_bag",
-    detergent_id: "det-tide-pods",
-    bag_count: 2,
-    pickup_date: "Today",
-    pickup_slot: "8am-12pm",
-    subtotal: 30.0,
-    discount_amount: 0.0,
-    delivery_fee: 0.0, // Free because >= 2 bags
-    tax_amount: 0.0,
-    total_amount: 30.0,
-    is_out_of_home: true,
-    bag_outside_door_confirmed: true,
-    customer_notes: "Leave clean bags on front porch behind white chair.",
-    has_preexisting_damage: true,
-    damage_notes: "Frayed stitching on grey duvet cover (documented before wash).",
-    damage_photo_url: "/brand/hero-mascot.png",
-    customer_notified_damage: true,
-    order_status: "in_wash",
-    created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
-    updated_at: new Date().toISOString(),
-    user: { id: "u-1", email: "sarah.jenkins@example.com", phone: "+1 (815) 575-9536", address: "1420 Algonquin Rd, Lake in the Hills, IL 60156", full_name: "Sarah Jenkins", role: "customer", is_active: true, created_at: "", updated_at: "" },
-    proofs: [
-      { id: "prf-1", order_id: "ord-1", proof_type: "pickup", image_url: "/brand/logo-badge.jpg", uploaded_by: "driver-1", created_at: new Date(Date.now() - 7200000).toISOString() },
-      { id: "prf-2", order_id: "ord-1", proof_type: "damage", image_url: "/brand/hero-mascot.png", notes: "Frayed stitching", uploaded_by: "wash-lead", created_at: new Date(Date.now() - 3600000).toISOString() },
-    ],
-  },
-  {
-    id: "ord-2",
-    order_number: "LX-2026-0043",
-    user_id: "u-2",
-    pricing_mode: "per_bag",
-    detergent_id: "det-eco-plant",
-    bag_count: 1,
-    pickup_date: "Today",
-    pickup_slot: "1pm-6pm",
-    subtotal: 15.0,
-    discount_amount: 0.0,
-    delivery_fee: 10.0,
-    tax_amount: 0.0,
-    total_amount: 25.0,
-    is_out_of_home: false,
-    bag_outside_door_confirmed: false,
-    customer_notes: "Ring doorbell twice upon arrival.",
-    order_status: "confirmed",
-    created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-    updated_at: new Date().toISOString(),
-    user: { id: "u-2", email: "marcus.rodriguez@example.com", phone: "+1 (815) 345-8912", address: "882 Pyott Rd, Lake in the Hills, IL 60156", full_name: "Marcus Rodriguez", role: "customer", is_active: true, created_at: "", updated_at: "" },
-  },
-  {
-    id: "ord-3",
-    order_number: "LX-2026-0044",
-    user_id: "u-3",
-    pricing_mode: "per_kg",
-    detergent_id: "det-fragrance-free",
-    bag_count: 0,
-    estimated_weight_kg: 12.0,
-    final_weight_kg: null,
-    pickup_date: "Tomorrow",
-    pickup_slot: "8am-12pm",
-    subtotal: 33.0,
-    discount_amount: 0.0,
-    delivery_fee: 10.0,
-    tax_amount: 0.0,
-    total_amount: 43.0,
-    is_out_of_home: true,
-    bag_outside_door_confirmed: true,
-    customer_notes: "Bulk Airbnb linens and bedsheets.",
-    order_status: "driver_assigned",
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    updated_at: new Date().toISOString(),
-    user: { id: "u-3", email: "elena.rostova@example.com", phone: "+1 (815) 621-4402", address: "410 Randall Rd, Crystal Lake, IL 60014", full_name: "Elena Rostova", role: "customer", is_active: true, created_at: "", updated_at: "" },
-  },
-];
-
-const INITIAL_REVIEWS: OrderReview[] = [
-  {
-    id: "rev-pending-1",
-    order_id: "ord-104",
-    user_id: "u-4",
-    rating: 5,
-    comment: "The driver was here right at 8:15 AM! Folded clothes smelled so crisp and fresh. 10/10 recommend.",
-    status: "pending",
-    created_at: new Date(Date.now() - 1800000).toISOString(),
-    updated_at: new Date().toISOString(),
-    user: { full_name: "David Miller" },
-    photos: [{ id: "p1", review_id: "rev-pending-1", photo_url: "/brand/logo-badge.jpg", display_order: 1, created_at: new Date().toISOString() }],
-  },
-];
-
+/**
+ * AdminPage Component
+ *
+ * Executive control workspace for Laundry Express operations:
+ * - Orders Pipeline: Progressive state advancement (Accept, Pickup, Damage reporting, Delivery)
+ * - Customers Directory: Full accounts inspection (Profile, Order history, Stripe payments, Reviews)
+ * - Rates & Delivery: Base rates, bag/KG thresholds, free delivery rules
+ * - Packages & Detergents: Dynamic customer catalog management
+ * - Coupons & Reviews: Promo codes and feedback moderation
+ */
 export default function AdminPage() {
   const [activeSection, setActiveSection] = React.useState<AdminSection>("orders");
   const [orders, setOrders] = React.useState<Order[]>(INITIAL_ORDERS);
   const [reviews, setReviews] = React.useState<OrderReview[]>(INITIAL_REVIEWS);
+  const [customers, setCustomers] = React.useState<CustomerAccount[]>(INITIAL_CUSTOMERS);
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>
@@ -191,6 +111,7 @@ export default function AdminPage() {
         activeSection={activeSection}
         onSelectSection={setActiveSection}
         ordersCount={activeOrdersCount}
+        customersCount={customers.length}
         pendingReviewsCount={pendingReviewsCount}
       />
 
@@ -203,6 +124,13 @@ export default function AdminPage() {
               onUpdateStatus={handleUpdateStatus}
               onUpdateFinalWeight={handleUpdateFinalWeight}
               onUploadProof={handleUploadProof}
+            />
+          )}
+
+          {activeSection === "customers" && (
+            <CustomersManager
+              customers={customers}
+              onViewOrder={() => setActiveSection("orders")}
             />
           )}
 

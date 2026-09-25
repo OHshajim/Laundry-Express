@@ -3,12 +3,26 @@
 import * as React from "react";
 import { Zap, X, Copy, Check, Clock, Sparkles } from "lucide-react";
 
+export interface PromoAnnouncement {
+  id: string;
+  code: string;
+  discountPercentage: number;
+  freeDeliveryThresholdBags: number;
+  highlightText: string;
+  operatingHoursNotice: string;
+}
+
 /**
  * PromoBanner Component
  *
  * Sticky dismissible top notification bar.
  * Announces the launch promotional coupon code (HEROFRESH) and highlights
- * the key value proposition: 2+ Bags = 100% FREE Delivery ($0.00).
+ * the core value proposition: 2+ Bags = 100% FREE Delivery ($0.00).
+ *
+ * Accessibility Guidelines:
+ * - Uses role="complementary" with aria-label
+ * - Focus ring on coupon code copy button and dismiss button
+ * - Clipboard write feedback with temporary confirmation checkmark
  */
 export function PromoBanner() {
   const [visible, setVisible] = React.useState(true);
@@ -41,7 +55,7 @@ export function PromoBanner() {
           </span>
 
           <p className="font-medium text-slate-200">
-            <span className="font-extrabold text-amber-300">Superhero Launch Offer:</span>{" "}
+            <span className="font-extrabold text-amber-300">Launch Offer:</span>{" "}
             Use code{" "}
             <button
               type="button"
@@ -57,37 +71,19 @@ export function PromoBanner() {
                 <Copy className="h-3 w-3 text-sky-200" />
               )}
             </button>{" "}
-            for <strong className="text-white">15% OFF</strong>!{" "}
-            <span className="hidden sm:inline">
-              Or use{" "}
-              <button
-                type="button"
-                onClick={() => handleCopy("FREESHIP")}
-                className="inline-flex items-center gap-1 font-mono font-bold bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded-md transition-colors text-white cursor-pointer"
-                title="Click to copy coupon code"
-                aria-label="Copy coupon code FREESHIP"
-              >
-                <span>FREESHIP</span>
-                {copiedCode === "FREESHIP" ? (
-                  <Check className="h-3 w-3 text-emerald-300 animate-in zoom-in" />
-                ) : (
-                  <Sparkles className="h-3 w-3 text-amber-300" />
-                )}
-              </button>{" "}
-              for $10 off single bags.
-            </span>
+            for <strong className="text-white">15% OFF</strong> your order!
           </p>
+
+          <span className="hidden sm:inline text-slate-500">•</span>
+
+          <span className="hidden sm:inline-flex items-center gap-1 text-emerald-300 font-bold">
+            ⚡ 2+ Bags = FREE Delivery ($0.00)
+          </span>
 
           <span className="hidden md:inline text-slate-500">•</span>
 
-          <span className="hidden md:inline-flex items-center gap-1 text-emerald-300 font-bold">
-            ⚡ 2+ Bags = Always FREE Delivery ($0.00)
-          </span>
-
-          <span className="hidden lg:inline text-slate-500">•</span>
-
-          <span className="hidden lg:inline text-slate-300 text-[11px]">
-            Operating Daily 8am–12pm &amp; 1pm–6pm
+          <span className="hidden md:inline text-slate-300 text-[11px]">
+            Daily Pickup: 8am–12pm &amp; 1pm–6pm
           </span>
         </div>
 

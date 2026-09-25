@@ -3,16 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import {
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Sparkles,
-  CreditCard,
-  Camera,
-  AlertTriangle,
-  CheckCircle2,
-  Calendar,
+  User, Phone, Mail, MapPin, Sparkles, CreditCard, Camera, AlertTriangle, CheckCircle2, Calendar,
 } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { ORDER_STATUSES } from "@/lib/constants";
@@ -26,6 +17,7 @@ interface OrderDetailModalProps {
   onClose: () => void;
   onUpdateStatus?: (orderId: string, newStatus: OrderStatus) => void;
   onOpenProofModal?: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
+  allOrders?: Order[];
 }
 
 export function OrderDetailModal({
@@ -34,6 +26,7 @@ export function OrderDetailModal({
   onClose,
   onUpdateStatus,
   onOpenProofModal,
+  allOrders = [],
 }: OrderDetailModalProps) {
   if (!order) return null;
 
@@ -43,6 +36,12 @@ export function OrderDetailModal({
     : order.detergent_id === "det-eco-plant"
     ? "Seventh Generation Eco-Plant"
     : "All Free & Clear (Hypoallergenic)";
+
+  const userPastOrders = allOrders.filter(
+    (o) => o.user?.email === order.user?.email || (order.user_id && o.user_id === order.user_id)
+  );
+  const prevOrdersCount = userPastOrders.filter((o) => o.id !== order.id).length;
+  const lifetimeSpent = userPastOrders.reduce((sum, o) => sum + o.total_amount, 0) || order.total_amount;
 
   return (
     <Dialog
@@ -72,9 +71,14 @@ export function OrderDetailModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Card 1: Customer Contact & Delivery Presence */}
           <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
-            <div className="flex items-center gap-2 font-bold text-slate-900 border-b border-slate-100 pb-2">
-              <User className="h-4 w-4 text-sky-600 shrink-0" />
-              <span>Customer &amp; Presence Verification</span>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2 font-bold text-slate-900">
+                <User className="h-4 w-4 text-sky-600 shrink-0" />
+                <span>Customer &amp; Presence Verification</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-100 text-[#E91E63]">
+                {prevOrdersCount > 0 ? "Repeat Customer" : "New Customer"}
+              </span>
             </div>
 
             <div className="space-y-1.5 leading-relaxed">
@@ -94,6 +98,18 @@ export function OrderDetailModal({
               <div className="flex items-start gap-2 pt-1">
                 <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
                 <span>{order.user?.address || "United States, IL · McHenry Co. · Lake in the Hills"}</span>
+              </div>
+            </div>
+
+            {/* User History Preview & Previous Total Orders */}
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[11px]">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Previous Orders</span>
+                <span className="font-extrabold text-slate-900">{prevOrdersCount} previous order{prevOrdersCount !== 1 ? "s" : ""}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Customer Lifetime Value</span>
+                <span className="font-extrabold text-emerald-600">{formatCurrency(lifetimeSpent)}</span>
               </div>
             </div>
 
@@ -209,24 +225,14 @@ export function OrderDetailModal({
 
           <div className="flex items-center gap-2">
             {onOpenProofModal && order.order_status === "in_wash" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-rose-600 border-rose-200 hover:bg-rose-50"
-                onClick={() => { onClose(); onOpenProofModal(order, "damage"); }}
-              >
+              <Button variant="outline" size="sm" className="text-rose-600 border-rose-200 hover:bg-rose-50" onClick={() => { onClose(); onOpenProofModal(order, "damage"); }}>
                 <AlertTriangle className="h-3.5 w-3.5 mr-1 shrink-0" />
                 Report Damage
               </Button>
             )}
 
             {onUpdateStatus && order.order_status === "confirmed" && (
-              <Button
-                variant="hero"
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={() => { onUpdateStatus(order.id, "driver_assigned"); onClose(); }}
-              >
+              <Button variant="hero" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { onUpdateStatus(order.id, "driver_assigned"); onClose(); }}>
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1 shrink-0" />
                 Accept Order
               </Button>
