@@ -53,8 +53,11 @@ export const metadata: Metadata = {
     title: "Laundry Express",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/icon.svg",
     apple: "/brand/logo-badge.jpg",
   },
   openGraph: {

@@ -85,6 +85,7 @@ export interface Detergent {
 export type OrderStatus =
   | "pending"
   | "confirmed"
+  | "driver_assigned"
   | "picked_up"
   | "in_wash"
   | "out_for_delivery"
@@ -118,6 +119,11 @@ export interface Order {
   order_status: OrderStatus;
   stripe_customer_id?: string;
   stripe_payment_method_id?: string;
+  has_preexisting_damage?: boolean;
+  damage_notes?: string;
+  damage_photo_url?: string;
+  customer_notified_damage?: boolean;
+  accepted_at?: string;
   created_at: string;
   updated_at: string;
   // Joined fields
@@ -131,7 +137,7 @@ export interface Order {
 export interface OrderProof {
   id: string;
   order_id: string;
-  proof_type: "pickup" | "dropoff";
+  proof_type: "pickup" | "dropoff" | "damage";
   image_url: string;
   notes?: string;
   uploaded_by: string;

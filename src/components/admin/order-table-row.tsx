@@ -1,5 +1,7 @@
+"use client";
+
 import * as React from "react";
-import { Clock, Scale, Camera } from "lucide-react";
+import { Clock, Scale, Camera, AlertTriangle, Check, Send } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { ORDER_STATUSES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -9,14 +11,18 @@ interface OrderTableRowProps {
   order: Order;
   onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
   onOpenWeightDialog: (order: Order) => void;
-  onOpenProofModal: (order: Order) => void;
+  onOpenProofModal: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
 }
 
 /**
  * OrderTableRow Component
  *
- * Renders an individual order row in the admin pipeline table.
- * Includes customer details, bag/kg volume, pickup slot, status badge, and action triggers.
+ * Implements the progressive order fulfillment actions:
+ * 1. Confirmed -> "Accept Order" (dispatches confirmation email to customer)
+ * 2. Driver Assigned -> "Pickup (Photo Proof)" (requires pickup photo)
+ * 3. In Wash -> "Report Damage" (pre-existing flaw photo) & "Out for Delivery"
+ * 4. Out for Delivery -> "Deliver (Drop-off Photo Required)"
+ * 5. Completed -> Delivered & Verified
  */
 export function OrderTableRow({
   order,
@@ -42,11 +48,22 @@ export function OrderTableRow({
         <span className="text-[11px] text-slate-500 block max-w-xs truncate">
           {order.customer_notes || "Doorstep Address"}
         </span>
-        {order.is_out_of_home && (
-          <span className="inline-block mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">
-            Away • Bag Outside Door
-          </span>
-        )}
+
+        {/* Status Callout Badges */}
+        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+          {order.is_out_of_home && (
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">
+              Away • Bag Outside Door
+            </span>
+          )}
+
+          {order.has_preexisting_damage && (
+            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 shrink-0 text-rose-600" />
+              Damage Logged • Customer Notified
+            </span>
+          )}
+        </div>
       </td>
 
       <td className="p-3.5">
@@ -57,7 +74,7 @@ export function OrderTableRow({
             ? "By Weight (KG)"
             : "Package"}
         </span>
-        <span className="text-slate-600">
+        <span className="text-slate-600 font-semibold">
           {order.pricing_mode === "per_bag"
             ? `${order.bag_count} Bag(s)`
             : order.final_weight_kg
@@ -69,7 +86,7 @@ export function OrderTableRow({
       <td className="p-3.5">
         <span className="font-medium text-slate-900 block">{order.pickup_date}</span>
         <span className="text-slate-500 text-[11px] flex items-center gap-1">
-          <Clock className="h-3 w-3 text-sky-600" />
+          <Clock className="h-3 w-3 text-sky-600 shrink-0" />
           {order.pickup_slot}
         </span>
       </td>
@@ -87,47 +104,100 @@ export function OrderTableRow({
       </td>
 
       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-        {order.pricing_mode === "per_kg" && (
+        {/* Optional Weigh scale for KG mode */}
+        {order.pricing_mode === "per_kg" && order.order_status !== "completed" && (
           <Button
             variant="outline"
             size="sm"
             className="h-8 px-2 text-xs"
             onClick={() => onOpenWeightDialog(order)}
-            title="Record precision intake weight"
+            title="Record scale weight"
           >
-            <Scale className="h-3.5 w-3.5 mr-1" />
+            <Scale className="h-3.5 w-3.5 mr-1 shrink-0" />
             Weigh
           </Button>
         )}
 
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-8 px-2 text-xs"
-          onClick={() => onOpenProofModal(order)}
-          title="Upload or view pickup/drop-off photo proofs"
-        >
-          <Camera className="h-3.5 w-3.5 mr-1 text-sky-600" />
-          Proofs ({order.proofs?.length || 0})
-        </Button>
+        {/* Step-by-Step Progressive Action Buttons */}
+        {order.order_status === "confirmed" && (
+          <Button
+            variant="hero"
+            size="sm"
+            className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => onUpdateStatus(order.id, "driver_assigned")}
+            title="Accept order and dispatch confirmation email to customer"
+          >
+            <Send className="h-3.5 w-3.5 mr-1 shrink-0" />
+            Accept Order
+          </Button>
+        )}
 
-        <select
-          value={order.order_status}
-          onChange={(e) => onUpdateStatus(order.id, e.target.value as OrderStatus)}
-          aria-label={`Change status for order ${order.order_number}`}
-          className="h-8 text-xs rounded-lg border border-slate-300 bg-white px-2 font-semibold text-slate-700 shadow-2xs focus:border-sky-500 focus:outline-none"
-        >
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="driver_assigned">Driver Assigned</option>
-          <option value="picked_up">Picked Up</option>
-          <option value="in_wash">In Wash</option>
-          <option value="drying_folding">Drying/Folding</option>
-          <option value="out_for_delivery">Out For Delivery</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+        {order.order_status === "driver_assigned" && (
+          <Button
+            variant="primary"
+            size="sm"
+            className="h-8 px-3 text-xs"
+            onClick={() => onOpenProofModal(order, "pickup")}
+            title="Upload pickup proof photo to start wash cycle"
+          >
+            <Camera className="h-3.5 w-3.5 mr-1 shrink-0" />
+            Pickup (Photo Proof)
+          </Button>
+        )}
+
+        {order.order_status === "in_wash" && (
+          <div className="inline-flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs border-rose-300 text-rose-700 hover:bg-rose-50"
+              onClick={() => onOpenProofModal(order, "damage")}
+              title="Add photo of pre-existing garment tear or stain to notify customer"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 mr-1 text-rose-600 shrink-0" />
+              Report Damage
+            </Button>
+
+            <Button
+              variant="hero"
+              size="sm"
+              className="h-8 px-2.5 text-xs"
+              onClick={() => onUpdateStatus(order.id, "out_for_delivery")}
+              title="Mark order finished washing & ready for delivery"
+            >
+              Ready for Delivery
+            </Button>
+          </div>
+        )}
+
+        {order.order_status === "out_for_delivery" && (
+          <Button
+            variant="hero"
+            size="sm"
+            className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => onOpenProofModal(order, "dropoff")}
+            title="Upload drop-off photo proof to complete order"
+          >
+            <Camera className="h-3.5 w-3.5 mr-1 shrink-0" />
+            Deliver (Drop-off Photo)
+          </Button>
+        )}
+
+        {order.order_status === "completed" && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-8 px-2.5 text-xs text-emerald-800 bg-emerald-50 border-emerald-200"
+            onClick={() => onOpenProofModal(order, "dropoff")}
+            title="View verified delivery proof"
+          >
+            <Check className="h-3.5 w-3.5 mr-1 text-emerald-600 shrink-0" />
+            Proofs ({order.proofs?.length || 0})
+          </Button>
+        )}
       </td>
     </tr>
   );
 }
+
+export default OrderTableRow;
