@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Zap, Clock, ShieldCheck, Sparkles, ArrowRight, Star } from "lucide-react";
+import { Zap, Clock, ShieldCheck, Sparkles, ArrowRight, Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
@@ -13,12 +13,29 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Hero Content (7 Cols) */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-sky-200 shadow-xs text-xs font-bold text-slate-800">
-              <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-              <span>Doorstep Laundry Heroes</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-sky-600 font-extrabold">2+ Bags = FREE Delivery</span>
+            {/* Top Badges with Animated Coverage Highlight */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-sky-200 shadow-xs text-xs font-bold text-slate-800">
+                <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                <span>Doorstep Laundry Heroes</span>
+                <span className="text-slate-300">•</span>
+                <span className="text-sky-600 font-extrabold">2+ Bags = FREE Delivery</span>
+              </div>
+
+              {/* Animated Location Coverage Radar Badge */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-sky-50 via-white to-blue-50 border border-sky-300 shadow-xs text-xs font-bold text-slate-800">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+                </span>
+                <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                <span className="text-sky-900 font-extrabold">
+                  Lake in the Hills (30-Mile Radius)
+                </span>
+                <span className="text-[10px] font-bold text-sky-700 bg-sky-100/90 px-1.5 py-0.5 rounded">
+                  IL Northwest Suburbs
+                </span>
+              </div>
             </div>
 
             {/* Main Headline */}

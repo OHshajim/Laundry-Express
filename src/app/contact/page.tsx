@@ -12,7 +12,7 @@ import { APP_CONFIG } from "@/lib/constants";
 export const metadata: Metadata = {
   title: "Contact Us & Operations Hub — Laundry Express",
   description:
-    "Get in touch with Laundry Express. Visit our central wash facility at 1244 Hero Way, call (555) 123-4567, or send us a message. Operating daily 8am-12pm & 1pm-6pm.",
+    "Get in touch with Laundry Express. Located in Lake in the Hills, McHenry Co., IL (42.1903, -88.383743). Call 815-575-9536 or message us for doorstep wash & fold in a 30-mile radius.",
   keywords: [
     "contact laundry express",
     "laundry express location",

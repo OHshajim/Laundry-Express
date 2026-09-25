@@ -11,9 +11,23 @@ export function getLocalBusinessSchema() {
     description: APP_CONFIG.description,
     url: APP_CONFIG.url,
     telephone: APP_CONFIG.supportPhone,
+    email: APP_CONFIG.supportEmail,
+    sameAs: [APP_CONFIG.facebookUrl],
     priceRange: "$$",
     paymentAccepted: "Credit Card, Apple Pay, Google Pay",
     currenciesAccepted: "USD",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Lake in the Hills",
+      addressLocality: "Lake in the Hills",
+      addressRegion: "IL",
+      addressCountry: "US",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: APP_CONFIG.location.lat,
+      longitude: APP_CONFIG.location.lng,
+    },
     openingHoursSpecification: [
       {
         "@type": "OpeningHoursSpecification",
@@ -46,7 +60,7 @@ export function getLocalBusinessSchema() {
     ],
     areaServed: {
       "@type": "AdministrativeArea",
-      name: "Metropolitan Area & Suburbs",
+      name: "Lake in the Hills & 30-Mile Radius (Northwest Suburbs of Illinois)",
     },
     makesOffer: [
       {

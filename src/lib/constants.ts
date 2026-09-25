@@ -4,9 +4,22 @@ export const APP_CONFIG = {
   description:
     "Professional doorstep laundry service. 1 Bag = $10.00 delivery fee; 2+ Bags = FREE delivery! Operational daily 8am-12pm & 1pm-6pm.",
   url: "https://laundryexpress.com",
-  supportPhone: "+1 (800) 555-WASH",
-  supportEmail: "support@laundryexpress.com",
-  address: "1244 Hero Way, Suite 400, Metro Central, NY 10001",
+  supportPhone: "815-575-9536",
+  supportEmail: "customerservice@laundryexpressservices.com",
+  facebookUrl: "https://www.facebook.com/profile.php?id=61594071297569",
+  address: "United States, IL · McHenry Co. · Lake in the Hills",
+  location: {
+    city: "Lake in the Hills",
+    county: "McHenry Co.",
+    state: "IL",
+    country: "United States",
+    region: "Northwest Suburbs of Illinois",
+    lat: 42.1903,
+    lng: -88.383743,
+    serviceRadius: "Lake in the Hills - 30-mile radius",
+    displayAddress: "United States, IL · McHenry Co. · Lake in the Hills",
+    mapsUrl: "https://maps.google.com/?q=42.1903,-88.383743",
+  },
   operatingHours: {
     slot1: {
       id: "8am-12pm",

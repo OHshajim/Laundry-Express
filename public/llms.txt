@@ -5,6 +5,11 @@
 ## Business Overview
 - Brand: Laundry Express
 - Service Type: On-demand and scheduled residential/commercial laundry wash & fold service.
+- Location: United States, IL · McHenry Co. · Lake in the Hills (Coordinates: 42.1903, -88.383743)
+- Service Area: Northwest Suburbs of Illinois (Lake in the Hills & 30-Mile Radius)
+- Support Hotline: 815-575-9536
+- Email: customerservice@laundryexpressservices.com
+- Facebook: https://www.facebook.com/profile.php?id=61594071297569
 - Operating Hours: Daily across two operational pickup & delivery windows:
   - Morning Window: 8:00 AM – 12:00 PM
   - Afternoon Window: 1:00 PM – 6:00 PM

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, ShieldCheck, MapPin, Sparkles, Heart } from "lucide-react";
+import { Clock, ShieldCheck, MapPin, Sparkles, Heart, Phone, Mail, ExternalLink } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 import { MascotBadge } from "@/components/shared/mascot-badge";
 
@@ -65,15 +65,29 @@ export function SiteFooter() {
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-white tracking-wide uppercase flex items-center gap-2">
               <MapPin className="h-4 w-4 text-rose-400" />
-              Service Areas
+              Location &amp; Service Radius
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Serving the entire downtown metro area, north &amp; south suburbs, university campuses, and residential districts.
+              Lake in the Hills, McHenry Co. &amp; Northwest Suburbs of Illinois (42.1903, -88.383743) within a 30-mile radius.
             </p>
-            <div className="pt-2 text-xs">
-              <span className="text-slate-500 block">Need custom bulk laundry?</span>
-              <a href={`tel:${APP_CONFIG.supportPhone}`} className="text-sky-400 hover:underline font-semibold">
-                Call {APP_CONFIG.supportPhone}
+            <div className="pt-1 space-y-1.5 text-xs">
+              <a href={`tel:${APP_CONFIG.supportPhone}`} className="text-sky-400 hover:underline font-semibold flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5 text-sky-400" />
+                {APP_CONFIG.supportPhone}
+              </a>
+              <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-slate-300 hover:text-sky-400 hover:underline font-medium flex items-center gap-1.5 truncate">
+                <Mail className="h-3.5 w-3.5 text-rose-400" />
+                {APP_CONFIG.supportEmail}
+              </a>
+              <a
+                href={APP_CONFIG.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline font-semibold flex items-center gap-1.5 pt-0.5"
+              >
+                <span className="h-3.5 w-3.5 rounded bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">f</span>
+                Follow on Facebook
+                <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           </div>
