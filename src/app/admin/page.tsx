@@ -25,12 +25,17 @@ const INITIAL_ORDERS: Order[] = [
     is_out_of_home: true,
     bag_outside_door_confirmed: true,
     customer_notes: "Leave clean bags on front porch behind white chair.",
+    has_preexisting_damage: true,
+    damage_notes: "Frayed stitching on grey duvet cover (documented before wash).",
+    damage_photo_url: "/brand/hero-mascot.png",
+    customer_notified_damage: true,
     order_status: "in_wash",
     created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
     updated_at: new Date().toISOString(),
-    user: { id: "u-1", email: "sarah@example.com", full_name: "Sarah Jenkins", role: "customer", is_active: true, created_at: "", updated_at: "" },
+    user: { id: "u-1", email: "sarah.jenkins@example.com", phone: "+1 (815) 575-9536", address: "1420 Algonquin Rd, Lake in the Hills, IL 60156", full_name: "Sarah Jenkins", role: "customer", is_active: true, created_at: "", updated_at: "" },
     proofs: [
-      { id: "prf-1", order_id: "ord-1", proof_type: "pickup", image_url: "/brand/logo-badge.jpg", uploaded_by: "driver-1", created_at: new Date().toISOString() },
+      { id: "prf-1", order_id: "ord-1", proof_type: "pickup", image_url: "/brand/logo-badge.jpg", uploaded_by: "driver-1", created_at: new Date(Date.now() - 7200000).toISOString() },
+      { id: "prf-2", order_id: "ord-1", proof_type: "damage", image_url: "/brand/hero-mascot.png", notes: "Frayed stitching", uploaded_by: "wash-lead", created_at: new Date(Date.now() - 3600000).toISOString() },
     ],
   },
   {
@@ -50,10 +55,10 @@ const INITIAL_ORDERS: Order[] = [
     is_out_of_home: false,
     bag_outside_door_confirmed: false,
     customer_notes: "Ring doorbell twice upon arrival.",
-    order_status: "confirmed", // Paid, ready for admin acceptance
+    order_status: "confirmed",
     created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
     updated_at: new Date().toISOString(),
-    user: { id: "u-2", email: "marcus@example.com", full_name: "Marcus Rodriguez", role: "customer", is_active: true, created_at: "", updated_at: "" },
+    user: { id: "u-2", email: "marcus.rodriguez@example.com", phone: "+1 (815) 345-8912", address: "882 Pyott Rd, Lake in the Hills, IL 60156", full_name: "Marcus Rodriguez", role: "customer", is_active: true, created_at: "", updated_at: "" },
   },
   {
     id: "ord-3",
@@ -74,10 +79,10 @@ const INITIAL_ORDERS: Order[] = [
     is_out_of_home: true,
     bag_outside_door_confirmed: true,
     customer_notes: "Bulk Airbnb linens and bedsheets.",
-    order_status: "driver_assigned", // Accepted, driver en route for pickup
+    order_status: "driver_assigned",
     created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
     updated_at: new Date().toISOString(),
-    user: { id: "u-3", email: "elena@example.com", full_name: "Elena Rostova", role: "customer", is_active: true, created_at: "", updated_at: "" },
+    user: { id: "u-3", email: "elena.rostova@example.com", phone: "+1 (815) 621-4402", address: "410 Randall Rd, Crystal Lake, IL 60014", full_name: "Elena Rostova", role: "customer", is_active: true, created_at: "", updated_at: "" },
   },
 ];
 

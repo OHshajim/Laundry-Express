@@ -12,33 +12,34 @@ interface OrderTableRowProps {
   onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
   onOpenWeightDialog: (order: Order) => void;
   onOpenProofModal: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
+  onViewDetails?: (order: Order) => void;
 }
 
-/**
- * OrderTableRow Component
- *
- * Implements the progressive order fulfillment actions:
- * 1. Confirmed -> "Accept Order" (dispatches confirmation email to customer)
- * 2. Driver Assigned -> "Pickup (Photo Proof)" (requires pickup photo)
- * 3. In Wash -> "Report Damage" (pre-existing flaw photo) & "Out for Delivery"
- * 4. Out for Delivery -> "Deliver (Drop-off Photo Required)"
- * 5. Completed -> Delivered & Verified
- */
 export function OrderTableRow({
   order,
   onUpdateStatus,
   onOpenWeightDialog,
   onOpenProofModal,
+  onViewDetails,
 }: OrderTableRowProps) {
   const statusMeta = ORDER_STATUSES[order.order_status] || ORDER_STATUSES.pending;
 
   return (
-    <tr className="hover:bg-slate-50/60 transition-colors">
-      <td className="p-3.5 font-bold text-slate-900">
-        <span>{order.order_number}</span>
-        <span className="block text-[10px] text-slate-400 font-mono mt-0.5">
-          {formatDate(order.created_at)}
-        </span>
+    <tr className="hover:bg-slate-50/80 transition-colors">
+      <td className="p-3.5">
+        <button
+          type="button"
+          onClick={() => onViewDetails?.(order)}
+          className="text-left font-extrabold text-slate-900 hover:text-[#1E88C7] transition-colors cursor-pointer group flex flex-col"
+          title="Click to inspect all order details"
+        >
+          <span className="underline underline-offset-2 decoration-slate-300 group-hover:decoration-[#1E88C7]">
+            {order.order_number}
+          </span>
+          <span className="text-[10px] text-slate-400 font-mono mt-0.5 font-normal">
+            {formatDate(order.created_at)}
+          </span>
+        </button>
       </td>
 
       <td className="p-3.5">
@@ -104,6 +105,15 @@ export function OrderTableRow({
       </td>
 
       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs text-slate-600 hover:text-[#1E88C7] hover:bg-slate-100"
+          onClick={() => onViewDetails?.(order)}
+          title="Inspect all order details"
+        >
+          Details
+        </Button>
         {/* Optional Weigh scale for KG mode */}
         {order.pricing_mode === "per_kg" && order.order_status !== "completed" && (
           <Button

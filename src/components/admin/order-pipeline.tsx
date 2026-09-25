@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { OrderTableRow } from "./order-table-row";
+import { OrderDetailModal } from "./order-detail-modal";
 
 interface OrderPipelineProps {
   orders: Order[];
@@ -30,11 +31,17 @@ export function OrderPipeline({
   onUploadProof,
 }: OrderPipelineProps) {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [detailOrderId, setDetailOrderId] = React.useState<string | null>(null);
   const [weightInput, setWeightInput] = React.useState<string>("");
   const [proofType, setProofType] = React.useState<"pickup" | "dropoff" | "damage">("pickup");
   const [damageNotes, setDamageNotes] = React.useState<string>("");
   const [proofModalOpen, setProofModalOpen] = React.useState<boolean>(false);
   const [systemAlert, setSystemAlert] = React.useState<string | null>(null);
+
+  const detailOrder = React.useMemo(
+    () => orders.find((o) => o.id === detailOrderId) || null,
+    [orders, detailOrderId]
+  );
 
   const triggerAlert = (msg: string) => {
     setSystemAlert(msg);
@@ -140,6 +147,7 @@ export function OrderPipeline({
                   onUpdateStatus={handleStatusChangeWithNotification}
                   onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_kg || 5)); }}
                   onOpenProofModal={handleOpenProofModal}
+                  onViewDetails={(o) => setDetailOrderId(o.id)}
                 />
               ))}
             </tbody>
@@ -194,6 +202,15 @@ export function OrderPipeline({
           </div>
         </Dialog>
       )}
+
+      {/* Full Order Detail Inspection Modal */}
+      <OrderDetailModal
+        order={detailOrder}
+        isOpen={!!detailOrder}
+        onClose={() => setDetailOrderId(null)}
+        onUpdateStatus={handleStatusChangeWithNotification}
+        onOpenProofModal={handleOpenProofModal}
+      />
     </div>
   );
 }
