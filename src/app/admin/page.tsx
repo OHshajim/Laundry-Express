@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import { AdminSidebar, AdminSection } from "@/components/admin/admin-sidebar";
+import { AdminOverview } from "@/components/admin/admin-overview";
 import { OrderPipeline } from "@/components/admin/order-pipeline";
 import { CustomersManager } from "@/components/admin/customers-manager";
 import { PricingManager } from "@/components/admin/pricing-manager";
 import { ReviewModerator } from "@/components/admin/review-moderator";
 import { TransactionsManager } from "@/components/admin/transactions-manager";
+import { FaqsTermsManager } from "@/components/admin/faqs-terms-manager";
+import { AdminSettingsManager } from "@/components/admin/admin-settings-manager";
 import { INITIAL_ORDERS, INITIAL_REVIEWS, INITIAL_CUSTOMERS } from "@/lib/mock-admin-data";
 import type { Order, OrderReview, OrderStatus } from "@/types";
 import type { CustomerAccount } from "@/components/admin/customer-detail-modal";
@@ -119,6 +122,14 @@ export default function AdminPage() {
       {/* Main Operations Work Area */}
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto space-y-6">
+          {activeSection === "overview" && (
+            <AdminOverview
+              orders={orders}
+              customers={customers}
+              onNavigate={(s) => setActiveSection(s as AdminSection)}
+            />
+          )}
+
           {activeSection === "orders" && (
             <OrderPipeline
               orders={orders}
@@ -155,6 +166,9 @@ export default function AdminPage() {
               onChangeStatus={handleChangeReviewStatus}
             />
           )}
+
+          {activeSection === "faqs" && <FaqsTermsManager />}
+          {activeSection === "settings" && <AdminSettingsManager />}
         </div>
       </main>
     </div>

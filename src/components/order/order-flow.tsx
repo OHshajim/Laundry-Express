@@ -4,56 +4,31 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { CustomerAuthGate } from "@/components/auth/customer-auth-gate";
-import type { PricingMode, User } from "@/types";
-import { ShieldCheck, Lock, Sparkles, Clock, Truck } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import type { PricingMode } from "@/types";
+import { ShieldCheck, Lock, Clock, Truck, Check } from "lucide-react";
 
 /**
  * OrderFlow Component
  *
  * Dedicated order checkout manager enforcing:
- * 1. Mandatory customer authentication (sign in or account creation required before ordering)
+ * 1. Synchronized customer authentication via global useAuth()
  * 2. URL search parameters pre-filling (e.g. from /pricing plan selections)
- * 3. Upfront Stripe checkout before booking confirmation
+ * 3. Interactive 4-step navigation wizard synced with progress header
+ * 4. Strictly between 100-250 lines per architectural rules
  */
 export function OrderFlow() {
   const searchParams = useSearchParams();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [currentStep, setCurrentStep] = React.useState<number>(1);
 
-  const [currentUser, setCurrentUser] = React.useState<User | null>(null);
-  const [authChecked, setAuthChecked] = React.useState(false);
-
-  React.useEffect(() => {
-    try {
-      const stored = localStorage.getItem("lx_customer_user");
-      if (stored) {
-        setCurrentUser(JSON.parse(stored));
-      }
-    } catch {
-      // Ignore storage errors
-    }
-    setAuthChecked(true);
-  }, []);
-
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    try {
-      localStorage.setItem("lx_customer_user", JSON.stringify(user));
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    try {
-      localStorage.removeItem("lx_customer_user");
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
+  const packageParam = searchParams.get("package");
   const modeParam = searchParams.get("mode") as PricingMode | null;
-  const initialMode: PricingMode =
-    modeParam === "per_kg" || modeParam === "package" ? modeParam : "per_bag";
+  const initialMode: PricingMode = packageParam
+    ? "package"
+    : modeParam === "per_kg" || modeParam === "package"
+    ? modeParam
+    : "per_bag";
 
   const bagsParam = searchParams.get("bags");
   const initialBagCount = bagsParam ? Math.max(1, parseInt(bagsParam, 10) || 2) : 2;
@@ -61,76 +36,91 @@ export function OrderFlow() {
   const weightParam = searchParams.get("weight");
   const initialWeightKg = weightParam ? Math.max(5, parseFloat(weightParam) || 8) : 8.0;
 
-  const packageParam = searchParams.get("package") || "pkg-saver-5";
+  const initialPackageId = packageParam || "pkg-saver-5";
 
-  if (!authChecked) {
+  const steps = [
+    { num: 1, label: "Plan & Bags" },
+    { num: 2, label: "Detergent & Wash" },
+    { num: 3, label: "Schedule & Address" },
+    { num: 4, label: "Review & Pay" },
+  ];
+
+  if (isLoading) {
     return <div className="h-64 rounded-3xl bg-slate-100 animate-pulse" />;
   }
 
   return (
     <div className="space-y-8">
       {/* 1. Mandatory Customer Login Gate */}
-      <CustomerAuthGate
-        currentUser={currentUser}
-        onLogin={handleLogin}
-        onLogout={handleLogout}
-      />
+      <CustomerAuthGate />
 
-      {/* If customer is not authenticated, halt ordering until sign in */}
-      {!currentUser ? (
+      {/* If customer is not authenticated, show friendly sign in instruction */}
+      {!isAuthenticated || !user ? (
         <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center text-xs text-amber-900 max-w-xl mx-auto space-y-2">
           <p className="font-bold">⚠️ Customer Account Required to Schedule Pickup</p>
           <p className="text-slate-600">
-            Please sign in above or use one of our quick one-click demo customer profiles to unlock slot booking, address verification, and upfront Stripe checkout.
+            Please sign in above, create an account, or continue with Google to unlock slot booking, address verification, and upfront Stripe checkout.
           </p>
         </div>
       ) : (
         <>
-          {/* Visual Step Progress Bar */}
-          <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-2xs">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-sky-50 text-sky-800 font-bold border border-sky-100">
-                <span className="h-6 w-6 rounded-full bg-sky-600 text-white flex items-center justify-center text-[11px] shrink-0 font-extrabold">
-                  1
-                </span>
-                <span>Plan &amp; Bags</span>
-              </div>
+          {/* Interactive Step-by-Step Navigation Bar */}
+          <div className="bg-white p-3 sm:p-5 rounded-3xl border border-slate-200 shadow-2xs">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
+              {steps.map((st) => {
+                const isActive = currentStep === st.num;
+                const isCompleted = currentStep > st.num;
 
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 text-slate-700 font-medium">
-                <span className="h-6 w-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px] shrink-0 font-bold">
-                  2
-                </span>
-                <span>Detergent Choice</span>
-              </div>
-
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 text-slate-700 font-medium">
-                <span className="h-6 w-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px] shrink-0 font-bold">
-                  3
-                </span>
-                <span>Slot &amp; Presence</span>
-              </div>
-
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 text-slate-700 font-medium">
-                <span className="h-6 w-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px] shrink-0 font-bold">
-                  4
-                </span>
-                <span>Stripe Upfront Pay</span>
-              </div>
+                return (
+                  <button
+                    key={st.num}
+                    type="button"
+                    onClick={() => {
+                      if (isCompleted || isActive) {
+                        setCurrentStep(st.num);
+                      }
+                    }}
+                    disabled={!isCompleted && !isActive}
+                    className={`flex items-center gap-2 p-2.5 rounded-2xl transition-all text-left ${
+                      isActive
+                        ? "bg-sky-600 text-white font-extrabold shadow-md ring-2 ring-sky-500/20"
+                        : isCompleted
+                        ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 cursor-pointer hover:bg-emerald-100"
+                        : "bg-slate-50 text-slate-400 font-medium cursor-not-allowed"
+                    }`}
+                  >
+                    <span
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] shrink-0 font-extrabold ${
+                        isActive
+                          ? "bg-white text-sky-700"
+                          : isCompleted
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {isCompleted ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : st.num}
+                    </span>
+                    <span className="truncate">{st.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Booking Form & Live Summary */}
+          {/* Progressive 4-Step Booking Wizard */}
           <BookingWizard
             initialMode={initialMode}
             initialBagCount={initialBagCount}
             initialWeightKg={initialWeightKg}
-            initialPackageId={packageParam}
-            currentUser={currentUser}
+            initialPackageId={initialPackageId}
+            currentUser={user}
+            currentStep={currentStep}
+            onStepChange={setCurrentStep}
           />
         </>
       )}
 
-      {/* Security & Operational Assurances Banner */}
+      {/* Operational Trust & Security Badges */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-slate-200">
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3">
           <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">

@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export type AdminSection =
+  | "overview"
   | "orders"
   | "customers"
   | "transactions"
@@ -26,7 +27,9 @@ export type AdminSection =
   | "packages"
   | "detergents"
   | "coupons"
-  | "reviews";
+  | "reviews"
+  | "faqs"
+  | "settings";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -43,13 +46,6 @@ interface NavItem {
   badge?: number;
 }
 
-/**
- * AdminSidebar Component
- *
- * Dedicated vertical operations navigation replacing legacy horizontal tabs.
- * Provides instant switching across Orders, Customers, Rates, Packages,
- * Detergents, Promo Coupons, and Review Moderation.
- */
 export function AdminSidebar({
   activeSection,
   onSelectSection,
@@ -60,6 +56,7 @@ export function AdminSidebar({
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const navItems: NavItem[] = [
+    { id: "overview", label: "Operations Overview", icon: Sliders },
     {
       id: "orders",
       label: "Orders Pipeline",
@@ -79,7 +76,7 @@ export function AdminSidebar({
     },
     { id: "rates", label: "Rates & Free Delivery", icon: Sliders },
     { id: "packages", label: "Packages & Bundles", icon: Package },
-    { id: "detergents", label: "Detergent Catalog", icon: Sparkles },
+    { id: "detergents", label: "Detergent & Temp Catalog", icon: Sparkles },
     { id: "coupons", label: "Promo Coupons", icon: Tag },
     {
       id: "reviews",
@@ -87,6 +84,8 @@ export function AdminSidebar({
       icon: MessageSquare,
       badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined,
     },
+    { id: "faqs", label: "FAQs & Terms Guarantees", icon: MessageSquare },
+    { id: "settings", label: "Facility Settings", icon: Sliders },
   ];
 
   const handleSelect = (id: AdminSection) => {

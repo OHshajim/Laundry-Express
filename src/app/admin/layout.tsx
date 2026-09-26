@@ -22,7 +22,18 @@ export interface AdminSessionMetadata {
 }
 
 export interface AdminNavigationSection {
-  id: "orders" | "rates" | "packages" | "detergents" | "coupons" | "reviews";
+  id:
+    | "overview"
+    | "orders"
+    | "customers"
+    | "transactions"
+    | "rates"
+    | "packages"
+    | "detergents"
+    | "coupons"
+    | "reviews"
+    | "faqs"
+    | "settings";
   title: string;
   badgeCount?: number;
   category: "operations" | "catalog" | "feedback";
@@ -57,13 +68,17 @@ interface AdminLayoutProps {
  * 6. Wash & fold completed -> Status moves to 'out_for_delivery'
  * 7. Doorstep drop-off -> Uploads required drop-off photo proof -> Status becomes 'completed'
  */
+import { AdminAuthGuard } from "@/components/auth/admin-auth-guard";
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-100/90 text-slate-900 flex flex-col font-sans antialiased">
-      {/* Main Administrative Workspace (Sidebar + Dynamic View Area) */}
-      <div className="flex-1 flex flex-col w-full">
-        {children}
-      </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden">
+      <AdminAuthGuard>
+        {/* Main Administrative Workspace (Sidebar + Dynamic View Area) */}
+        <div className="flex-1 flex flex-col w-full min-w-0">
+          {children}
+        </div>
+      </AdminAuthGuard>
     </div>
   );
 }

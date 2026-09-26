@@ -83,11 +83,13 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from "@/context/auth-context";
+
 /**
  * RootLayout
  *
  * Top-level application layout wrapping all page routes.
- * Enforces responsive overflow safety, typography CSS variables, and safe margins.
+ * Enforces responsive overflow safety, typography CSS variables, and global auth state.
  */
 export default function RootLayout({
   children,
@@ -100,9 +102,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-sky-500 selection:text-white">
-        {/* Main Application Shell: overflow-x-clip enables sticky navigation without horizontal overflow */}
+        {/* Main Application Shell with Global Auth Provider */}
         <div className="flex-1 flex flex-col w-full overflow-x-clip">
-          {children}
+          <AuthProvider>{children}</AuthProvider>
         </div>
       </body>
     </html>

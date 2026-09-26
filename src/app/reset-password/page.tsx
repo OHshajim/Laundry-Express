@@ -1,0 +1,116 @@
+import * as React from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Footer } from "@/components/shared/footer";
+import { ResetPasswordView } from "@/components/auth/reset-password-view";
+import { APP_CONFIG } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  title: "Set New Password — Laundry Express",
+  description:
+    "Set a new password for your Laundry Express customer or operations account.",
+  alternates: {
+    canonical: "/reset-password",
+  },
+  openGraph: {
+    title: "Reset Password — Laundry Express",
+    description: "Update your Laundry Express account password.",
+    url: `${APP_CONFIG.url}/reset-password`,
+    siteName: "Laundry Express",
+    images: [
+      {
+        url: "/brand/logo-badge.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Laundry Express Reset Password",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+};
+
+/**
+ * Skeleton fallback shown while reset password component loads
+ */
+function ResetPasswordSkeleton() {
+  return (
+    <div className="max-w-md mx-auto py-8 px-4 animate-pulse space-y-6">
+      <div className="h-16 w-16 bg-slate-200 rounded-2xl mx-auto" />
+      <div className="space-y-2 text-center">
+        <div className="h-6 bg-slate-200 rounded-lg w-48 mx-auto" />
+        <div className="h-4 bg-slate-100 rounded-lg w-64 mx-auto" />
+      </div>
+      <div className="h-11 bg-slate-100 rounded-xl border border-slate-200" />
+      <div className="h-11 bg-slate-100 rounded-xl border border-slate-200" />
+      <div className="h-11 bg-slate-200 rounded-xl" />
+    </div>
+  );
+}
+
+/**
+ * Structured SEO metadata for password reset
+ */
+function ResetPasswordStructuredData() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Laundry Express Password Reset",
+    url: `${APP_CONFIG.url}/reset-password`,
+    description: "Password reset form for Laundry Express.",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Laundry Express",
+      url: APP_CONFIG.url,
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+/**
+ * ResetPasswordPage Component
+ *
+ * Dedicated password reset completion page:
+ * - Simple layout matching /login and /register
+ * - Validates security token and allows customer/staff to save a new password
+ * - Strictly complies with the 100-250 lines architectural rule
+ */
+export default function ResetPasswordPage() {
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50/70 overflow-x-clip">
+      {/* High-level SEO structured data */}
+      <ResetPasswordStructuredData />
+
+      {/* Main Form Work Area */}
+      <main className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md mx-auto space-y-6">
+          {/* Breadcrumb Header */}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-primary transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Sign In</span>
+            </Link>
+          </div>
+
+          {/* Interactive Reset Password View in Suspense Boundary */}
+          <React.Suspense fallback={<ResetPasswordSkeleton />}>
+            <ResetPasswordView />
+          </React.Suspense>
+        </div>
+      </main>
+
+      {/* Semantic Footer */}
+      <Footer />
+    </div>
+  );
+}

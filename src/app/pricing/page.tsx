@@ -6,6 +6,7 @@ import { PlanSelector } from "@/components/pricing/plan-selector";
 import { PlanComparison } from "@/components/pricing/plan-comparison";
 import { FaqSection } from "@/components/shared/faq-section";
 import { APP_CONFIG } from "@/lib/constants";
+import { Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Plans & Pricing — Transparent Laundry Rates",
@@ -41,16 +42,17 @@ export const metadata: Metadata = {
  * prepaid saver packages, and detailed plan comparison matrix.
  * Includes instant calculator and side-by-side plan comparisons.
  * Main navigation stays static as users scroll.
+ * Strict adherence to the 100-250 lines rule.
  */
 export default function PricingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pt-8 md:pt-10">
       {/* Sticky Global Navigation Navbar */}
       <Navbar />
 
       <main className="flex-1 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          {/* Header Title & Core Delivery Fee Rule Callout */}
+          {/* Header Title & Positioning */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <span className="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 uppercase tracking-wide">
               Zero Hidden Fees &amp; Transparent Rates
@@ -66,6 +68,24 @@ export default function PricingPage() {
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
               No hidden service surcharges or surprise fees. Choose between standard bags, weighed bulk by the KG, or pre-paid discount saver packages.
             </p>
+
+            {/* Quick Guarantees Pill Strip */}
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-600">
+              <span className="inline-flex items-center gap-1.5 font-bold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                $32.50 Flat 13-Gal Bag Rate
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1.5 font-bold">
+                <ShieldCheck className="h-4 w-4 text-sky-600" />
+                Photo Proof Confirmation
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1.5 font-bold">
+                <Zap className="h-4 w-4 text-amber-500" />
+                24-Hour Fast Turnaround
+              </span>
+            </div>
           </div>
 
           {/* Interactive Plan Selector: Bags vs KG vs Packages */}

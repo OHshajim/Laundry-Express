@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { MapPin, Clock, ShieldCheck } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Phone, Sparkles } from "lucide-react";
 import { LocationCard, OFFICIAL_LOCATION } from "@/components/contact/location-card";
 import { GoggleMap } from "@/components/shared/google-map";
 import { ContactForm } from "@/components/contact/contact-form";
+import { APP_CONFIG } from "@/lib/constants";
 
 // Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
 
@@ -87,6 +88,11 @@ export function ContactView() {
           </Link>
           . Our Lake in the Hills dispatch team is at your service 7 days a week from 8:00 AM to 6:00 PM.
         </p>
+
+        <div className="pt-2 flex items-center justify-center gap-2 text-[11px] text-slate-400 font-medium">
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <span>Local family-operated laundry delivery service serving McHenry County</span>
+        </div>
       </div>
     </div>
   );

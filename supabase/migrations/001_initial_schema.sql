@@ -9,9 +9,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. USERS TABLE
 CREATE TABLE IF NOT EXISTS public.users (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
+    avatar_url TEXT,
     phone TEXT,
     address TEXT,
     role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),

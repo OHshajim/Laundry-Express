@@ -35,7 +35,7 @@ export default function CustomerOrdersPage() {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-200 ">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-pink-100">
         <div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">

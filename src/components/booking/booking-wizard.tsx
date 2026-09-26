@@ -1,19 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
-import type { PricingMode } from "@/types";
+import { ArrowRight, ArrowLeft } from "lucide-react";
+import type { PricingMode, User } from "@/types";
 import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
 import { StepPricingMode } from "./step-pricing-mode";
 import { StepBagCounter } from "./step-bag-counter";
 import { StepSlotPicker } from "./step-slot-picker";
 import { StepDetergent } from "./step-detergent";
-import { StepOutOfHome } from "./step-out-of-home";
+import { StepOutOfHome, type AddressDetails } from "./step-out-of-home";
+import { StepReview } from "./step-review";
 import { OrderSummaryCard } from "./order-summary-card";
-import { Dialog } from "@/components/ui/dialog";
+import { OrderInvoiceModal, type InvoiceData } from "./order-invoice-modal";
 import { Button } from "@/components/ui/button";
-
-import type { User } from "@/types";
 
 export interface BookingWizardProps {
   initialMode?: PricingMode;
@@ -21,35 +20,45 @@ export interface BookingWizardProps {
   initialWeightKg?: number;
   initialPackageId?: string;
   currentUser?: User | null;
+  currentStep?: number;
+  onStepChange?: (step: number) => void;
 }
 
 export function BookingWizard({
   initialMode = "per_bag",
   initialBagCount = 2,
   initialWeightKg = 8.0,
-  initialPackageId = "pkg-saver-5",
   currentUser = null,
+  currentStep: externalStep,
+  onStepChange,
 }: BookingWizardProps) {
+  const [internalStep, setInternalStep] = React.useState<number>(1);
+  const activeStep = externalStep ?? internalStep;
+  const setStep = (s: number) => {
+    setInternalStep(s);
+    onStepChange?.(s);
+  };
+
   const [pricingMode, setPricingMode] = React.useState<PricingMode>(initialMode);
   const [bagCount, setBagCount] = React.useState<number>(initialBagCount);
   const [weightKg, setWeightKg] = React.useState<number>(initialWeightKg);
-  const [selectedPackageId, setSelectedPackageId] = React.useState<string>(initialPackageId);
   const [selectedDetergentId, setSelectedDetergentId] = React.useState<string>("det-tide-pods");
-  const [selectedDate, setSelectedDate] = React.useState<string>(() => {
-    return new Date().toISOString().split("T")[0];
-  });
+  const [selectedTemp, setSelectedTemp] = React.useState<"cold" | "warm" | "hot">("cold");
+  const [selectedDate, setSelectedDate] = React.useState<string>(() => new Date().toISOString().split("T")[0]);
+  const [dropoffDate, setDropoffDate] = React.useState<string>("");
   const [selectedSlot, setSelectedSlot] = React.useState<"8am-12pm" | "1pm-6pm">("8am-12pm");
   const [isOutOfHome, setIsOutOfHome] = React.useState<boolean>(false);
   const [bagConfirmed, setBagConfirmed] = React.useState<boolean>(false);
   const [address, setAddress] = React.useState<string>("");
+  const [addressDetails, setAddressDetails] = React.useState<AddressDetails>();
   const [notes, setNotes] = React.useState<string>("");
   const [promoCode, setPromoCode] = React.useState<string>("");
   const [appliedPromo, setAppliedPromo] = React.useState<string>("");
   const [promoError, setPromoError] = React.useState<string>("");
+  const [paymentMethod, setPaymentMethod] = React.useState<"card" | "apple_pay" | "cash_on_delivery">("card");
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
-  const [successOrder, setSuccessOrder] = React.useState<{ orderNumber: string; total: number } | null>(null);
+  const [invoice, setInvoice] = React.useState<InvoiceData | null>(null);
 
-  // Live price calculation (server-side logic mirrored for instant client feedback)
   const priceResult = React.useMemo(() => {
     return calculateOrderPrice({
       pricing_mode: pricingMode,
@@ -62,10 +71,6 @@ export function BookingWizard({
 
   const handleApplyPromo = () => {
     const code = promoCode.trim().toUpperCase();
-    if (!code) {
-      setPromoError("Please enter a code");
-      return;
-    }
     if (code === "HEROFRESH" || code === "FREESHIP") {
       setAppliedPromo(code);
       setPromoError("");
@@ -74,122 +79,151 @@ export function BookingWizard({
     }
   };
 
-  const isFormValid = address.trim().length > 5 && (!isOutOfHome || bagConfirmed);
+  const isStep3Valid = address.trim().length >= 6 && (!isOutOfHome || bagConfirmed);
 
   const handleCheckout = () => {
-    if (!isFormValid) return;
+    if (!isStep3Valid) return;
     setIsProcessing(true);
-
-    // Simulate server action creating order and mock Stripe payment
     setTimeout(() => {
       setIsProcessing(false);
       const randomSeq = Math.floor(1000 + Math.random() * 9000);
-      setSuccessOrder({
-        orderNumber: `LX-${new Date().getFullYear()}-${randomSeq}`,
-        total: priceResult.total_amount,
+      const delivery = dropoffDate || new Date(Date.now() + 24 * 3600 * 1000).toISOString().split("T")[0];
+      setInvoice({
+        orderId: `LX-${new Date().getFullYear()}-${randomSeq}`,
+        orderDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        pickupDate: selectedDate,
+        pickupSlot: selectedSlot === "8am-12pm" ? "8am – 12pm" : "1pm – 6pm",
+        deliveryDate: delivery,
+        paymentMethod,
+        totalAmount: priceResult.total_amount,
+        customerName: currentUser?.full_name || "Customer",
+        customerEmail: currentUser?.email || "customer@laundryexpress.com",
+        address,
+        orderDetails: {
+          planName: pricingMode === "per_bag" ? "By The Bag (13 Gal)" : "By The KG",
+          quantity: pricingMode === "per_bag" ? `${bagCount} Bag(s)` : `${weightKg} KG`,
+          detergent: selectedDetergentId,
+          temperature: selectedTemp,
+          specialRequest: isOutOfHome ? "Away (Contactless Doorstep)" : "Home (Ring Bell)",
+        },
       });
-    }, 1200);
+    }, 1000);
   };
 
   return (
-    <div id="book-now" className="scroll-mt-24 py-8">
+    <div id="book-now" className="scroll-mt-24 py-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Form Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
-          <StepPricingMode
-            selectedMode={pricingMode}
-            onSelectMode={(mode) => setPricingMode(mode)}
-          />
+          {activeStep === 1 && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} />
+              <StepBagCounter
+                pricingMode={pricingMode}
+                bagCount={bagCount}
+                onBagCountChange={setBagCount}
+                weightKg={weightKg}
+                onWeightKgChange={setWeightKg}
+              />
+              <div className="flex justify-end pt-2">
+                <Button variant="hero" size="lg" onClick={() => setStep(2)}>
+                  <span>Continue to Detergent Choice</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
 
-          <StepBagCounter
-            pricingMode={pricingMode}
-            bagCount={bagCount}
-            onBagCountChange={setBagCount}
-            weightKg={weightKg}
-            onWeightKgChange={setWeightKg}
-          />
+          {activeStep === 2 && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <StepDetergent
+                selectedDetergentId={selectedDetergentId}
+                onSelectDetergent={setSelectedDetergentId}
+                selectedTemperature={selectedTemp}
+                onSelectTemperature={setSelectedTemp}
+              />
+              <div className="flex items-center justify-between pt-2">
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <span>Back to Bags</span>
+                </Button>
+                <Button variant="hero" size="lg" onClick={() => setStep(3)}>
+                  <span>Continue to Schedule &amp; Address</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
 
-          <StepSlotPicker
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            selectedSlot={selectedSlot}
-            onSelectSlot={setSelectedSlot}
-          />
+          {activeStep === 3 && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <StepSlotPicker
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                selectedSlot={selectedSlot}
+                onSelectSlot={setSelectedSlot}
+                dropoffDate={dropoffDate}
+                onSelectDropoffDate={setDropoffDate}
+              />
+              <StepOutOfHome
+                isOutOfHome={isOutOfHome}
+                onIsOutOfHomeChange={setIsOutOfHome}
+                bagConfirmed={bagConfirmed}
+                onBagConfirmedChange={setBagConfirmed}
+                address={address}
+                onAddressChange={setAddress}
+                addressDetails={addressDetails}
+                onAddressDetailsChange={setAddressDetails}
+                notes={notes}
+                onNotesChange={setNotes}
+              />
+              <div className="flex items-center justify-between pt-2">
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <span>Back to Detergent</span>
+                </Button>
+                <Button variant="hero" size="lg" disabled={!isStep3Valid} onClick={() => setStep(4)}>
+                  <span>Review &amp; Checkout</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
 
-          <StepDetergent
-            selectedDetergentId={selectedDetergentId}
-            onSelectDetergent={setSelectedDetergentId}
-          />
-
-          <StepOutOfHome
-            isOutOfHome={isOutOfHome}
-            onIsOutOfHomeChange={setIsOutOfHome}
-            bagConfirmed={bagConfirmed}
-            onBagConfirmedChange={setBagConfirmed}
-            address={address}
-            onAddressChange={setAddress}
-            notes={notes}
-            onNotesChange={setNotes}
-          />
+          {activeStep === 4 && (
+            <StepReview
+              pricingMode={pricingMode}
+              bagCount={bagCount}
+              weightKg={weightKg}
+              selectedDate={selectedDate}
+              selectedSlot={selectedSlot}
+              address={address}
+              isOutOfHome={isOutOfHome}
+              onEditStep={setStep}
+              onBack={() => setStep(3)}
+            />
+          )}
         </div>
 
-        {/* Right Summary Column (1 Col) */}
         <div className="lg:col-span-1">
           <OrderSummaryCard
             priceResult={priceResult}
+            pricingMode={pricingMode}
+            bagCount={bagCount}
+            weightKg={weightKg}
+            selectedPaymentMethod={paymentMethod}
+            onSelectPaymentMethod={setPaymentMethod}
             promoCode={promoCode}
             onPromoCodeChange={setPromoCode}
             onApplyPromo={handleApplyPromo}
             promoError={promoError}
             isProcessing={isProcessing}
-            onProceedToCheckout={handleCheckout}
-            disabled={!isFormValid}
+            onProceedToCheckout={activeStep === 4 ? handleCheckout : () => setStep(Math.min(4, activeStep + 1))}
+            disabled={activeStep === 3 && !isStep3Valid}
           />
-          {!isFormValid && (
-            <p className="text-[11px] text-center text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200 mt-3">
-              ⚠️ Please enter your address {isOutOfHome && "and confirm laundry bag placement"} to proceed.
-            </p>
-          )}
         </div>
       </div>
 
-      {/* Success Dialog Modal */}
-      {successOrder && (
-        <Dialog
-          open={!!successOrder}
-          onOpenChange={() => setSuccessOrder(null)}
-          title="💳 Upfront Payment Processed &amp; Pickup Confirmed!"
-          description="Your Stripe payment succeeded and your pickup window is secured."
-        >
-          <div className="text-center space-y-4 py-2">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-10 w-10" />
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-xs text-slate-500 font-semibold uppercase">Assigned Order Code</span>
-              <p className="text-2xl font-black text-slate-900">{successOrder.orderNumber}</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-left space-y-1.5 text-slate-700">
-              <p><strong>Customer:</strong> {currentUser?.full_name || "Customer"} ({currentUser?.email})</p>
-              <p><strong>Payment Status:</strong> Paid upfront via Stripe (${successOrder.total.toFixed(2)})</p>
-              <p><strong>Scheduled Slot:</strong> {selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM"} on {selectedDate}</p>
-              <p><strong>Pickup Address:</strong> {address}</p>
-              <p><strong>Presence Mode:</strong> {isOutOfHome ? "Away (Contactless Doorstep Pickup)" : "Home (Doorbell rings)"}</p>
-              <p><strong>Photo Proof Guarantee:</strong> Our driver will upload a photo upon pickup and drop-off!</p>
-            </div>
-
-            <Button
-              variant="hero"
-              className="w-full"
-              onClick={() => setSuccessOrder(null)}
-            >
-              Back to Home
-            </Button>
-          </div>
-        </Dialog>
-      )}
+      <OrderInvoiceModal invoice={invoice} onClose={() => { setInvoice(null); setStep(1); }} />
     </div>
   );
 }

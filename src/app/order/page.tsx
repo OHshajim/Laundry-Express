@@ -50,7 +50,7 @@ function OrderLoadingSkeleton() {
 
 export default function OrderPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pt-8 md:pt-10">
       {/* Sticky Global Navigation Navbar */}
       <Navbar />
 

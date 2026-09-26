@@ -4,6 +4,7 @@ import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { ContactView } from "@/components/contact/contact-view";
 import { APP_CONFIG } from "@/lib/constants";
+import { Phone, Mail, Clock, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact Us & Operations Hub — Laundry Express",
@@ -40,10 +41,11 @@ export const metadata: Metadata = {
  *       support email, and daily operating windows (8am-6pm).
  * Right: High-resolution interactive Google Map centered on Lake in the Hills, IL.
  * Static navigation header ensures natural scrolling experience.
+ * Strict adherence to the 100-250 lines rule.
  */
 export default function ContactPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-clip pb-8 md:py-10">
+    <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-clip pt-8 md:pt-10">
       {/* Sticky Global Navigation Navbar */}
       <Navbar />
 
@@ -66,6 +68,22 @@ export default function ContactPage() {
               Ready for clean clothes delivered fresh to your door? View our central facility, operating
               hours, or connect with our customer care dispatchers directly.
             </p>
+
+            {/* Quick Contact Micro-Badges */}
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
+                <Phone className="h-3.5 w-3.5 text-primary" />
+                <span>815-575-9536</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                <span>8:00 AM – 6:00 PM Daily</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <span>30-Mile Service Territory</span>
+              </span>
+            </div>
           </div>
 
           {/* Interactive 2-Column Contact Showcase (Left Details, Right Google Map) */}
