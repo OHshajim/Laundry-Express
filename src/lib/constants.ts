@@ -181,8 +181,6 @@ export const GUARANTEE_POLICIES = [
 export const SITE_NAVIGATION_LINKS = [
   { href: "/", label: "Home" },
   { href: "/pricing", label: "Plans & Bags" },
-  { href: "/dashboard", label: "Customer Dashboard" },
-  { href: "/contact", label: "Contact Us" },
   { href: "/order", label: "Book Pickup" },
-  { href: "/admin", label: "Admin Operations" },
+  { href: "/dashboard", label: "Dashboard" },
 ] as const;

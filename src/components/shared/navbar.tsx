@@ -21,7 +21,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
   const pathname = usePathname();
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
 
   React.useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -42,18 +42,17 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? "bg-primary shadow-lg shadow-pink-900/15 border-b border-pink-700/30 text-white backdrop-blur-md"
-          : "bg-transparent text-slate-900 border-b border-transparent"
-      }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled
+        ? "bg-primary shadow-lg shadow-pink-900/15 border-b border-pink-700/30 text-white backdrop-blur-md"
+        : "bg-transparent text-slate-900 border-b border-transparent"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Brand Logo & Name */}
           <Link href="/" className="flex items-center gap-1 group">
             <div className="relative h-16 w-16 transition-transform group-hover:scale-95 duration-200 shrink-0">
-              <Image src="/hero.jpg" alt="Laundry Express Mascot" width={100} height={100} priority />
+              <Image src="/brand/hero.jpg" alt="Laundry Express Mascot" width={100} height={100} priority />
             </div>
             <div>
               <span className={`font-black text-xl tracking-tight ${scrolled ? "text-white" : "text-slate-900"}`}>
@@ -70,15 +69,14 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`transition-all duration-200 ${
-                    scrolled
-                      ? isActive
-                        ? "text-white font-black drop-shadow-[0_0_12px_rgba(255,255,255,0.9)]"
-                        : "text-pink-100 hover:text-white"
-                      : isActive
+                  className={`transition-all duration-200 ${scrolled
+                    ? isActive
+                      ? "text-white font-black drop-shadow-[0_0_12px_rgba(255,255,255,0.9)]"
+                      : "text-pink-100 hover:text-white"
+                    : isActive
                       ? "text-primary font-black drop-shadow-[0_0_10px_var(--primary-ghost)]"
                       : "text-slate-700 hover:text-primary"
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -93,9 +91,8 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`text-xs font-bold flex items-center gap-1.5 ${
-                    scrolled ? "text-white hover:bg-white/15" : "text-slate-700 hover:text-primary"
-                  }`}
+                  className={`text-xs font-bold flex items-center gap-1.5 ${scrolled ? "text-white hover:bg-white/15" : "text-slate-700 hover:text-primary"
+                    }`}
                 >
                   <LogIn className="h-3.5 w-3.5" />
                   <span>Sign In</span>
@@ -104,13 +101,12 @@ export function Navbar() {
             ) : (
               <div className="flex items-center gap-2.5">
                 {/* User Profile Avatar Pill */}
-                <Link href={isAdmin ? "/admin" : "/dashboard"}>
+                <Link href="/dashboard">
                   <div
-                    className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                      scrolled
-                        ? "bg-white/20 text-white hover:bg-white/30"
-                        : "bg-slate-100 text-slate-800 hover:bg-slate-200/80"
-                    }`}
+                    className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-bold transition-colors ${scrolled
+                      ? "bg-white/20 text-white hover:bg-white/30"
+                      : "bg-slate-100 text-slate-800 hover:bg-slate-200/80"
+                      }`}
                   >
                     {userAvatarUrl ? (
                       <div className="relative h-6 w-6 rounded-full overflow-hidden border border-white/40 shrink-0">
@@ -122,39 +118,8 @@ export function Navbar() {
                       </div>
                     )}
                     <span className="truncate max-w-[100px]">{userDisplayName}</span>
-                    {isAdmin && (
-                      <span className="px-1.5 py-0.2 bg-black text-white text-[9px] rounded font-black uppercase">
-                        Admin
-                      </span>
-                    )}
                   </div>
                 </Link>
-
-                {/* Dashboard / Admin Direct Portal Link */}
-                <Link href={isAdmin ? "/admin" : "/dashboard"}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`text-xs font-semibold px-2 ${
-                      scrolled ? "text-white hover:bg-white/15" : "text-slate-600 hover:text-primary"
-                    }`}
-                    title={isAdmin ? "Operations Admin" : "Customer Dashboard"}
-                  >
-                    {isAdmin ? <Shield className="h-3.5 w-3.5" /> : <LayoutDashboard className="h-3.5 w-3.5" />}
-                  </Button>
-                </Link>
-
-                {/* Sign Out Button */}
-                <button
-                  type="button"
-                  onClick={logout}
-                  title="Sign Out"
-                  className={`p-1.5 rounded-full cursor-pointer transition-colors ${
-                    scrolled ? "text-pink-200 hover:text-white" : "text-slate-400 hover:text-rose-600"
-                  }`}
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                </button>
               </div>
             )}
 
@@ -208,24 +173,14 @@ export function Navbar() {
             ))}
 
             {isAuthenticated ? (
-              <>
-                <Link
-                  href={isAdmin ? "/admin" : "/dashboard"}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-1.5 flex items-center gap-2 font-bold"
-                >
-                  {isAdmin ? <Shield className="h-4 w-4" /> : <LayoutDashboard className="h-4 w-4" />}
-                  <span>{isAdmin ? "Admin Operations Portal" : "My Orders Dashboard"}</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => { logout(); setMobileMenuOpen(false); }}
-                  className="py-1.5 text-left text-xs font-bold text-rose-500 flex items-center gap-1.5"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>Sign Out ({userDisplayName})</span>
-                </button>
-              </>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 flex items-center gap-2 font-bold"
+              >
+                {isAdmin ? <Shield className="h-4 w-4" /> : <LayoutDashboard className="h-4 w-4" />}
+                <span>{isAdmin ? "Admin Operations Portal" : "My Orders Dashboard"}</span>
+              </Link>
             ) : (
               <Link
                 href="/login"

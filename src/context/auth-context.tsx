@@ -17,7 +17,7 @@ export interface AuthContextType {
   isCustomer: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (callbackUrl?: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterPayload) => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   resetPassword: (token: string, newPass: string) => Promise<{ success: boolean; message?: string; error?: string }>;
@@ -105,9 +105,11 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+  const loginWithGoogle = async (
+    callbackUrl: string = "/dashboard"
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
-      await signIn("google", { callbackUrl: "/dashboard" });
+      await signIn("google", { callbackUrl });
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err?.message || "Google sign-in failed." };

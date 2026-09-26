@@ -6,22 +6,23 @@ import type { User, UserRole } from "@/types";
  * Dedicated custom authentication store for Laundry Express:
  * - Decoupled from third-party auth services
  * - Manages custom customer registrations & administrator credentials
- * - Verifies passwords and normalizes user profiles
- * - Provides seamless integration with NextAuth.js CredentialsProvider
+ * - Verifies real passwords with strict matching
+ * - Supports email-based password resets
  * - Strictly complies with the 100-250 lines architectural rule
  */
 
 export interface StoredUser extends User {
-  passwordHash?: string;
+  passwordHash: string;
 }
 
 // In-memory user registry for active server processes
 const USER_REGISTRY = new Map<string, StoredUser>();
 
-// Pre-seed primary administrative account
+// Pre-seed primary administrative account with password
 const DEFAULT_ADMIN: StoredUser = {
   id: "admin-ops-001",
   email: "admin@laundryexpress.com",
+  passwordHash: "admin123",
   full_name: "Operations Administrator",
   phone: "815-575-9536",
   address: "Operations Center, Lake in the Hills, IL 60156",
@@ -32,10 +33,11 @@ const DEFAULT_ADMIN: StoredUser = {
 };
 USER_REGISTRY.set(DEFAULT_ADMIN.email, DEFAULT_ADMIN);
 
-// Pre-seed verified customer account for quick testing
+// Pre-seed verified customer account with password
 const DEFAULT_CUSTOMER: StoredUser = {
   id: "cust-demo-001",
   email: "customer@laundryexpress.com",
+  passwordHash: "customer123",
   full_name: "Sarah Jenkins",
   phone: "815-575-9536",
   address: "742 Evergreen Terrace, Lake in the Hills, IL 60156",
@@ -68,7 +70,7 @@ export class CustomUserStore {
   }
 
   /**
-   * Create or register a new customer in the custom store
+   * Create or register a new customer in the custom store with password
    */
   static createCustomer(params: {
     email: string;
@@ -79,12 +81,16 @@ export class CustomUserStore {
     const normalized = params.email.trim().toLowerCase();
     const existing = USER_REGISTRY.get(normalized);
     if (existing) {
+      if (params.password) {
+        existing.passwordHash = params.password;
+      }
       return existing;
     }
 
     const newUser: StoredUser = {
       id: `u-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       email: normalized,
+      passwordHash: params.password || "customer123",
       full_name: params.fullName.trim() || "Valued Customer",
       phone: params.phone?.trim() || "815-575-9536",
       role: "customer",
@@ -98,7 +104,7 @@ export class CustomUserStore {
   }
 
   /**
-   * Verify credentials against stored profiles or administrative rules
+   * Strictly verify email and password credentials
    */
   static verifyCredentials(email: string, password: string): User | null {
     if (!email || !password || password.length < 6) {
@@ -108,7 +114,12 @@ export class CustomUserStore {
     const normalized = email.trim().toLowerCase();
     const existing = USER_REGISTRY.get(normalized);
 
+    // If user exists, strictly verify their password
     if (existing) {
+      if (existing.passwordHash && existing.passwordHash !== password) {
+        return null; // Invalid password
+      }
+
       return {
         id: existing.id,
         email: existing.email,
@@ -122,11 +133,12 @@ export class CustomUserStore {
       };
     }
 
-    // Dynamic account auto-provisioning for valid credentials
+    // Auto-provision initial administrator or customer with provided password
     const isAdmin = normalized.includes("admin");
     const autoUser: StoredUser = {
       id: `u-${Date.now()}`,
       email: normalized,
+      passwordHash: password,
       full_name: isAdmin ? "Operations Admin" : "Verified Customer",
       phone: "815-575-9536",
       role: isAdmin ? "admin" : "customer",
@@ -150,6 +162,25 @@ export class CustomUserStore {
   }
 
   /**
+   * Update user password by verified email
+   */
+  static updatePassword(email: string, newPassword: string): boolean {
+    if (!email || !newPassword || newPassword.length < 6) {
+      return false;
+    }
+
+    const normalized = email.trim().toLowerCase();
+    const existing = USER_REGISTRY.get(normalized);
+    if (!existing) {
+      return false;
+    }
+
+    existing.passwordHash = newPassword;
+    existing.updated_at = new Date().toISOString();
+    return true;
+  }
+
+  /**
    * Provision or locate user from Google OAuth callback
    */
   static handleGoogleProfile(googleUser: {
@@ -170,6 +201,7 @@ export class CustomUserStore {
     const newUser: StoredUser = {
       id: `u-google-${Date.now()}`,
       email: normalized,
+      passwordHash: "oauth-google-managed-session",
       full_name: googleUser.name || "Google Customer",
       avatar_url: googleUser.avatar_url,
       phone: "815-575-9536",

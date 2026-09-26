@@ -30,8 +30,8 @@ const NAV_ITEMS: NavItem[] = [
     isPrimary: true,
   },
   {
-    name: "Admin",
-    href: "/admin",
+    name: "Dashboard",
+    href: "/dashboard",
     icon: ShieldCheck,
   },
 ];

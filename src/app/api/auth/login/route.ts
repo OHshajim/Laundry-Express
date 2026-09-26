@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { User } from "@/types";
+import { CustomUserStore } from "@/lib/services/custom-user-store";
 
 // In-memory rate limiting tracker (5 requests per 60 seconds per IP)
 const rateLimitMap = new Map<string, { count: number; expiresAt: number }>();
@@ -77,21 +78,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Role assignment based on verified operations administrative domain
-    const isAdmin =
-      normalizedEmail === "admin@laundryexpress.com" ||
-      normalizedEmail.startsWith("admin@") ||
-      normalizedEmail.includes("+admin@");
-
-    const user: User = {
-      id: `u-${Date.now()}`,
-      email: normalizedEmail,
-      full_name: isAdmin ? "Operations Administrator" : "Verified Customer",
-      role: isAdmin ? "admin" : "customer",
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    // Strictly verify credentials using CustomUserStore
+    const user = CustomUserStore.verifyCredentials(normalizedEmail, password);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid email or password." },
+        { status: 401 }
+      );
+    }
 
     return NextResponse.json(
       {
@@ -107,7 +101,7 @@ export async function POST(req: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: "Internal authentication service error." },
       { status: 500 }

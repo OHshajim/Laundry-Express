@@ -129,10 +129,10 @@ export function AdminOverview({ orders, customers, onNavigate }: AdminOverviewPr
           <div className="space-y-2 text-xs">
             <button
               type="button"
-              onClick={() => onNavigate("rates")}
+              onClick={() => onNavigate("settings")}
               className="w-full p-3 rounded-xl border border-slate-200 hover:border-primary hover:bg-pink-50/40 text-left transition-all cursor-pointer block font-bold text-slate-800"
             >
-              Adjust Base Rates ($/Bag &amp; $/KG) →
+              Adjust Rates &amp; Facility Settings →
             </button>
             <button
               type="button"

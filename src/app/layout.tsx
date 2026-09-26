@@ -54,11 +54,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/mascot-bubble-hero.jpg", type: "image/jpeg" },
+      { url: "/brand/mascot-bubble-hero.jpg", sizes: "any" },
     ],
-    shortcut: "/icon.svg",
-    apple: "/brand/logo-badge.jpg",
+    shortcut: "/brand/mascot-bubble-hero.jpg",
+    apple: "/brand/mascot-bubble-hero.jpg",
   },
   openGraph: {
     type: "website",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     description: "$32.50 per 13-gallon bag (about 2 loads). 1 Bag = $10.00 fee; 2+ Bags = FREE delivery! 100% photo proof guarantee.",
     images: [
       {
-        url: "/brand/logo-badge.jpg",
+        url: "/brand/mascot-bubble-hero.jpg",
         width: 1200,
         height: 630,
         alt: "Laundry Express Superhero Laundry",
@@ -79,18 +79,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
     description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Photo proof guarantee.",
-    images: ["/brand/logo-badge.jpg"],
+    images: ["/brand/mascot-bubble-hero.jpg"],
   },
 };
 
 import { AuthProvider } from "@/context/auth-context";
 
-/**
- * RootLayout
- *
- * Top-level application layout wrapping all page routes.
- * Enforces responsive overflow safety, typography CSS variables, and global auth state.
- */
 export default function RootLayout({
   children,
 }: {

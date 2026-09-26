@@ -20,7 +20,7 @@ import { useAuth } from "@/context/auth-context";
 export function RegisterView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect");
+  const redirectPath = searchParams.get("callbackUrl") || searchParams.get("redirect");
 
   const { register, loginWithGoogle, isAuthenticated, user, isAdmin } = useAuth();
 
@@ -36,7 +36,7 @@ export function RegisterView() {
 
   React.useEffect(() => {
     if (isAuthenticated && user) {
-      router.push(redirectPath || (isAdmin ? "/admin" : "/dashboard"));
+      router.push(redirectPath || "/dashboard");
     }
   }, [isAuthenticated, user, isAdmin, redirectPath, router]);
 
@@ -79,7 +79,8 @@ export function RegisterView() {
     setErrorMsg("");
     setIsGoogleLoading(true);
     try {
-      const res = await loginWithGoogle();
+      const destination = redirectPath || "/dashboard";
+      const res = await loginWithGoogle(destination);
       if (!res.success) setErrorMsg(res.error || "Google authentication was not completed.");
     } catch {
       setErrorMsg("Unable to connect to Google service.");
@@ -219,7 +220,10 @@ export function RegisterView() {
       {/* Switch to Login */}
       <div className="pt-2 text-center border-t border-slate-100 text-xs text-slate-600">
         Already have an account?{" "}
-        <Link href="/login" className="font-bold text-primary hover:underline">
+        <Link
+          href={redirectPath ? `/login?callbackUrl=${encodeURIComponent(redirectPath)}` : "/login"}
+          className="font-bold text-primary hover:underline"
+        >
           Sign in
         </Link>
       </div>

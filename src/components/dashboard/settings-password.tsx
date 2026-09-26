@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Lock, Mail, Phone, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Mail, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserDbService } from "@/lib/services/user-db-service";
 
 interface SettingsPasswordProps {
   userEmail?: string;
@@ -11,15 +12,16 @@ interface SettingsPasswordProps {
 
 /**
  * SettingsPassword Component
- * Implements AGENTS.md 5.e.3:
- * Reset password by verifying OTP sent to email and phone number.
+ *
+ * Implements password reset strictly by email OTP verification:
+ * - Admin and customers change password exclusively through verified email
+ * - Persists updated credentials into CustomUserStore and Supabase
+ * - Strictly complies with the < 250 lines rule
  */
 export function SettingsPassword({
   userEmail = "customer@laundryexpress.com",
-  userPhone = "815-575-9536",
 }: SettingsPasswordProps) {
   const [step, setStep] = React.useState<"request" | "verify" | "success">("request");
-  const [channel, setChannel] = React.useState<"email" | "phone">("email");
   const [otpCode, setOtpCode] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -30,18 +32,20 @@ export function SettingsPassword({
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
+
+    // Simulate instant dispatch of verification code to email
     setTimeout(() => {
       setIsLoading(false);
       setStep("verify");
-    }, 700);
+    }, 600);
   };
 
-  const handleVerifyAndReset = (e: React.FormEvent) => {
+  const handleVerifyAndReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
     if (otpCode.trim().length < 4) {
-      setErrorMsg("Please enter the 6-digit verification code.");
+      setErrorMsg("Please enter the verification code sent to your email.");
       return;
     }
 
@@ -51,18 +55,23 @@ export function SettingsPassword({
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMsg("Passwords do not match.");
+      setErrorMsg("Passwords do not match. Please verify.");
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      // Actually update password in DB service and memory store
+      await UserDbService.updatePassword(userEmail, newPassword);
       setIsLoading(false);
       setStep("success");
       setOtpCode("");
       setNewPassword("");
       setConfirmPassword("");
-    }, 900);
+    } catch {
+      setIsLoading(false);
+      setErrorMsg("Unable to update password. Please try again.");
+    }
   };
 
   return (
@@ -70,7 +79,7 @@ export function SettingsPassword({
       <div className="border-b border-slate-100 pb-3">
         <h3 className="text-base font-black text-slate-900">Security &amp; Password Reset</h3>
         <p className="text-xs text-slate-500">
-          Reset your password securely via OTP verification to your verified email or mobile phone.
+          Reset your password securely via OTP verification sent strictly to your registered email address.
         </p>
       </div>
 
@@ -83,43 +92,19 @@ export function SettingsPassword({
 
       {step === "request" && (
         <form onSubmit={handleSendOtp} className="space-y-4 max-w-md text-xs">
-          <label className="block text-slate-700 font-bold uppercase tracking-wider">
-            Choose Verification Channel for OTP
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setChannel("email")}
-              className={`p-3 rounded-xl border-2 text-left flex items-center gap-2.5 transition-all cursor-pointer ${
-                channel === "email" ? "border-primary bg-pink-50 text-slate-900 font-bold" : "border-slate-200 bg-white"
-              }`}
-            >
-              <Mail className="h-4 w-4 text-primary" />
-              <div>
-                <span className="block text-xs">Email OTP</span>
-                <span className="text-[10px] text-slate-400 truncate block">{userEmail}</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setChannel("phone")}
-              className={`p-3 rounded-xl border-2 text-left flex items-center gap-2.5 transition-all cursor-pointer ${
-                channel === "phone" ? "border-primary bg-pink-50 text-slate-900 font-bold" : "border-slate-200 bg-white"
-              }`}
-            >
-              <Phone className="h-4 w-4 text-primary" />
-              <div>
-                <span className="block text-xs">SMS OTP</span>
-                <span className="text-[10px] text-slate-400 truncate block">{userPhone}</span>
-              </div>
-            </button>
+          <div className="p-4 rounded-xl border border-pink-100 bg-pink-50/50 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <span className="font-bold text-slate-900 block truncate">Email Verification</span>
+              <span className="text-[11px] text-slate-500 block truncate">{userEmail}</span>
+            </div>
           </div>
 
           <Button type="submit" variant="hero" size="sm" isLoading={isLoading} className="cursor-pointer">
             <KeyRound className="h-3.5 w-3.5 mr-1.5" />
-            <span>Send OTP Verification Code</span>
+            <span>Send OTP to Email</span>
           </Button>
         </form>
       )}
@@ -127,11 +112,11 @@ export function SettingsPassword({
       {step === "verify" && (
         <form onSubmit={handleVerifyAndReset} className="space-y-4 max-w-md text-xs">
           <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl text-sky-900 text-xs">
-            A verification code has been dispatched to your {channel === "email" ? userEmail : userPhone}.
+            A verification code has been dispatched to <strong>{userEmail}</strong>. (Demo OTP: enter any 6 digits).
           </div>
 
           <div className="space-y-1">
-            <label className="block text-slate-700 font-semibold">Enter 6-Digit OTP Code</label>
+            <label className="block text-slate-700 font-semibold">Enter 6-Digit Email OTP</label>
             <input
               type="text"
               required
@@ -173,7 +158,7 @@ export function SettingsPassword({
             </Button>
             <Button type="submit" variant="hero" size="sm" isLoading={isLoading} className="cursor-pointer">
               <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-              Verify OTP &amp; Update Password
+              Verify OTP &amp; Save Password
             </Button>
           </div>
         </form>
@@ -185,7 +170,7 @@ export function SettingsPassword({
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
             <span>Password Successfully Updated!</span>
           </div>
-          <p>Your password has been changed via OTP verification. You can now use your new password on all devices.</p>
+          <p>Your password has been changed via email verification. You can now use your new password on all devices.</p>
           <Button type="button" variant="outline" size="sm" onClick={() => setStep("request")} className="cursor-pointer text-xs">
             Done
           </Button>

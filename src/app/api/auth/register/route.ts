@@ -103,6 +103,7 @@ export async function POST(req: Request) {
         name: storedUser.full_name,
         phone: storedUser.phone,
         role: "customer",
+        password,
       });
     } catch (err: any) {
       console.warn("⚠️ Register API: Could not sync user to database:", err?.message);

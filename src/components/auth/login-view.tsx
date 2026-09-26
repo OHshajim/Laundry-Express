@@ -21,7 +21,7 @@ import { useAuth } from "@/context/auth-context";
 export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect");
+  const redirectPath = searchParams.get("callbackUrl") || searchParams.get("redirect");
 
   const { login, loginWithGoogle, isAuthenticated, user, isAdmin } = useAuth();
 
@@ -36,7 +36,7 @@ export function LoginView() {
   // Redirect if user is already authenticated
   React.useEffect(() => {
     if (isAuthenticated && user) {
-      const destination = redirectPath || (isAdmin ? "/admin" : "/dashboard");
+      const destination = redirectPath || "/dashboard";
       router.push(destination);
     }
   }, [isAuthenticated, user, isAdmin, redirectPath, router]);
@@ -54,7 +54,7 @@ export function LoginView() {
         return;
       }
 
-      const destination = redirectPath || (isAdmin ? "/admin" : "/dashboard");
+      const destination = redirectPath || "/dashboard";
       router.push(destination);
     } catch {
       setErrorMsg("An unexpected error occurred during sign-in. Please try again.");
@@ -67,7 +67,8 @@ export function LoginView() {
     setErrorMsg("");
     setIsGoogleLoading(true);
     try {
-      const res = await loginWithGoogle();
+      const destination = redirectPath || "/dashboard";
+      const res = await loginWithGoogle(destination);
       if (!res.success) {
         setErrorMsg(res.error || "Google authentication was not completed.");
       }
@@ -202,7 +203,10 @@ export function LoginView() {
       {/* Switch to Registration */}
       <div className="pt-2 text-center border-t border-slate-100 text-xs text-slate-600">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-bold text-primary hover:underline">
+        <Link
+          href={redirectPath ? `/register?callbackUrl=${encodeURIComponent(redirectPath)}` : "/register"}
+          className="font-bold text-primary hover:underline"
+        >
           Create an account
         </Link>
       </div>

@@ -17,7 +17,7 @@ import { FloatingBubbles } from "./floating-bubbles";
  */
 export function Footer() {
   return (
-    <footer className="relative bg-black text-slate-300 border-t border-neutral-900 pt-16 pb-12 overflow-hidden">
+    <footer className="relative bg-black text-slate-300 border-t border-neutral-900 pt-16 overflow-hidden">
       {/* Ambient Bubble Background Effect (Lower-density count={8}) */}
       <FloatingBubbles variant="footer" count={8} className="opacity-40" />
 
@@ -93,7 +93,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Credits & Legal */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+        <div className="py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
           <p>&copy; {new Date().getFullYear()} Laundry Express. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <Link href="/" className="hover:text-primary transition-colors">
@@ -101,9 +101,6 @@ export function Footer() {
             </Link>
             <Link href="/pricing" className="hover:text-primary transition-colors">
               Plans &amp; Bags
-            </Link>
-            <Link href="/dashboard" className="hover:text-primary transition-colors font-bold text-slate-300">
-              Customer Portal
             </Link>
             <Link href="/terms" className="hover:text-primary transition-colors">
               Terms &amp; Guarantees

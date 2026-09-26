@@ -96,7 +96,7 @@ export function HeroMascot() {
           transition={{ type: "spring", stiffness: 280, damping: 18 }}
         >
           <Image
-            src="/hero.jpg"
+            src="/brand/hero.jpg"
             alt="Laundry Express Bubble Hero Mascot"
             width={340}
             height={340}

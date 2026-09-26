@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     email TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
     avatar_url TEXT,
+    password_hash TEXT,
     phone TEXT,
     address TEXT,
     role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
@@ -21,6 +22,9 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Ensure password_hash column exists on existing tables
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
 -- RLS Policies for public.users
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
