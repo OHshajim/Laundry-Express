@@ -133,7 +133,7 @@ export function ReviewModerator({
                           type="button"
                           key={p.id || i}
                           onClick={() => setSelectedPhoto(p.photo_url)}
-                          className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 hover:ring-2 hover:ring-[#1E88C7] transition-all cursor-pointer group"
+                          className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 hover:ring-2 hover:ring-primary transition-all cursor-pointer group"
                           title="Click to view full photo"
                         >
                           <Image

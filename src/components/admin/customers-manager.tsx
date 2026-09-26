@@ -53,7 +53,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name, email, phone..."
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E88C7]"
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -62,7 +62,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <div className="flex items-center gap-2 text-slate-500 mb-1">
-            <UserCheck className="h-4 w-4 text-[#1E88C7]" />
+            <UserCheck className="h-4 w-4 text-primary" />
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Accounts</span>
           </div>
           <span className="text-2xl font-black text-slate-900 block">{customers.length}</span>
@@ -71,7 +71,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <div className="flex items-center gap-2 text-slate-500 mb-1">
-            <ShoppingBag className="h-4 w-4 text-[#F5A623]" />
+            <ShoppingBag className="h-4 w-4 text-hero-amber" />
             <span className="text-[11px] font-bold uppercase tracking-wider">Repeat Customers</span>
           </div>
           <span className="text-2xl font-black text-slate-900 block">{repeatCount}</span>
@@ -123,7 +123,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
                           <button
                             type="button"
                             onClick={() => setSelectedCustomer(cust)}
-                            className="font-bold text-slate-900 hover:text-[#1E88C7] transition-colors text-left cursor-pointer"
+                            className="font-bold text-slate-900 hover:text-primary transition-colors text-left cursor-pointer"
                           >
                             {cust.full_name}
                           </button>
@@ -137,13 +137,13 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
                     <td className="p-3.5 space-y-1">
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <Mail className="h-3 w-3 text-slate-400 shrink-0" />
-                        <a href={`mailto:${cust.email}`} className="hover:text-[#1E88C7] truncate max-w-[180px]">
+                        <a href={`mailto:${cust.email}`} className="hover:text-primary truncate max-w-[180px]">
                           {cust.email}
                         </a>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <Phone className="h-3 w-3 text-slate-400 shrink-0" />
-                        <a href={`tel:${cust.phone}`} className="hover:text-[#1E88C7] font-medium">
+                        <a href={`tel:${cust.phone}`} className="hover:text-primary font-medium">
                           {cust.phone}
                         </a>
                       </div>
@@ -170,7 +170,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 px-2.5 text-xs text-slate-700 hover:text-[#1E88C7]"
+                        className="h-8 px-2.5 text-xs text-slate-700 hover:text-primary"
                         onClick={() => setSelectedCustomer(cust)}
                       >
                         <Eye className="h-3.5 w-3.5 mr-1 shrink-0" />

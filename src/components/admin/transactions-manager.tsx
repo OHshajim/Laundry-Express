@@ -107,7 +107,7 @@ export function TransactionsManager({ onViewOrder }: TransactionsManagerProps) {
             placeholder="Search by customer, order #, or PI..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-[#EC4899]"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-primary"
           />
         </div>
 
@@ -176,7 +176,7 @@ export function TransactionsManager({ onViewOrder }: TransactionsManagerProps) {
                 <td className="py-3.5 px-4">
                   <button
                     onClick={() => onViewOrder && onViewOrder(txn.order_id)}
-                    className="font-mono text-xs font-bold text-[#EC4899] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="font-mono text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     {txn.order_number}
                     <ExternalLink className="h-3 w-3" />

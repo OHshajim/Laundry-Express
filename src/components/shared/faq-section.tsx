@@ -101,7 +101,7 @@ export function FaqSection() {
             Have a custom inquiry or large hotel/commercial request?{" "}
             <a
               href={`tel:${APP_CONFIG.supportPhone.replace(/\D/g, "")}`}
-              className="text-[#E91E63] font-bold hover:underline"
+              className="text-primary font-bold hover:underline"
             >
               Call our support team at {APP_CONFIG.supportPhone}
             </a>

@@ -60,7 +60,7 @@ export default function CustomerRatingsPage() {
       {/* Submit New Rating Form */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border-2 border-pink-200 shadow-md space-y-5">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center font-bold">
+          <div className="h-8 w-8 rounded-full bg-primary-pale text-primary flex items-center justify-center font-bold">
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
@@ -83,7 +83,7 @@ export default function CustomerRatingsPage() {
               <select
                 value={selectedOrderId}
                 onChange={(e) => setSelectedOrderId(e.target.value)}
-                className="w-full p-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#EC4899]"
+                className="w-full p-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {CUSTOMER_ORDERS.map((ord) => (
                   <option key={ord.id} value={ord.id}>
@@ -122,13 +122,13 @@ export default function CustomerRatingsPage() {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="How was the folding, fragrance, and delivery punctuality?"
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#EC4899]"
+              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary"
               required
             />
           </div>
 
           <div className="flex justify-end pt-1">
-            <Button type="submit" className="bg-[#EC4899] hover:bg-[#BE185D] text-white shadow-md text-xs">
+            <Button type="submit" className="bg-primary hover:bg-primary-dark text-white shadow-md text-xs">
               <Plus className="h-3.5 w-3.5 mr-1" />
               <span>Submit Review</span>
             </Button>

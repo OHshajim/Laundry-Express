@@ -112,7 +112,7 @@ export function AdminSidebar({
             <span className="font-black text-base text-white tracking-tight block truncate">
               Laundry Express
             </span>
-            <span className="text-[11px] text-[#E91E63] font-bold block drop-shadow-[0_0_8px_rgba(233,30,99,0.5)]">
+            <span className="text-[11px] text-primary font-bold block drop-shadow-[0_0_8px_var(--primary)]">
               Admin Dashboard
             </span>
           </div>
@@ -145,7 +145,7 @@ export function AdminSidebar({
               onClick={() => handleSelect(item.id)}
               className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                 isActive
-                  ? "bg-[#E91E63] text-white shadow-[0_0_20px_rgba(233,30,99,0.55)] border border-[#E91E63]"
+                  ? "bg-primary text-white shadow-[0_0_20px_var(--primary-ghost)] border border-primary"
                   : "text-neutral-400 hover:text-white hover:bg-neutral-900 hover:shadow-[0_0_12px_rgba(233,30,99,0.25)]"
               }`}
             >
@@ -157,7 +157,7 @@ export function AdminSidebar({
               {item.badge !== undefined && (
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
-                    isActive ? "bg-white text-[#E91E63]" : "bg-[#E91E63] text-white shadow-[0_0_8px_rgba(233,30,99,0.5)]"
+                    isActive ? "bg-white text-primary" : "bg-primary text-white shadow-[0_0_8px_var(--primary)]"
                   }`}
                 >
                   {item.badge}
@@ -201,7 +201,7 @@ export function AdminSidebar({
         </div>
 
         <Link href="/">
-          <Button variant="ghost" size="sm" className="text-xs text-neutral-300 hover:text-[#E91E63]">
+          <Button variant="ghost" size="sm" className="text-xs text-neutral-300 hover:text-primary">
             <ArrowLeft className="h-3.5 w-3.5 mr-1" />
             Live Site
           </Button>

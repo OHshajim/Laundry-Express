@@ -35,7 +35,7 @@ const DASHBOARD_NAV = [
  * CustomerDashboardLayout Component
  *
  * Provides customer authenticated navigation with:
- * - Bubble Pink (#EC4899) active navigation indicators
+ * - Bubble Pink (var(--primary)) active navigation indicators
  * - Responsive desktop sidebar & mobile drawer menu
  * - Customer identity badge and quick "Book Pickup" action
  */
@@ -49,7 +49,7 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#F8FAFC]">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-background">
       {/* Mobile Top Bar */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-pink-100 shadow-xs sticky top-0 z-30">
         <Link href="/" className="flex items-center gap-2">
@@ -59,7 +59,7 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
 
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-xl text-slate-700 hover:text-[#EC4899] hover:bg-pink-50"
+          className="p-2 rounded-xl text-slate-700 hover:text-primary hover:bg-pink-50"
           aria-label="Toggle navigation"
         >
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -78,7 +78,7 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
             <MascotBadge size="sm" />
             <div>
               <span className="font-extrabold text-slate-900 text-sm block">Customer Portal</span>
-              <span className="text-[11px] text-[#EC4899] font-bold block">
+              <span className="text-[11px] text-primary font-bold block">
                 {CURRENT_CUSTOMER.full_name}
               </span>
             </div>
@@ -96,8 +96,8 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
                     active
-                      ? "bg-[#EC4899] text-white shadow-md shadow-pink-500/25"
-                      : "text-slate-600 hover:bg-pink-50 hover:text-[#EC4899]"
+                      ? "bg-primary text-white shadow-md shadow-primary/25"
+                      : "text-slate-600 hover:bg-pink-50 hover:text-primary"
                   }`}
                 >
                   <Icon className={`h-4 w-4 shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
@@ -111,7 +111,7 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
         {/* Sidebar Footer Support & Back to Site */}
         <div className="p-6 border-t border-pink-50 space-y-3">
           <Link href="/order" className="block">
-            <Button className="w-full bg-[#EC4899] hover:bg-[#BE185D] text-white shadow-md shadow-pink-500/20 text-xs">
+            <Button className="w-full bg-primary hover:bg-primary-dark text-white shadow-md shadow-primary/20 text-xs">
               <PlusCircle className="h-4 w-4 mr-2" />
               <span>Book New Pickup</span>
             </Button>
@@ -119,12 +119,12 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
 
           <div className="p-3 rounded-xl bg-pink-50/60 border border-pink-100 text-[11px] text-slate-600 space-y-1">
             <div className="flex items-center gap-1.5 font-bold text-slate-800">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#EC4899]" />
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
               <span>Doorstep Photo Support</span>
             </div>
             <a
               href={`tel:${APP_CONFIG.supportPhone}`}
-              className="text-[#EC4899] font-bold hover:underline flex items-center gap-1"
+              className="text-primary font-bold hover:underline flex items-center gap-1"
             >
               <Phone className="h-3 w-3" />
               <span>{APP_CONFIG.supportPhone}</span>
@@ -157,12 +157,12 @@ export default function CustomerDashboardLayout({ children }: DashboardLayoutPro
           <div className="flex items-center gap-3">
             <a href={`tel:${APP_CONFIG.supportPhone}`}>
               <Button variant="outline" size="sm" className="text-xs border-slate-300">
-                <Phone className="h-3.5 w-3.5 mr-1.5 text-[#EC4899]" />
+                <Phone className="h-3.5 w-3.5 mr-1.5 text-primary" />
                 <span>Support: {APP_CONFIG.supportPhone}</span>
               </Button>
             </a>
             <Link href="/order">
-              <Button size="sm" className="bg-[#EC4899] hover:bg-[#BE185D] text-white text-xs">
+              <Button size="sm" className="bg-primary hover:bg-primary-dark text-white text-xs">
                 <span>Book Pickup</span>
               </Button>
             </Link>

@@ -46,16 +46,16 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
     <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-pink-200/90 shadow-[0_0_35px_rgba(236,72,153,0.12)] p-6 sm:p-8 space-y-7 transition-all">
       {/* Top Bubble Pink Hub Badge */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-pink-100">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 border border-pink-200 text-[#BE185D] text-xs font-black shadow-xs">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 border border-pink-200 text-primary-dark text-xs font-black shadow-xs">
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EC4899] opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EC4899]" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
           </span>
           <span>Regional Operations Hub</span>
         </div>
 
         <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-          <ShieldCheck className="h-4 w-4 text-[#EC4899]" />
+          <ShieldCheck className="h-4 w-4 text-primary" />
           30-Mile Radius Service Territory
         </span>
       </div>
@@ -64,7 +64,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
       <div className="space-y-6 text-slate-800">
         {/* Item 1: Service Territory & Address */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-primary flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <MapPin className="h-5 w-5" />
           </div>
           <div className="space-y-1">
@@ -78,7 +78,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
               href={location.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-black text-[#EC4899] hover:text-[#BE185D] hover:underline pt-0.5"
+              className="inline-flex items-center gap-1 text-xs font-black text-primary hover:text-primary-dark hover:underline pt-0.5"
             >
               <span>Explore Coverage Map</span>
               <ArrowRight className="h-3 w-3 shrink-0" />
@@ -88,7 +88,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
 
         {/* Item 2: Phone with Hero Callout */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-primary flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <Phone className="h-5 w-5" />
           </div>
           <div className="space-y-0.5">
@@ -97,7 +97,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
             </h4>
             <a
               href={`tel:${location.phone}`}
-              className="font-black text-[#EC4899] text-2xl sm:text-3xl tracking-tight block hover:text-[#BE185D] drop-shadow-[0_0_12px_rgba(236,72,153,0.25)] transition-colors"
+              className="font-black text-primary text-2xl sm:text-3xl tracking-tight block hover:text-primary-dark drop-shadow-[0_0_12px_var(--primary-ghost)] transition-colors"
             >
               {location.phone}
             </a>
@@ -109,7 +109,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
 
         {/* Item 3: Email */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-primary flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <Mail className="h-5 w-5" />
           </div>
           <div className="space-y-0.5">
@@ -118,7 +118,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
             </h4>
             <a
               href={`mailto:${location.email}`}
-              className="text-sm font-bold text-slate-700 hover:text-[#EC4899] hover:underline block break-all transition-colors"
+              className="text-sm font-bold text-slate-700 hover:text-primary hover:underline block break-all transition-colors"
             >
               {location.email}
             </a>
@@ -127,7 +127,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
 
         {/* Item 4: Hours of Operation */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-primary flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <Clock className="h-5 w-5" />
           </div>
           <div className="space-y-0.5">
@@ -135,7 +135,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
               Hours of Operation
             </h4>
             <p className="text-sm font-bold text-slate-800">
-              All Week: <span className="text-[#EC4899] font-black">{location.hours}</span>
+              All Week: <span className="text-primary font-black">{location.hours}</span>
             </p>
             <span className="text-xs text-slate-400 block font-normal">
               Morning (8am–12pm) &amp; Afternoon (1pm–6pm) Slots
@@ -147,7 +147,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
         <div className="pt-2">
           <a
             href={`tel:${location.phone}`}
-            className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-[#EC4899] hover:bg-[#BE185D] text-white font-black text-base shadow-lg shadow-pink-500/35 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
+            className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-base shadow-lg shadow-primary/35 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
           >
             <Phone className="h-5 w-5 shrink-0" />
             <span>Call Now — {location.phone}</span>

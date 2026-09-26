@@ -31,8 +31,8 @@ export function OrderTableRow({
       title="Click row to inspect complete order details"
     >
       <td className="p-3.5">
-        <div className="text-left font-extrabold text-slate-900 group-hover:text-[#1E88C7] transition-colors flex flex-col">
-          <span className="underline underline-offset-2 decoration-slate-300 group-hover:decoration-[#1E88C7]">
+        <div className="text-left font-extrabold text-slate-900 group-hover:text-primary transition-colors flex flex-col">
+          <span className="underline underline-offset-2 decoration-slate-300 group-hover:decoration-primary">
             {order.order_number}
           </span>
           <span className="text-[10px] text-slate-400 font-mono mt-0.5 font-normal">

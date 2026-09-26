@@ -54,7 +54,7 @@ export default function DashboardOverviewPage() {
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Link href="/order">
             <Button size="lg" className="bg-white text-slate-900 hover:bg-pink-50 font-black shadow-lg">
-              <RotateCcw className="h-4 w-4 mr-2 text-[#EC4899]" />
+              <RotateCcw className="h-4 w-4 mr-2 text-primary" />
               <span>Book Again</span>
             </Button>
           </Link>
@@ -71,7 +71,7 @@ export default function DashboardOverviewPage() {
 
         <div className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-500 block">Total Laundry Saved</span>
-          <span className="text-2xl font-black text-[#EC4899]">~16 Loads</span>
+          <span className="text-2xl font-black text-primary">~16 Loads</span>
           <span className="text-[11px] text-slate-500 font-medium block">Over 24 hours of free time</span>
         </div>
 
@@ -87,8 +87,8 @@ export default function DashboardOverviewPage() {
         <div className="p-6 sm:p-8 rounded-3xl bg-white border-2 border-pink-300 shadow-lg space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-pink-50">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 text-[#BE185D] text-xs font-black mb-1">
-                <Clock className="h-3.5 w-3.5 text-[#EC4899]" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 text-primary-dark text-xs font-black mb-1">
+                <Clock className="h-3.5 w-3.5 text-primary" />
                 <span>Active Order In-Flight</span>
               </div>
               <h3 className="text-xl font-black text-slate-900">
@@ -101,7 +101,7 @@ export default function DashboardOverviewPage() {
                 {activeOrder.order_status.replace("_", " ")}
               </Badge>
               <Link href="/dashboard/orders">
-                <Button size="sm" variant="outline" className="border-pink-200 text-[#EC4899] hover:bg-pink-50">
+                <Button size="sm" variant="outline" className="border-pink-200 text-primary hover:bg-pink-50">
                   <span>View Timeline &amp; Photos</span>
                   <ArrowRight className="h-3.5 w-3.5 ml-1" />
                 </Button>
@@ -112,14 +112,14 @@ export default function DashboardOverviewPage() {
           {/* 4-Stage Progress Stepper Bar */}
           <div className="grid grid-cols-4 gap-2 text-center text-xs">
             <div className="space-y-1.5">
-              <div className="h-2 rounded-full bg-[#EC4899]" />
+              <div className="h-2 rounded-full bg-primary" />
               <span className="font-extrabold text-slate-900 block text-[11px]">1. Picked Up</span>
               <span className="text-[10px] text-emerald-600 font-bold">Photo Proof Logged</span>
             </div>
             <div className="space-y-1.5">
-              <div className="h-2 rounded-full bg-[#EC4899]" />
+              <div className="h-2 rounded-full bg-primary" />
               <span className="font-extrabold text-slate-900 block text-[11px]">2. In Sanitization</span>
-              <span className="text-[10px] text-[#EC4899] font-bold">Tide Ultra Oxi</span>
+              <span className="text-[10px] text-primary font-bold">Tide Ultra Oxi</span>
             </div>
             <div className="space-y-1.5">
               <div className="h-2 rounded-full bg-slate-200" />
@@ -142,7 +142,7 @@ export default function DashboardOverviewPage() {
                 {activeOrder.bag_count} Standard 13-Gal Bags • {formatCurrency(activeOrder.total_amount)}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#BE185D] font-bold">
+            <div className="flex items-center gap-1.5 text-xs text-primary-dark font-bold">
               <Camera className="h-4 w-4" />
               <span>Intake Photo Verified</span>
             </div>
@@ -156,7 +156,7 @@ export default function DashboardOverviewPage() {
         <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 className="font-black text-slate-900 text-base">Completed Laundry Orders</h3>
-            <Link href="/dashboard/orders" className="text-xs font-bold text-[#EC4899] hover:underline">
+            <Link href="/dashboard/orders" className="text-xs font-bold text-primary hover:underline">
               View All ({pastOrders.length})
             </Link>
           </div>
@@ -177,7 +177,7 @@ export default function DashboardOverviewPage() {
               </div>
 
               <Link href="/order">
-                <Button size="sm" variant="outline" className="border-pink-200 text-[#EC4899] hover:bg-pink-50 text-xs">
+                <Button size="sm" variant="outline" className="border-pink-200 text-primary hover:bg-pink-50 text-xs">
                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
                   <span>Book Again</span>
                 </Button>
@@ -190,7 +190,7 @@ export default function DashboardOverviewPage() {
         <div className="lg:col-span-5 p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 className="font-black text-slate-900 text-base">Recent Payments</h3>
-            <Link href="/dashboard/transactions" className="text-xs font-bold text-[#EC4899] hover:underline">
+            <Link href="/dashboard/transactions" className="text-xs font-bold text-primary hover:underline">
               View History
             </Link>
           </div>

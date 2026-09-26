@@ -81,7 +81,7 @@ export default function CustomerTransactionsPage() {
             placeholder="Search by order or card..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#EC4899]"
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
@@ -89,7 +89,7 @@ export default function CustomerTransactionsPage() {
           <button
             onClick={() => setStatusFilter("all")}
             className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-colors ${
-              statusFilter === "all" ? "bg-[#EC4899] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              statusFilter === "all" ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             All
@@ -97,7 +97,7 @@ export default function CustomerTransactionsPage() {
           <button
             onClick={() => setStatusFilter("succeeded")}
             className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-colors ${
-              statusFilter === "succeeded" ? "bg-[#EC4899] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              statusFilter === "succeeded" ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Succeeded
@@ -114,7 +114,7 @@ export default function CustomerTransactionsPage() {
               className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-pink-50/20 transition-colors"
             >
               <div className="flex items-start sm:items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-pink-100 text-primary flex items-center justify-center shrink-0">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div className="space-y-0.5">
@@ -143,7 +143,7 @@ export default function CustomerTransactionsPage() {
                     href={txn.receipt_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-xl text-slate-500 hover:text-[#EC4899] hover:bg-pink-50 transition-colors"
+                    className="p-2 rounded-xl text-slate-500 hover:text-primary hover:bg-pink-50 transition-colors"
                     title="View Stripe Digital Receipt"
                   >
                     <ExternalLink className="h-4 w-4" />

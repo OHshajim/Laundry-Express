@@ -51,22 +51,22 @@ export function CustomerDetailModal({
         {/* Customer Header Summary Card */}
         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-[#1E88C7] text-white font-black text-base flex items-center justify-center shrink-0 shadow-xs">
+            <div className="h-11 w-11 rounded-2xl bg-primary text-white font-black text-base flex items-center justify-center shrink-0 shadow-xs">
               {customer.full_name.charAt(0)}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-sm text-slate-900">{customer.full_name}</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-100 text-[#E91E63]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-100 text-primary">
                   {customer.orders.length > 1 ? "Repeat Customer" : "New Customer"}
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3 text-slate-500 text-[11px] mt-0.5">
-                <a href={`mailto:${customer.email}`} className="flex items-center gap-1 hover:text-[#1E88C7]">
+                <a href={`mailto:${customer.email}`} className="flex items-center gap-1 hover:text-primary">
                   <Mail className="h-3 w-3 shrink-0" />
                   <span>{customer.email}</span>
                 </a>
-                <a href={`tel:${customer.phone}`} className="flex items-center gap-1 hover:text-[#1E88C7]">
+                <a href={`tel:${customer.phone}`} className="flex items-center gap-1 hover:text-primary">
                   <Phone className="h-3 w-3 shrink-0" />
                   <span>{customer.phone}</span>
                 </a>
@@ -102,7 +102,7 @@ export function CustomerDetailModal({
               onClick={() => setActiveTab(tab)}
               className={`pb-2 px-3 text-xs font-bold border-b-2 transition-colors cursor-pointer capitalize ${
                 activeTab === tab
-                  ? "border-[#E91E63] text-[#E91E63]"
+                  ? "border-primary text-primary"
                   : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
@@ -189,7 +189,7 @@ export function CustomerDetailModal({
                 {customer.payments.map((pmt) => (
                   <div key={pmt.id} className="p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <CreditCard className="h-4 w-4 text-[#1E88C7] shrink-0" />
+                      <CreditCard className="h-4 w-4 text-primary shrink-0" />
                       <div>
                         <span className="font-bold text-slate-900 block font-mono text-[11px]">{pmt.id}</span>
                         <span className="text-[10px] text-slate-400">Order {pmt.order_number} • {pmt.date} • {pmt.method}</span>

@@ -33,7 +33,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 1,
         numberStr: "01",
-        shortLabel: "1. Pick Your Time",
+        shortLabel: "Pick Your Time",
         badge: "8am–12pm & 1pm–6pm",
         icon: CalendarClock,
         actionText: "Schedule 13-gallon bag pickup",
@@ -43,7 +43,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 2,
         numberStr: "02",
-        shortLabel: "2. Doorstep Hand-off",
+        shortLabel: "Doorstep Hand-off",
         badge: "Contactless Ready",
         icon: DoorOpen,
         actionText: "Leave bag outside or hand to driver",
@@ -53,17 +53,17 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 3,
         numberStr: "03",
-        shortLabel: "3. Photo Verified",
+        shortLabel: "Photo Verified",
         badge: "100% Transparent",
         icon: Camera,
         actionText: "Pickup photo proof logged",
-        detail: "Driver logs weight, scans barcode, and snaps photo.",
+        detail: "Driver logs weight, scans barcode, and snaps photo proof.",
         helperNote: "Zero lost or mixed bags.",
       },
       {
         id: 4,
         numberStr: "04",
-        shortLabel: "4. Delivered Fresh",
+        shortLabel: "Delivered Fresh",
         badge: "24h Turnaround",
         icon: Sparkles,
         actionText: "Washed, folded crisp & returned",
@@ -82,7 +82,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 1,
         numberStr: "01",
-        shortLabel: "1. Pick Your Time",
+        shortLabel: "Pick Your Time",
         badge: "Morning or Afternoon",
         icon: CalendarClock,
         actionText: "Select bulk pickup slot",
@@ -92,7 +92,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 2,
         numberStr: "02",
-        shortLabel: "2. Doorstep Hand-off",
+        shortLabel: "Doorstep Hand-off",
         badge: "Hamper Ready",
         icon: DoorOpen,
         actionText: "Driver collects weighed laundry",
@@ -102,7 +102,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 3,
         numberStr: "03",
-        shortLabel: "3. Photo Verified",
+        shortLabel: "Photo Verified",
         badge: "Digital Scale Proof",
         icon: Camera,
         actionText: "Precision digital scale photo logged",
@@ -112,7 +112,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 4,
         numberStr: "04",
-        shortLabel: "4. Delivered Fresh",
+        shortLabel: "Delivered Fresh",
         badge: "24h Turnaround",
         icon: Sparkles,
         actionText: "Sanitized, sorted & delivered",
@@ -131,7 +131,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 1,
         numberStr: "01",
-        shortLabel: "1. Pick Your Time",
+        shortLabel: "Pick Your Time",
         badge: "Flexible Windows",
         icon: CalendarClock,
         actionText: "Schedule comforter & linen care",
@@ -141,7 +141,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 2,
         numberStr: "02",
-        shortLabel: "2. Doorstep Hand-off",
+        shortLabel: "Doorstep Hand-off",
         badge: "Linens Bag",
         icon: DoorOpen,
         actionText: "Leave bedding in laundry hamper",
@@ -151,7 +151,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 3,
         numberStr: "03",
-        shortLabel: "3. Photo Verified",
+        shortLabel: "Photo Verified",
         badge: "Fabric Inspection",
         icon: Camera,
         actionText: "Fabric inspection photo check",
@@ -161,7 +161,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 4,
         numberStr: "04",
-        shortLabel: "4. Delivered Fresh",
+        shortLabel: "Delivered Fresh",
         badge: "Hypoallergenic Clean",
         icon: Sparkles,
         actionText: "Ozone sanitized & fluffed",
@@ -180,7 +180,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 1,
         numberStr: "01",
-        shortLabel: "1. Pick Your Time",
+        shortLabel: "Pick Your Time",
         badge: "Priority Dispatch",
         icon: CalendarClock,
         actionText: "Book priority pickup window",
@@ -190,7 +190,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 2,
         numberStr: "02",
-        shortLabel: "2. Doorstep Hand-off",
+        shortLabel: "Doorstep Hand-off",
         badge: "Fast Track Route",
         icon: DoorOpen,
         actionText: "Fast courier porch intake",
@@ -200,7 +200,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 3,
         numberStr: "03",
-        shortLabel: "3. Photo Verified",
+        shortLabel: "Photo Verified",
         badge: "Instant Timestamp",
         icon: Camera,
         actionText: "Instant pickup photo receipt",
@@ -210,7 +210,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       {
         id: 4,
         numberStr: "04",
-        shortLabel: "4. Delivered Fresh",
+        shortLabel: "Delivered Fresh",
         badge: "Hero Turnaround",
         icon: Sparkles,
         actionText: "Guaranteed back in 24 hours",
@@ -220,3 +220,5 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
     ],
   },
 };
+
+export default SERVICES_DATA;

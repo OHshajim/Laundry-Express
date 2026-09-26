@@ -52,6 +52,47 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 
 ## 4. Session History Log
 
+### [2026-09-26 13:45] | Step: Full Workspace-Wide Elimination of Hardcoded Hex Colors & CSS Variable Migration
+- **Prompt:** i am seeing that you are still using hardcoded hex color change everything and use css variale
+- **Output:**
+  1. Updated `src/app/globals.css` (285 lines): redirected all legacy aliases (`--deep-hero`, `--bubble-sky`, `--punch-pink`, `--cape-red`, `--ink-navy`) and `@theme inline` utilities directly to CSS variables (`var(--primary)`, `var(--secondary)`, `var(--accent-alert)`, `var(--deep)`).
+  2. Overhauled `footer.tsx` (`src/components/shared/footer.tsx`, 137 lines): eliminated all 14 hardcoded hex colors (`#EC4899`, `#F472B6`, etc.), replacing them with semantic tokens (`text-primary`, `hover:text-primary`, `hover:text-primary-light`, `hover:drop-shadow-[0_0_8px_var(--primary)]`).
+  3. Overhauled `button.tsx` (`src/components/ui/button.tsx`, 119 lines), `navbar.tsx` (`src/components/shared/navbar.tsx`, 238 lines), `hero-section.tsx` (`src/components/shared/hero-section.tsx`, 131 lines), `google-map.tsx` (`src/components/shared/google-map.tsx`, 108 lines), and `mobile-bottom-nav.tsx` (`src/components/shared/mobile-bottom-nav.tsx`, 113 lines): converted all primary, secondary, alert, and dark states to semantic CSS variables.
+  4. Systematically scanned and migrated all remaining files across `src/` (27 files including `cloth-journey-animation.tsx`, `location-card.tsx`, `contact-form.tsx`, `contact-view.tsx`, `contact/page.tsx`, `terms/page.tsx`, `admin/transactions/page.tsx`, `dashboard/layout.tsx`, `dashboard/orders/page.tsx`, `dashboard/page.tsx`, `dashboard/ratings/page.tsx`, `dashboard/transactions/page.tsx`, `admin-sidebar.tsx`, `customer-card.tsx`, `customer-detail-modal.tsx`, `customers-manager.tsx`, `order-card.tsx`, `order-detail-modal.tsx`, `order-pipeline.tsx`, `order-table-row.tsx`, `pricing-manager.tsx`, `review-moderator.tsx`, `transactions-manager.tsx`, `plan-bag-card.tsx`, `faq-section.tsx`, and `layout.tsx`).
+  5. Verified 0 hardcoded hex colors remaining across all TSX/TS components in `src/`.
+  6. Verified 0 line count violations across all 79 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to completely eradicate hardcoded hex colors and enforce pure CSS variable usage everywhere.
+
+### [2026-09-26 13:35] | Step: CSS Variable Conversion, Brand Logo-Badge Integration & Text Line Breaking Resolution
+- **Prompt:** instead ogf using hardcoded use the variable and also in @[home-cta-banner.tsx:L126-L139] instead of this use the brand /logobadge image and make the component perfect and fix all text whixch are line braking
+- **Output:**
+  1. Updated `HomeCtaBanner` (`src/components/home/home-cta-banner.tsx`, 166 lines): replaced all hardcoded hex values (`#EC4899`, `#BE185D`, `#38BDF8`) with semantic CSS variables and Tailwind tokens (`bg-primary`, `hover:bg-primary-dark`, `text-primary`, `border-primary/30`, `bg-secondary/15`, `shadow-primary/35`, `var(--primary)`).
+  2. Integrated official brand sticker badge (`/brand/logo-badge.jpg`): replaced the small circular preview with a prominent glassmorphic badge card (`rounded-2xl border-white/20 bg-white/10 hover:bg-white/15`) showing the official "LAUNDRY EXPRESS" Bubble Hero emblem.
+  3. Fixed awkward text line breaks: replaced loose text and floating bullet dots (`•`) with discrete, responsive pill tags (`whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10`) for all 6 feature guarantees; applied `text-balance` and `whitespace-nowrap` to pricing phrases and headline.
+  4. Systematically eliminated hardcoded hex color remnants in `how-it-works-step.tsx` (159 lines), `how-it-works-section.tsx` (179 lines), `order-tracking-summary.tsx` (115 lines), and `hero-mascot.tsx` (116 lines), keeping all files compliant with the 100–250 lines rule.
+  5. Verified 0 line count violations across all 79 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to use CSS variables everywhere instead of hardcoded hex colors, use the official brand logo-badge image, and eliminate text line breaking artifacts.
+
+### [2026-09-26 13:15] | Step: HomeCtaBanner Theme Redesign, Bubble Physics Upgrade & Glassmorphic ContactForm
+- **Prompt:** fix that part make it clean and match with website theme and update the content and also we need to update the bubbles (.bubble, .bubble-soap, .bubble-foam, .bubble-micro, bubbleRise, bubbleRiseDrift, .bubble-drift); combine design and theory with website theme
+- **Output:**
+  1. Redesigned `HomeCtaBanner` (`src/components/home/home-cta-banner.tsx`, 162 lines): completely replaced the outdated royal-blue and orange/indigo palette with a luxury Ink Navy & Pure Black glassmorphism card (`border-pink-500/30`, `shadow-[0_0_50px_rgba(236,72,153,0.18)]`), soft Bubble Pink ambient backlights, primary "Book Pickup Now" CTA in Punch Pink `#EC4899`, "Compare Plans & Bags" in frosted glass, and circular Bubble Hero mascot emblem.
+  2. Updated `src/app/globals.css` (240 lines): integrated user's realistic bubble rising and drifting physics (`bubbleRise`, `bubbleRiseDrift`, `.bubble-drift`) harmonized with the Bubble Pink (`#EC4899`), Deep Rose (`#BE185D`), Foam White, and Bubble Sky (`#38BDF8`) theme.
+  3. Updated `FloatingBubbles` (`src/components/shared/floating-bubbles.tsx`, 117 lines): wired up dynamic CSS variables (`--dur`, `--del`, `--drift`) and specular highlights for floating soap bubbles.
+  4. Built `ContactForm` (`src/components/contact/contact-form.tsx`, 194 lines): glassmorphic form with full name, email, phone, subject dropdown, message textarea, focus pink rings, animated loading spinner, and success submission state. Integrated into `ContactView` (`src/components/contact/contact-view.tsx`, 128 lines).
+  5. Verified 100% compliance with strict 100–250 lines rule across all 79 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to clean up the outdated blue CTA banner to match the site's pink/black brand aesthetic, apply user-specified bubble physics, and implement interactive contact theory.
+
+### [2026-09-26 13:05] | Step: Delivery Route Progress & Truck Alignment, Card Collapse Resolution & Navbar/Footer Renaming
+- **Prompt:** the progress and track icon not maching and the cards content gets collaps so fix that; also rename site-header/site-footer to navbar/footer and ensure sticky scroll
+- **Output:**
+  1. Renamed `site-header.tsx` to `navbar.tsx` (194 lines) and `site-footer.tsx` to `footer.tsx` (162 lines), preserving all user image dimensions, hover scales, and borderless text glow.
+  2. Fixed sticky navbar: replaced `overflow-x-hidden` on parent wrappers (`layout.tsx`, `page.tsx`, `pricing/page.tsx`, `contact/page.tsx`, `order/page.tsx`, `terms/page.tsx`) with `overflow-x-clip`, allowing `sticky top-0 z-50` to stay firmly pinned on vertical scroll.
+  3. Aligned progress bar & traveling delivery truck icon with 4-card grid columns: established exact station waypoint coordinates (`12.5%`, `37.5%`, `62.5%`, `87.5%`) matching card centers, with animated connecting route line and traveling beacon parking directly over each active card.
+  4. Resolved card text collapse in `HowItWorksStep` (`src/components/home/how-it-works-step.tsx`, 164 lines): switched from side-by-side squished layout to vertical stacked flow, removed harsh `truncate` and `line-clamp` cutoffs, expanded card `min-h-[300px]`, and cleaned redundant step number prefixes in `how-it-works-data.ts`.
+  5. Verified 100% compliance with strict 100–250 lines rule across all 78 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to ensure the animated progress track and truck beacon align directly with step cards, prevent text truncation/collapse in step cards, and streamline component file names.
+
 ### [2026-09-26 12:50] | Step: Hero Mascot Image Integration, Sticky Transparent-to-Pink Nav & Borderless Text-Glow Links
 - **Prompt:** @[src/components/shared/hero-mascot.tsx] update that and use hero.jpg in nav and make when the nav in top the bg will transparent when scroll doen bg will pink and remove the border form navlinks glow only the text
 - **Output:**

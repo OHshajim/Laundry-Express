@@ -33,16 +33,16 @@ export function OrderCard({
   return (
     <div
       onClick={() => onViewDetails?.(order)}
-      className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#1E88C7]/50 transition-all cursor-pointer space-y-3 group"
+      className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-primary/50 transition-all cursor-pointer space-y-3 group"
     >
       {/* Top Header: Order Number, Date, Status */}
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className="font-extrabold text-slate-900 text-sm group-hover:text-[#1E88C7] transition-colors underline underline-offset-2 decoration-slate-300">
+            <span className="font-extrabold text-slate-900 text-sm group-hover:text-primary transition-colors underline underline-offset-2 decoration-slate-300">
               {order.order_number}
             </span>
-            <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#1E88C7] transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
           </div>
           <span className="text-[10px] text-slate-400 font-mono">
             {formatDate(order.created_at)}

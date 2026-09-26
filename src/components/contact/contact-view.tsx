@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MapPin, Clock, ShieldCheck } from "lucide-react";
 import { LocationCard, OFFICIAL_LOCATION } from "@/components/contact/location-card";
 import { GoggleMap } from "@/components/shared/google-map";
+import { ContactForm } from "@/components/contact/contact-form";
 
 // Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
 
@@ -15,12 +16,8 @@ import { GoggleMap } from "@/components/shared/google-map";
  * - Left side: Regional territory, click-to-call Phone (815-575-9536), Email, Hours of Operation,
  *   and high-converting Bubble Pink Call Now button.
  * - Right side: Clean Google Map displaying shaded 30-mile service radius.
- *
- * Features:
- * - Direct click-to-call integration with tel: protocols
- * - Approximate service territory display protecting operations privacy
- * - Bubble Pink highlights and glowing container borders
- * - Responsive anti-overflow wrapping across mobile, tablet, and desktop viewports
+ * - Interactive glassmorphic Contact Form with instant feedback.
+ * - Strict adherence to the 100-250 lines rule.
  */
 export function ContactView() {
   return (
@@ -44,7 +41,7 @@ export function ContactView() {
       {/* Dispatch Area Highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div className="p-4 rounded-2xl bg-white border border-pink-100 shadow-xs flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-pink-100 text-primary flex items-center justify-center shrink-0">
             <MapPin className="h-5 w-5" />
           </div>
           <div>
@@ -54,7 +51,7 @@ export function ContactView() {
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-pink-100 shadow-xs flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-pink-100 text-primary flex items-center justify-center shrink-0">
             <Clock className="h-5 w-5" />
           </div>
           <div>
@@ -64,7 +61,7 @@ export function ContactView() {
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-pink-100 shadow-xs flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-pink-100 text-primary flex items-center justify-center shrink-0">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
@@ -74,10 +71,15 @@ export function ContactView() {
         </div>
       </div>
 
+      {/* Interactive Contact & Message Form */}
+      <div className="pt-4 max-w-4xl mx-auto">
+        <ContactForm />
+      </div>
+
       {/* Helpful Support Footer Strip & Direct Assistance */}
       <div className="p-6 rounded-3xl bg-white border border-pink-200/80 text-center text-xs text-slate-500 shadow-[0_0_25px_rgba(236,72,153,0.08)] space-y-3">
         <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-black text-slate-800">
-          <span className="flex items-center gap-1.5 text-[#EC4899]">
+          <span className="flex items-center gap-1.5 text-primary">
             <span>⚡</span>
             <span>24-Hour Turnaround</span>
           </span>
@@ -87,7 +89,7 @@ export function ContactView() {
             <span>Doorstep Photo Proof Guarantee</span>
           </span>
           <span className="text-slate-300">•</span>
-          <span className="flex items-center gap-1.5 text-[#EC4899]">
+          <span className="flex items-center gap-1.5 text-primary">
             <span>🚚</span>
             <span>2+ Bags = 100% FREE Delivery</span>
           </span>
@@ -95,11 +97,11 @@ export function ContactView() {
 
         <p className="leading-relaxed text-slate-600 max-w-2xl mx-auto">
           Need a special pickup request or have delicate wash requirements? Explore our{" "}
-          <Link href="/pricing" className="text-[#EC4899] font-black hover:underline">
+          <Link href="/pricing" className="text-primary font-black hover:underline">
             Plans &amp; Bags
           </Link>{" "}
           or inspect our{" "}
-          <Link href="/#faq" className="text-[#EC4899] font-black hover:underline">
+          <Link href="/#faq" className="text-primary font-black hover:underline">
             Frequently Asked Questions
           </Link>
           . Our Lake in the Hills dispatch team is at your service 7 days a week from 8:00 AM to 6:00 PM.

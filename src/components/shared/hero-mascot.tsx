@@ -2,13 +2,21 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Sparkles, ShieldCheck, Zap, Heart, CheckCircle2, Star } from "lucide-react";
+import {
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  Heart,
+  CheckCircle2,
+  Star,
+  Award,
+} from "lucide-react";
 
 /**
  * HeroMascot Component
  *
- * Visual hero element featuring the "Bubble Hero" mascot using /hero.jpg.
- * Key behaviors:
+ * Visual hero element featuring the "Bubble Hero" mascot:
+ * - Uses semantic CSS variables and Tailwind tokens (--primary, --primary-dark, --primary-pale)
  * - Gentle floating & bobbing keyframe animation
  * - Smooth fade + scale entrance on load
  * - Fully responsive: scales down cleanly on mobile without overlapping text
@@ -18,10 +26,10 @@ import { Sparkles, ShieldCheck, Zap, Heart, CheckCircle2, Star } from "lucide-re
 export function HeroMascot() {
   return (
     <div className="relative flex flex-col items-center justify-center w-full max-w-md mx-auto animate-in fade-in zoom-in-95 duration-700 select-none">
-      {/* Soft Pink Ambient Halo behind mascot */}
+      {/* Soft Ambient Halo behind mascot using theme tokens */}
       <div
         aria-hidden="true"
-        className="absolute w-72 h-72 sm:w-88 sm:h-88 rounded-full bg-gradient-to-tr from-[#FCE7F3] via-[#F472B6]/30 to-[#38BDF8]/20 blur-3xl pointer-events-none -z-10 animate-pulse"
+        className="absolute w-72 h-72 sm:w-88 sm:h-88 rounded-full bg-gradient-to-tr from-primary-pale via-primary-light/25 to-secondary/20 blur-3xl pointer-events-none -z-10 animate-pulse"
       />
 
       {/* Floating & Bobbing Container */}
@@ -29,34 +37,27 @@ export function HeroMascot() {
         {/* Floating Mini Decorative Badge - Top Left */}
         <div
           aria-hidden="true"
-          className="absolute -top-2 -left-2 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-pink-100 flex items-center gap-1.5 animate-bounce [animation-duration:3s]"
+          className="absolute -top-2 -left-2 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-primary-pale flex items-center gap-1.5 animate-bounce [animation-duration:3s]"
         >
-          <div className="h-6 w-6 rounded-full bg-pink-100 flex items-center justify-center text-[#EC4899]">
-            <Heart className="h-3.5 w-3.5 fill-[#EC4899]" />
+          <div className="h-6 w-6 rounded-full bg-primary-pale flex items-center justify-center text-primary">
+            <Heart className="h-3.5 w-3.5 fill-primary" />
           </div>
-          <span className="text-[11px] font-bold text-slate-800 pr-1">Pick Up • Wash</span>
+          <span className="text-[11px] font-bold text-slate-800 pr-1 whitespace-nowrap">
+            Pick Up • Wash
+          </span>
         </div>
 
         {/* Floating Mini Decorative Badge - Top Right */}
         <div
           aria-hidden="true"
-          className="absolute top-1/4 -right-3 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-sky-100 flex items-center gap-1.5 animate-bounce [animation-duration:3.6s]"
+          className="absolute top-1/4 -right-10 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-sky-100 flex items-center gap-1.5 animate-bounce [animation-duration:3.6s]"
         >
           <div className="h-6 w-6 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
             <Sparkles className="h-3.5 w-3.5 fill-sky-600" />
           </div>
-          <span className="text-[11px] font-bold text-slate-800 pr-1">Fold &amp; Deliver</span>
-        </div>
-
-        {/* Floating Trust Indicator - Mid Left */}
-        <div
-          aria-hidden="true"
-          className="absolute bottom-16 -left-3 bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl shadow-md border border-slate-100 flex items-center gap-1.5 hidden sm:flex"
-        >
-          <div className="flex text-amber-400">
-            <Star className="h-3 w-3 fill-amber-400" />
-          </div>
-          <span className="text-[10px] font-bold text-slate-700">5.0 Star Care</span>
+          <span className="text-[11px] font-bold text-slate-800 pr-1 whitespace-nowrap">
+            Fold &amp; Deliver
+          </span>
         </div>
 
         {/* Bubble Hero Mascot Image */}
@@ -72,10 +73,10 @@ export function HeroMascot() {
         </div>
 
         {/* Floating Bubble Hero Badge: 24h & Photo Proof */}
-        <div className="absolute -bottom-2 sm:-bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-[300px] bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-pink-200/80 shadow-xl flex items-center justify-between text-xs">
+        <div className="absolute -bottom-2 sm:-bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-[300px] bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-primary-pale shadow-xl flex items-center justify-between text-xs">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-full bg-[#FCE7F3] text-[#EC4899] flex items-center justify-center font-bold shadow-xs">
-              <Zap className="h-4 w-4 fill-[#EC4899]" />
+            <div className="h-8 w-8 rounded-full bg-primary-pale text-primary flex items-center justify-center font-bold shadow-xs">
+              <Zap className="h-4 w-4 fill-primary" />
             </div>
             <div>
               <span className="font-extrabold text-slate-900 block leading-tight">
@@ -88,7 +89,7 @@ export function HeroMascot() {
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[11px] font-black text-[#BE185D] bg-[#FCE7F3] px-2.5 py-0.5 rounded-full border border-pink-200">
+            <span className="text-[11px] font-black text-primary-dark bg-primary-pale px-2.5 py-0.5 rounded-full border border-primary-pale">
               24h Fast
             </span>
             <span className="text-[9px] text-slate-400 font-semibold mt-0.5 flex items-center gap-0.5">
@@ -96,6 +97,17 @@ export function HeroMascot() {
               Photo Proof
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Trust Micro-Badge below mascot */}
+      <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/60 shadow-xs text-[11px] text-slate-600">
+        <Award className="h-3.5 w-3.5 text-primary" />
+        <span className="font-semibold text-slate-700">100% Satisfaction Guaranteed</span>
+        <span className="text-slate-300">•</span>
+        <div className="flex items-center gap-0.5 text-amber-500">
+          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <span className="font-bold text-slate-800">4.9 / 5</span>
         </div>
       </div>
     </div>

@@ -51,13 +51,13 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           {/* Header Title & Hero Positioning */}
           <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-pink-50 text-[#E91E63] text-xs font-black border border-pink-200 uppercase tracking-wider shadow-xs">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-pink-50 text-primary text-xs font-black border border-pink-200 uppercase tracking-wider shadow-xs">
               Doorstep Service 7 Days a Week • 8am – 6pm
             </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
               Contact Our{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-[#E91E63] to-rose-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-primary to-rose-600">
                 Laundry Superheroes
               </span>
             </h1>
@@ -74,7 +74,7 @@ export default function ContactPage() {
           {/* Service Guarantee Banner in Dark Theme with Punch Pink CTA */}
           <div className="rounded-3xl bg-gradient-to-r from-black via-neutral-900 to-black text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border border-neutral-800 shadow-xl">
             <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs font-bold text-[#E91E63] uppercase tracking-wider block drop-shadow-[0_0_8px_rgba(233,30,99,0.5)]">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider block drop-shadow-[0_0_8px_var(--primary)]">
                 The Laundry Express Guarantee
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white">
@@ -87,7 +87,7 @@ export default function ContactPage() {
 
             <a
               href="/order"
-              className="shrink-0 px-7 py-4 rounded-2xl bg-[#E91E63] hover:bg-[#d81557] text-white font-black text-sm shadow-lg shadow-pink-500/35 transition-all active:scale-[0.98] whitespace-nowrap"
+              className="shrink-0 px-7 py-4 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-sm shadow-lg shadow-primary/35 transition-all active:scale-[0.98] whitespace-nowrap"
             >
               Schedule Pickup Now
             </a>

@@ -1,7 +1,6 @@
 import * as React from "react";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/shared/navbar";
-import { PromoBanner } from "@/components/shared/promo-banner";
 import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { OrderFlow } from "@/components/order/order-flow";
@@ -52,9 +51,6 @@ function OrderLoadingSkeleton() {
 export default function OrderPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
-      {/* Dismissible Promo Banner */}
-      <PromoBanner />
-
       {/* Sticky Global Navigation Navbar */}
       <Navbar />
 

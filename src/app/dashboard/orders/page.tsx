@@ -47,7 +47,7 @@ export default function CustomerOrdersPage() {
         </div>
 
         <Link href="/order">
-          <Button className="bg-[#EC4899] hover:bg-[#BE185D] text-white shadow-md shadow-pink-500/25 text-xs">
+          <Button className="bg-primary hover:bg-primary-dark text-white shadow-md shadow-primary/25 text-xs">
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
             <span>Book Next Pickup</span>
           </Button>
@@ -73,7 +73,7 @@ export default function CustomerOrdersPage() {
                     {order.order_status.replace("_", " ")}
                   </Badge>
                   {order.proofs && order.proofs.length > 0 && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#EC4899] bg-pink-50 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-pink-50 px-2 py-0.5 rounded-full">
                       <Camera className="h-3 w-3" />
                       <span>{order.proofs.length} Proof Photo(s)</span>
                     </span>
@@ -90,7 +90,7 @@ export default function CustomerOrdersPage() {
               </div>
 
               <div className="flex items-center gap-3 self-end md:self-center">
-                <Button size="sm" variant="outline" className="border-pink-200 text-[#EC4899] hover:bg-pink-50 text-xs">
+                <Button size="sm" variant="outline" className="border-pink-200 text-primary hover:bg-pink-50 text-xs">
                   <span>View Timeline &amp; Photos</span>
                 </Button>
               </div>
@@ -112,7 +112,7 @@ export default function CustomerOrdersPage() {
             </button>
 
             <div>
-              <span className="text-[11px] font-black uppercase text-[#BE185D] tracking-wider">
+              <span className="text-[11px] font-black uppercase text-primary-dark tracking-wider">
                 Real Customer Order Journey
               </span>
               <h3 className="text-2xl font-black text-slate-900">
@@ -125,22 +125,22 @@ export default function CustomerOrdersPage() {
               <span className="text-xs font-black text-slate-900 block">4-Stage Custody Progression</span>
               <div className="grid grid-cols-4 gap-2 text-center text-xs">
                 <div className="space-y-1">
-                  <div className="h-2 rounded-full bg-[#EC4899]" />
+                  <div className="h-2 rounded-full bg-primary" />
                   <span className="font-extrabold text-slate-900 block text-[11px]">1. Picked Up</span>
                   <span className="text-[10px] text-emerald-600 font-bold">Verified</span>
                 </div>
                 <div className="space-y-1">
-                  <div className={`h-2 rounded-full ${selectedOrder.order_status !== "confirmed" ? "bg-[#EC4899]" : "bg-slate-200"}`} />
+                  <div className={`h-2 rounded-full ${selectedOrder.order_status !== "confirmed" ? "bg-primary" : "bg-slate-200"}`} />
                   <span className="font-extrabold text-slate-900 block text-[11px]">2. Gentle Wash</span>
-                  <span className="text-[10px] text-[#EC4899] font-bold">Cold Sanitized</span>
+                  <span className="text-[10px] text-primary font-bold">Cold Sanitized</span>
                 </div>
                 <div className="space-y-1">
-                  <div className={`h-2 rounded-full ${selectedOrder.order_status === "completed" ? "bg-[#EC4899]" : "bg-slate-200"}`} />
+                  <div className={`h-2 rounded-full ${selectedOrder.order_status === "completed" ? "bg-primary" : "bg-slate-200"}`} />
                   <span className="font-medium text-slate-500 block text-[11px]">3. Crisp Fold</span>
                   <span className="text-[10px] text-slate-400">{selectedOrder.order_status === "completed" ? "Complete" : "In Progress"}</span>
                 </div>
                 <div className="space-y-1">
-                  <div className={`h-2 rounded-full ${selectedOrder.order_status === "completed" ? "bg-[#EC4899]" : "bg-slate-200"}`} />
+                  <div className={`h-2 rounded-full ${selectedOrder.order_status === "completed" ? "bg-primary" : "bg-slate-200"}`} />
                   <span className="font-medium text-slate-500 block text-[11px]">4. Delivered</span>
                   <span className="text-[10px] text-slate-400">{selectedOrder.order_status === "completed" ? "On Porch" : "Pending"}</span>
                 </div>
@@ -150,7 +150,7 @@ export default function CustomerOrdersPage() {
             {/* Proof Photos Gallery */}
             <div className="space-y-3">
               <h4 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
-                <Camera className="h-4 w-4 text-[#EC4899]" />
+                <Camera className="h-4 w-4 text-primary" />
                 <span>Verified Driver Proof Photos</span>
               </h4>
 

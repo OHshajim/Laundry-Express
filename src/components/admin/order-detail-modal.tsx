@@ -76,7 +76,7 @@ export function OrderDetailModal({
                 <User className="h-4 w-4 text-sky-600 shrink-0" />
                 <span>Customer &amp; Presence Verification</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-100 text-[#E91E63]">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-100 text-primary">
                 {prevOrdersCount > 0 ? "Repeat Customer" : "New Customer"}
               </span>
             </div>
@@ -163,7 +163,7 @@ export function OrderDetailModal({
                 </div>
                 <div className="flex justify-between font-black text-sm text-slate-900 pt-1 border-t border-slate-100">
                   <span>Total Paid:</span>
-                  <span className="text-[#1E88C7]">{formatCurrency(order.total_amount)}</span>
+                  <span className="text-primary">{formatCurrency(order.total_amount)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold pt-1">
                   <CreditCard className="h-3.5 w-3.5 shrink-0" />

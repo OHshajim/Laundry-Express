@@ -94,7 +94,7 @@ export function OrderPipeline({
       {systemAlert && (
         <div className="p-4 rounded-2xl bg-slate-900 text-white border border-slate-700 shadow-xl flex items-center justify-between animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5 text-xs font-semibold">
-            <Bell className="h-4 w-4 text-[#F5A623] shrink-0 animate-bounce" />
+            <Bell className="h-4 w-4 text-hero-amber shrink-0 animate-bounce" />
             <span>{systemAlert}</span>
           </div>
           <button type="button" onClick={() => setSystemAlert(null)} className="text-xs text-slate-400 hover:text-white">✕</button>
@@ -110,12 +110,12 @@ export function OrderPipeline({
         </div>
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Active In-Flight</span>
-          <span className="text-2xl font-black text-[#1E88C7] mt-1 block">{activeCount}</span>
+          <span className="text-2xl font-black text-primary mt-1 block">{activeCount}</span>
           <span className="text-[11px] text-slate-500 font-medium mt-1 block">Scheduled &amp; In-Route</span>
         </div>
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">In Wash &amp; Dry</span>
-          <span className="text-2xl font-black text-[#F5A623] mt-1 block">{inWashCount}</span>
+          <span className="text-2xl font-black text-hero-amber mt-1 block">{inWashCount}</span>
           <span className="text-[11px] text-slate-500 font-medium mt-1 block">Active Machine Cycles</span>
         </div>
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
@@ -203,7 +203,7 @@ export function OrderPipeline({
             )}
 
             <div className="p-6 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-2">
-              <Camera className="h-8 w-8 text-[#1E88C7] mx-auto shrink-0" />
+              <Camera className="h-8 w-8 text-primary mx-auto shrink-0" />
               <p className="font-bold text-slate-800">
                 {proofType === "damage" ? "Capture Damaged Garment Photo" : `Simulate Camera Snapshot (${proofType})`}
               </p>

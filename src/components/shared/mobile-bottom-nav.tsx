@@ -67,10 +67,10 @@ export function MobileBottomNav() {
                 aria-label={`Go to ${item.name}`}
                 className="relative -top-3 flex flex-col items-center group focus:outline-none focus:ring-2 focus:ring-sky-500 rounded-full"
               >
-                <div className="h-12 w-12 rounded-full bg-[#E91E63] hover:bg-[#d81557] flex items-center justify-center text-white shadow-lg shadow-pink-500/40 group-active:scale-95 transition-all">
+                <div className="h-12 w-12 rounded-full bg-primary hover:bg-primary-dark flex items-center justify-center text-white shadow-lg shadow-primary/40 group-active:scale-95 transition-all">
                   <Icon className="h-5 w-5 animate-pulse" />
                 </div>
-                <span className="text-[10px] font-bold text-[#E91E63] mt-0.5">
+                <span className="text-[10px] font-bold text-primary mt-0.5">
                   {item.name}
                 </span>
                 <span className="sr-only">(Opens booking checkout)</span>

@@ -49,7 +49,7 @@ export default function AdminTransactionsPage() {
             <div className="space-y-1">
               <Link
                 href="/admin"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-[#EC4899] transition-colors mb-1"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-primary transition-colors mb-1"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span>Return to Orders Pipeline</span>
@@ -72,7 +72,7 @@ export default function AdminTransactionsPage() {
                 disabled={isSyncing}
                 className="text-xs bg-neutral-900 border-neutral-800 text-neutral-300 hover:text-white"
               >
-                <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? "animate-spin text-[#EC4899]" : ""}`} />
+                <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? "animate-spin text-primary" : ""}`} />
                 <span>{isSyncing ? "Syncing..." : "Sync Stripe"}</span>
               </Button>
             </div>

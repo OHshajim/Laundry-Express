@@ -23,7 +23,7 @@ export function CustomerCard({ customer, onSelectCustomer }: CustomerCardProps) 
   return (
     <div
       onClick={() => onSelectCustomer(customer)}
-      className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-[#1E88C7]/50 transition-all cursor-pointer space-y-3"
+      className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-primary/50 transition-all cursor-pointer space-y-3"
     >
       {/* Customer Header */}
       <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
@@ -53,7 +53,7 @@ export function CustomerCard({ customer, onSelectCustomer }: CustomerCardProps) 
           <a
             href={`mailto:${customer.email}`}
             onClick={(e) => e.stopPropagation()}
-            className="hover:text-[#1E88C7] truncate"
+            className="hover:text-primary truncate"
           >
             {customer.email}
           </a>
@@ -64,7 +64,7 @@ export function CustomerCard({ customer, onSelectCustomer }: CustomerCardProps) 
           <a
             href={`tel:${customer.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="hover:text-[#1E88C7] font-medium"
+            className="hover:text-primary font-medium"
           >
             {customer.phone}
           </a>
@@ -88,7 +88,7 @@ export function CustomerCard({ customer, onSelectCustomer }: CustomerCardProps) 
         <Button
           variant="outline"
           size="sm"
-          className="h-8 px-2.5 text-xs text-slate-700 hover:text-[#1E88C7]"
+          className="h-8 px-2.5 text-xs text-slate-700 hover:text-primary"
           onClick={(e) => {
             e.stopPropagation();
             onSelectCustomer(customer);

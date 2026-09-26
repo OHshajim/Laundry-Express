@@ -32,14 +32,14 @@ export default function TermsPage() {
         <div className="space-y-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#EC4899] transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-primary transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Home</span>
           </Link>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-pink-50 border border-pink-200 text-[#BE185D] text-xs font-black">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#EC4899]" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-pink-50 border border-pink-200 text-primary-dark text-xs font-black">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
             <span>Official Customer Guarantees</span>
           </div>
 
@@ -65,7 +65,7 @@ export default function TermsPage() {
               key={g.id}
               className="p-6 rounded-3xl bg-pink-50/40 border border-pink-100 shadow-xs space-y-3"
             >
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#BE185D] bg-white px-2.5 py-1 rounded-full border border-pink-200">
+              <span className="text-[10px] font-black uppercase tracking-wider text-primary-dark bg-white px-2.5 py-1 rounded-full border border-pink-200">
                 {g.badge}
               </span>
               <h3 className="text-base font-black text-slate-900">{g.title}</h3>
@@ -79,7 +79,7 @@ export default function TermsPage() {
           {/* Policy 1: Zero Lost-Garment */}
           <section id="zero-lost" className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5">
-              <ShieldCheck className="h-6 w-6 text-[#EC4899]" />
+              <ShieldCheck className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-black text-slate-900">1. Zero Lost-Garment Guarantee</h2>
             </div>
             <div className="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -101,7 +101,7 @@ export default function TermsPage() {
           {/* Policy 2: 100% Satisfaction or Free Re-Wash */}
           <section id="free-rewash" className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="h-6 w-6 text-[#EC4899]" />
+              <Sparkles className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-black text-slate-900">2. 100% Satisfaction or Free Re-Wash</h2>
             </div>
             <div className="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -120,7 +120,7 @@ export default function TermsPage() {
           {/* Policy 3: Happiness Guarantee & Doorstep Protocols */}
           <section id="happiness" className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5">
-              <HeartHandshake className="h-6 w-6 text-[#EC4899]" />
+              <HeartHandshake className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-black text-slate-900">3. Happiness Guarantee &amp; Doorstep Protocols</h2>
             </div>
             <div className="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -148,7 +148,7 @@ export default function TermsPage() {
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <a href={`tel:${APP_CONFIG.supportPhone}`}>
               <Button variant="outline" className="bg-white text-slate-900 border-white hover:bg-pink-50">
-                <Phone className="h-4 w-4 mr-2 text-[#EC4899]" />
+                <Phone className="h-4 w-4 mr-2 text-primary" />
                 {APP_CONFIG.supportPhone}
               </Button>
             </a>

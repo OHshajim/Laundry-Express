@@ -43,23 +43,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4899] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer whitespace-nowrap shrink-0 max-w-full";
+      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer whitespace-nowrap shrink-0 max-w-full";
 
     const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        "bg-[#EC4899] text-white hover:bg-[#BE185D] hover:text-white shadow-md shadow-pink-500/20 active:bg-[#9D174D]",
+        "bg-primary text-white hover:bg-primary-dark hover:text-white shadow-md shadow-primary/20 active:bg-primary-dark",
       hero:
-        "bg-[#EC4899] text-white hover:bg-[#BE185D] hover:text-white shadow-lg shadow-pink-500/25 active:bg-[#9D174D]",
+        "bg-primary text-white hover:bg-primary-dark hover:text-white shadow-lg shadow-primary/25 active:bg-primary-dark",
       secondary:
-        "bg-[#38BDF8]/15 text-[#141B2E] hover:bg-[#38BDF8]/30 hover:text-[#141B2E] border border-[#38BDF8]/40 active:bg-[#38BDF8]/20",
+        "bg-secondary/15 text-deep hover:bg-secondary/30 hover:text-deep border border-secondary/40 active:bg-secondary/20",
       outline:
-        "border border-slate-300 bg-white text-[#141B2E] hover:bg-pink-50/50 hover:text-[#EC4899] hover:border-pink-300 active:bg-pink-100",
+        "border border-slate-300 bg-white text-deep hover:bg-primary-pale/50 hover:text-primary hover:border-primary-light active:bg-primary-pale",
       ghost:
-        "text-[#141B2E] hover:text-[#EC4899] hover:bg-pink-50 active:bg-pink-100",
+        "text-deep hover:text-primary hover:bg-primary-pale active:bg-primary-pale/60",
       danger:
-        "bg-[#D63A3A] text-white hover:bg-[#b82e2e] hover:text-white shadow-sm active:bg-[#a82525]",
+        "bg-accent-alert text-white hover:opacity-90 hover:text-white shadow-sm active:opacity-80",
       accent:
-        "bg-[#F5A623] text-[#141B2E] hover:bg-[#e09216] hover:text-[#141B2E] shadow-md shadow-amber-400/20 font-black active:bg-[#c97f0a]",
+        "bg-hero-amber text-deep hover:opacity-90 hover:text-deep shadow-md shadow-hero-amber/20 font-black active:opacity-80",
     };
 
     const sizeStyles: Record<ButtonSize, string> = {

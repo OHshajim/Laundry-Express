@@ -114,19 +114,19 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
         </div>
         <div className="flex justify-between pt-3 border-t border-slate-200 text-base font-black text-slate-900">
           <span>Estimated Total:</span>
-          <span className="text-xl text-[#EC4899]">{formatCurrency(bagTotal)}</span>
+          <span className="text-xl text-primary">{formatCurrency(bagTotal)}</span>
         </div>
       </div>
 
       {/* Guarantee Badge with Link to Policy */}
       <div className="flex items-center justify-between text-xs pt-1">
         <span className="flex items-center gap-1.5 font-bold text-slate-700">
-          <ShieldCheck className="h-4 w-4 text-[#EC4899]" />
+          <ShieldCheck className="h-4 w-4 text-primary" />
           <span>Zero Lost-Garment Guarantee</span>
         </span>
         <Link
           href="/terms#zero-lost"
-          className="text-xs font-bold text-[#EC4899] hover:underline"
+          className="text-xs font-bold text-primary hover:underline"
         >
           See full policy →
         </Link>
@@ -134,7 +134,7 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
 
       {/* CTA to Order with chosen count */}
       <Link href={`/order?mode=per_bag&bags=${bagCount}`} className="block">
-        <Button variant="hero" size="lg" className="w-full shadow-lg shadow-pink-500/25">
+        <Button variant="hero" size="lg" className="w-full shadow-lg shadow-primary/25">
           <span>Continue with {bagCount} Bag{bagCount > 1 ? "s" : ""}</span>
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>

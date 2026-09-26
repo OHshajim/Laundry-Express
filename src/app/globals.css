@@ -31,11 +31,11 @@
   --hero-amber: #F5A623;
 
   /* Aliases for backwards compatibility */
-  --bubble-sky: #38BDF8;
-  --deep-hero: #EC4899;
-  --cape-red: #D63A3A;
-  --ink-navy: #141B2E;
-  --punch-pink: #EC4899;
+  --bubble-sky: var(--secondary);
+  --deep-hero: var(--primary);
+  --cape-red: var(--accent-alert);
+  --ink-navy: var(--deep);
+  --punch-pink: var(--primary);
 }
 
 @theme inline {
@@ -48,12 +48,12 @@
   --color-secondary: var(--secondary);
   --color-accent-alert: var(--accent-alert);
   --color-deep: var(--deep);
-  --color-bubble-sky: #38BDF8;
-  --color-cape-red: #D63A3A;
-  --color-hero-amber: #F5A623;
-  --color-ink-navy: #141B2E;
-  --color-foam-white: #FFFFFF;
-  --color-punch-pink: #EC4899;
+  --color-bubble-sky: var(--secondary);
+  --color-cape-red: var(--accent-alert);
+  --color-hero-amber: var(--hero-amber);
+  --color-ink-navy: var(--deep);
+  --color-foam-white: var(--foam-white);
+  --color-punch-pink: var(--primary);
 }
 
 /* Custom Thin Sleek Scrollbar in Bubble Pink */
@@ -143,67 +143,125 @@ button,
 }
 
 /* Bubble Theme Classes: Soap, Foam, Sky & Micro */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: bubbleRise var(--dur, 9s) var(--del, 0s) ease-in infinite;
+  will-change: transform, opacity;
+}
+
 .bubble-soap {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85) 0%, rgba(236, 72, 153, 0.35) 45%, rgba(190, 24, 93, 0.2) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(1px);
+  background: radial-gradient(circle at 30% 28%,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 255, 255, 0.38) 28%,
+      rgba(236, 72, 153, 0.16) 60%,
+      rgba(56, 189, 248, 0.10) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 0 14px rgba(255, 255, 255, 0.55),
+    inset -5px -5px 10px rgba(236, 72, 153, 0.18),
+    0 3px 10px rgba(236, 72, 153, 0.1);
 }
 
 .bubble-foam {
-  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(252, 231, 243, 0.8) 50%, rgba(244, 114, 182, 0.3) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: radial-gradient(circle at 35% 30%,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(252, 231, 243, 0.65) 40%,
+      rgba(236, 72, 153, 0.18) 100%);
+  border: 1px solid rgba(236, 72, 153, 0.32);
+  box-shadow: inset 0 -4px 8px rgba(236, 72, 153, 0.12);
 }
 
 .bubble-sky {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85) 0%, rgba(56, 189, 248, 0.35) 50%, rgba(14, 165, 233, 0.2) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle at 30% 30%,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(56, 189, 248, 0.3) 50%,
+      rgba(14, 165, 233, 0.15) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
 }
 
 .bubble-micro {
-  opacity: 0.28;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9) 0%, rgba(236, 72, 153, 0.3) 70%, transparent 100%);
-  border: 0.5px solid rgba(255, 255, 255, 0.5);
-  pointer-events: none;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(236, 72, 153, 0.38);
 }
 
-/* Keyframes for bubble motion */
-@keyframes bubble-float-slow {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) scale(1);
+@keyframes bubbleRise {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.2);
+    opacity: 0;
   }
-  50% {
-    transform: translateY(-22px) translateX(8px) scale(1.03);
+
+  6% {
+    opacity: 0.9;
+    transform: translateY(-6vh) translateX(calc(var(--drift, 15px) * 0.1)) scale(0.75);
+  }
+
+  28% {
+    transform: translateY(-28vh) translateX(calc(var(--drift, 15px) * 0.45)) scale(1);
+  }
+
+  52% {
+    transform: translateY(-52vh) translateX(var(--drift, 15px)) scale(1.06);
+    opacity: 0.7;
+  }
+
+  78% {
+    transform: translateY(-78vh) translateX(calc(var(--drift, 15px) * 1.55)) scale(1.12);
+    opacity: 0.28;
+  }
+
+  100% {
+    transform: translateY(-108vh) translateX(calc(var(--drift, 15px) * 2)) scale(1.35);
+    opacity: 0;
   }
 }
 
-@keyframes bubble-float-fast {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) scale(1);
+@keyframes bubbleRiseDrift {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.25) rotate(0deg);
+    opacity: 0;
   }
-  50% {
-    transform: translateY(-14px) translateX(-6px) scale(0.97);
+
+  8% {
+    opacity: 1;
   }
+
+  32% {
+    transform: translateY(-30vh) translateX(var(--drift, 20px)) scale(1) rotate(4deg);
+  }
+
+  62% {
+    transform: translateY(-62vh) translateX(calc(var(--drift, 20px) * 0.55)) scale(1.1) rotate(-3deg);
+    opacity: 0.55;
+  }
+
+  88% {
+    opacity: 0.12;
+  }
+
+  100% {
+    transform: translateY(-110vh) translateX(calc(var(--drift, 20px) * 1.9)) scale(1.4) rotate(7deg);
+    opacity: 0;
+  }
+}
+
+.bubble-drift {
+  animation-name: bubbleRiseDrift !important;
 }
 
 @keyframes bubble-wobble {
-  0%, 100% {
+
+  0%,
+  100% {
     border-radius: 50%;
     transform: translateY(0px);
   }
+
   50% {
     border-radius: 54% 46% 52% 48%;
     transform: translateY(-12px) scale(1.02);
   }
-}
-
-.animate-bubble-slow {
-  animation: bubble-float-slow 7s ease-in-out infinite;
-  will-change: transform;
-}
-
-.animate-bubble-fast {
-  animation: bubble-float-fast 4.5s ease-in-out infinite;
-  will-change: transform;
 }
 
 .animate-bubble-wobble {
@@ -213,15 +271,15 @@ button,
 
 /* Reduced motion and mobile performance overrides */
 @media (prefers-reduced-motion: reduce) {
-  .animate-bubble-slow,
-  .animate-bubble-fast,
+
+  .bubble,
   .animate-bubble-wobble {
     animation: none !important;
   }
 }
 
 @media (max-width: 640px) {
-  .bubble-container > div:nth-child(n+6) {
+  .bubble-container>div:nth-child(n+6) {
     display: none;
   }
 }
