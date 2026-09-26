@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Check, ShoppingBag, Scale, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FloatingBubbles } from "./floating-bubbles";
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-20 bg-slate-50/70 scroll-mt-20">
+    <section id="pricing" className="relative overflow-hidden py-20 bg-slate-50/70 scroll-mt-20">
+      <FloatingBubbles variant="banner" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-bold mb-3">

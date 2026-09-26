@@ -6,6 +6,7 @@ import { Star, CheckCircle, XCircle, Trash2, Clock, Image as ImageIcon } from "l
 import type { OrderReview } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 
 interface ReviewModeratorProps {
   reviews: OrderReview[];
@@ -29,6 +30,7 @@ export function ReviewModerator({
   onChangeStatus,
 }: ReviewModeratorProps) {
   const [filter, setFilter] = React.useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [selectedPhoto, setSelectedPhoto] = React.useState<string | null>(null);
 
   const filteredReviews = reviews.filter((r) => {
     if (filter === "all") return true;
@@ -52,33 +54,18 @@ export function ReviewModerator({
 
         {/* Filter Badges */}
         <div className="flex items-center gap-1.5 p-1 bg-slate-200/60 rounded-xl text-xs font-bold">
-          <button
-            type="button"
-            onClick={() => setFilter("all")}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              filter === "all" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            All ({reviews.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter("pending")}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              filter === "pending" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Pending ({pendingCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter("approved")}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              filter === "approved" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Approved ({approvedCount})
-          </button>
+          {(["all", "pending", "approved"] as const).map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setFilter(status)}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer capitalize ${
+                filter === status ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {status} ({status === "all" ? reviews.length : status === "pending" ? pendingCount : approvedCount})
+            </button>
+          ))}
         </div>
       </div>
 
@@ -142,18 +129,21 @@ export function ReviewModerator({
                     </span>
                     <div className="flex gap-2">
                       {rev.photos.map((p, i) => (
-                        <div
+                        <button
+                          type="button"
                           key={p.id || i}
-                          className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0"
+                          onClick={() => setSelectedPhoto(p.photo_url)}
+                          className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 hover:ring-2 hover:ring-[#1E88C7] transition-all cursor-pointer group"
+                          title="Click to view full photo"
                         >
                           <Image
                             src={p.photo_url}
                             alt="Customer laundry review attachment"
                             fill
                             sizes="64px"
-                            className="object-cover"
+                            className="object-cover group-hover:scale-105 transition-transform"
                           />
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -203,13 +193,7 @@ export function ReviewModerator({
                 </div>
 
                 {onDelete && (
-                  <Button
-                    variant="danger"
-                    size="xs"
-                    onClick={() => onDelete(rev.id)}
-                    className="text-xs"
-                    title="Permanently delete review"
-                  >
+                  <Button variant="danger" size="xs" onClick={() => onDelete(rev.id)} className="text-xs" title="Permanently delete review">
                     <Trash2 className="h-3.5 w-3.5 mr-1 shrink-0" />
                     Delete Review
                   </Button>
@@ -226,6 +210,25 @@ export function ReviewModerator({
         <span>Pending Queue: <strong className="text-slate-800">{pendingCount}</strong></span>
         <span>Rejected: <strong className="text-slate-800">{rejectedCount}</strong></span>
       </div>
+
+      {/* Enlarged Photo Inspection Modal */}
+      {selectedPhoto && (
+        <Dialog
+          open={!!selectedPhoto}
+          onOpenChange={() => setSelectedPhoto(null)}
+          title="Customer Laundry Photo Audit"
+          description="High-resolution verified photo attachment submitted with customer review."
+        >
+          <div className="space-y-4">
+            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200">
+              <Image src={selectedPhoto} alt="Enlarged review photo proof" fill sizes="(max-width: 768px) 100vw, 600px" className="object-contain" />
+            </div>
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setSelectedPhoto(null)}>Close Preview</Button>
+            </div>
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 }

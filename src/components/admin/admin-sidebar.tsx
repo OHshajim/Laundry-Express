@@ -163,14 +163,6 @@ export function AdminSidebar({
 
       {/* Bottom Footer Actions */}
       <div className="p-4 border-t border-slate-800/80 space-y-3">
-        <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-400">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
-            <span className="font-bold text-slate-200">Live Dispatch Sync</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block">McHenry &amp; Long Beach Hubs</span>
-        </div>
-
         <Link href="/">
           <Button
             variant="outline"

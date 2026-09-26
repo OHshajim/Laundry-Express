@@ -25,21 +25,20 @@ export function OrderTableRow({
   const statusMeta = ORDER_STATUSES[order.order_status] || ORDER_STATUSES.pending;
 
   return (
-    <tr className="hover:bg-slate-50/80 transition-colors">
+    <tr
+      onClick={() => onViewDetails?.(order)}
+      className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+      title="Click row to inspect complete order details"
+    >
       <td className="p-3.5">
-        <button
-          type="button"
-          onClick={() => onViewDetails?.(order)}
-          className="text-left font-extrabold text-slate-900 hover:text-[#1E88C7] transition-colors cursor-pointer group flex flex-col"
-          title="Click to inspect all order details"
-        >
+        <div className="text-left font-extrabold text-slate-900 group-hover:text-[#1E88C7] transition-colors flex flex-col">
           <span className="underline underline-offset-2 decoration-slate-300 group-hover:decoration-[#1E88C7]">
             {order.order_number}
           </span>
           <span className="text-[10px] text-slate-400 font-mono mt-0.5 font-normal">
             {formatDate(order.created_at)}
           </span>
-        </button>
+        </div>
       </td>
 
       <td className="p-3.5">
@@ -105,22 +104,16 @@ export function OrderTableRow({
       </td>
 
       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2 text-xs text-slate-600 hover:text-[#1E88C7] hover:bg-slate-100"
-          onClick={() => onViewDetails?.(order)}
-          title="Inspect all order details"
-        >
-          Details
-        </Button>
         {/* Optional Weigh scale for KG mode */}
         {order.pricing_mode === "per_kg" && order.order_status !== "completed" && (
           <Button
             variant="outline"
             size="sm"
             className="h-8 px-2 text-xs"
-            onClick={() => onOpenWeightDialog(order)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenWeightDialog(order);
+            }}
             title="Record scale weight"
           >
             <Scale className="h-3.5 w-3.5 mr-1 shrink-0" />
@@ -134,7 +127,10 @@ export function OrderTableRow({
             variant="hero"
             size="sm"
             className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
-            onClick={() => onUpdateStatus(order.id, "driver_assigned")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdateStatus(order.id, "driver_assigned");
+            }}
             title="Accept order and dispatch confirmation email to customer"
           >
             <Send className="h-3.5 w-3.5 mr-1 shrink-0" />
@@ -147,7 +143,10 @@ export function OrderTableRow({
             variant="primary"
             size="sm"
             className="h-8 px-3 text-xs"
-            onClick={() => onOpenProofModal(order, "pickup")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenProofModal(order, "pickup");
+            }}
             title="Upload pickup proof photo to start wash cycle"
           >
             <Camera className="h-3.5 w-3.5 mr-1 shrink-0" />
@@ -161,7 +160,10 @@ export function OrderTableRow({
               variant="outline"
               size="sm"
               className="h-8 px-2 text-xs border-rose-300 text-rose-700 hover:bg-rose-50"
-              onClick={() => onOpenProofModal(order, "damage")}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenProofModal(order, "damage");
+              }}
               title="Add photo of pre-existing garment tear or stain to notify customer"
             >
               <AlertTriangle className="h-3.5 w-3.5 mr-1 text-rose-600 shrink-0" />
@@ -172,7 +174,10 @@ export function OrderTableRow({
               variant="hero"
               size="sm"
               className="h-8 px-2.5 text-xs"
-              onClick={() => onUpdateStatus(order.id, "out_for_delivery")}
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(order.id, "out_for_delivery");
+              }}
               title="Mark order finished washing & ready for delivery"
             >
               Ready for Delivery
@@ -185,7 +190,10 @@ export function OrderTableRow({
             variant="hero"
             size="sm"
             className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
-            onClick={() => onOpenProofModal(order, "dropoff")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenProofModal(order, "dropoff");
+            }}
             title="Upload drop-off photo proof to complete order"
           >
             <Camera className="h-3.5 w-3.5 mr-1 shrink-0" />
@@ -198,7 +206,10 @@ export function OrderTableRow({
             variant="secondary"
             size="sm"
             className="h-8 px-2.5 text-xs text-emerald-800 bg-emerald-50 border-emerald-200"
-            onClick={() => onOpenProofModal(order, "dropoff")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenProofModal(order, "dropoff");
+            }}
             title="View verified delivery proof"
           >
             <Check className="h-3.5 w-3.5 mr-1 text-emerald-600 shrink-0" />

@@ -52,6 +52,19 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 
 ## 4. Session History Log
 
+### [2026-09-26 10:55] | Step: Zero Horizontal Scroll Responsive Cards, Clickable Review Photos & Floating Bubble Animations
+- **Prompt:** Remove "Live Dispatch Sync McHenry & Long Beach Hubs" and Details button from order table (click row to open inspection dialog); make review photos clickable with preview modal; convert every table across the website into cards in mobile/tablet views to eliminate horizontal scrolling; add SEO-friendly animations, uniform typography hierarchy, and reusable floating bubble component for hero and other sections; ensure full responsiveness across mobile, tablet, and desktop.
+- **Output:**
+  1. Removed "Live Dispatch Sync • McHenry & Long Beach Hubs" from `src/components/admin/admin-sidebar.tsx`.
+  2. Overhauled `OrderTableRow` (`src/components/admin/order-table-row.tsx`, 224 lines): removed "Details" button, made entire `<tr>` clickable to open inspection modal, and added `e.stopPropagation()` to all operation buttons (`Weigh`, `Accept Order`, `Pickup`, `Report Damage`, `Deliver`, `Proofs`).
+  3. Created `OrderCard` (`src/components/admin/order-card.tsx`, 198 lines) and integrated into `OrderPipeline` (`src/components/admin/order-pipeline.tsx`, 232 lines) rendering desktop table (`hidden lg:block`) and mobile/tablet card view (`lg:hidden`) to eliminate horizontal scroll.
+  4. Created `CustomerCard` (`src/components/admin/customer-card.tsx`, 105 lines) and updated `CustomersManager` (`src/components/admin/customers-manager.tsx`, 216 lines) with responsive cards (`lg:hidden`).
+  5. Updated `CustomerDetailModal` (`src/components/admin/customer-detail-modal.tsx`, 249 lines) and `CouponsManager` (`src/components/admin/coupons-manager.tsx`, 234 lines) with responsive card views for mobile screens.
+  6. Updated `ReviewModerator` (`src/components/admin/review-moderator.tsx`, 236 lines) with clickable review photo thumbnails and a modal dialog for enlarged photo audits.
+  7. Built `FloatingBubbles` (`src/components/shared/floating-bubbles.tsx`, 174 lines) with GPU-accelerated CSS keyframe animations in `src/app/globals.css` (205 lines), integrated into `HeroSection`, `PricingSection`, and `HomeCtaBanner`.
+  8. Verified 100% compliance with the strict 100–250 lines rule across all 65 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive for zero horizontal scrolling on mobile/tablet devices, row-click order inspection, clickable review photos, and brand-aligned floating bubble animations.
+
 ### [2026-09-26 04:00] | Step: Admin Customers Suite, Previous Orders Inspection, UI Decluttering & Light Layout
 - **Prompt:** Remove "Laundry Express Operations Center • Daily Slots: 8am–12pm & 1pm–6pm Enterprise Admin Portal • © 2026 Laundry Express Services" from admin dashboard, make the website light and useful content only, show previous total orders and user preview when admin clicks an order, and add Customers tab in admin dashboard to inspect all customer accounts with details, history, orders, reviews, and payments in a dialog.
 - **Output:**

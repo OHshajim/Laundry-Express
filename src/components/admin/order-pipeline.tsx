@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { OrderTableRow } from "./order-table-row";
+import { OrderCard } from "./order-card";
 import { OrderDetailModal } from "./order-detail-modal";
 
 interface OrderPipelineProps {
@@ -124,35 +125,47 @@ export function OrderPipeline({
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-              <tr>
-                <th className="p-3.5">Order</th>
-                <th className="p-3.5">Customer &amp; Notes</th>
-                <th className="p-3.5">Mode &amp; Volume</th>
-                <th className="p-3.5">Scheduled Slot</th>
-                <th className="p-3.5">Total</th>
-                <th className="p-3.5">Status</th>
-                <th className="p-3.5 text-right">Progressive Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
-              {orders.map((ord) => (
-                <OrderTableRow
-                  key={ord.id}
-                  order={ord}
-                  onUpdateStatus={handleStatusChangeWithNotification}
-                  onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_kg || 5)); }}
-                  onOpenProofModal={handleOpenProofModal}
-                  onViewDetails={(o) => setDetailOrderId(o.id)}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Desktop Orders Table */}
+      <div className="hidden lg:block rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+            <tr>
+              <th className="p-3.5">Order</th>
+              <th className="p-3.5">Customer &amp; Notes</th>
+              <th className="p-3.5">Mode &amp; Volume</th>
+              <th className="p-3.5">Scheduled Slot</th>
+              <th className="p-3.5">Total</th>
+              <th className="p-3.5">Status</th>
+              <th className="p-3.5 text-right">Progressive Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 text-slate-700">
+            {orders.map((ord) => (
+              <OrderTableRow
+                key={ord.id}
+                order={ord}
+                onUpdateStatus={handleStatusChangeWithNotification}
+                onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_kg || 5)); }}
+                onOpenProofModal={handleOpenProofModal}
+                onViewDetails={(o) => setDetailOrderId(o.id)}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile & Tablet Card View (No Horizontal Scrolling) */}
+      <div className="lg:hidden space-y-3">
+        {orders.map((ord) => (
+          <OrderCard
+            key={ord.id}
+            order={ord}
+            onUpdateStatus={handleStatusChangeWithNotification}
+            onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_kg || 5)); }}
+            onOpenProofModal={handleOpenProofModal}
+            onViewDetails={(o) => setDetailOrderId(o.id)}
+          />
+        ))}
       </div>
 
       {/* Photo Proof & Damage Reporting Modal */}

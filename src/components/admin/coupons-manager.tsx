@@ -127,7 +127,8 @@ export function CouponsManager() {
         </div>
       </form>
 
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
             <tr>
@@ -201,6 +202,32 @@ export function CouponsManager() {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile & Tablet Card View (No Horizontal Scroll) */}
+      <div className="md:hidden space-y-3">
+        {coupons.map((c) => (
+          <div key={c.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-mono font-bold text-slate-900 text-sm">{c.code}</span>
+              <button type="button" onClick={() => handleToggleActive(c.id)} className="cursor-pointer">
+                <Badge variant={c.active ? "success" : "secondary"}>{c.active ? "Active" : "Disabled"}</Badge>
+              </button>
+            </div>
+            <div className="flex items-center justify-between text-slate-600">
+              <span>Discount: <strong className="text-slate-900">{c.discount}</strong></span>
+              <span className="capitalize text-slate-500">{c.discount_type.replace("_", " ")}</span>
+            </div>
+            <div className="flex justify-end gap-1.5 pt-2 border-t border-slate-100">
+              <Button variant="outline" size="xs" onClick={() => startEdit(c)}>
+                <Edit2 className="h-3 w-3 mr-1" /> Edit
+              </Button>
+              <Button variant="danger" size="xs" onClick={() => handleDeleteCoupon(c.id)}>
+                <Trash2 className="h-3 w-3 mr-1" /> Delete
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

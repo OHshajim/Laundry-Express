@@ -5,6 +5,7 @@ import { Search, UserCheck, CreditCard, ShoppingBag, Eye, Phone, Mail, MapPin } 
 import type { Order } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CustomerCard } from "./customer-card";
 import { CustomerDetailModal, CustomerAccount } from "./customer-detail-modal";
 
 interface CustomersManagerProps {
@@ -87,103 +88,118 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
         </div>
       </div>
 
-      {/* Customers Table */}
-      <div className="rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+      {/* Desktop Customers Table */}
+      <div className="hidden lg:block rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th className="p-3.5">Customer</th>
+              <th className="p-3.5">Contact Details</th>
+              <th className="p-3.5">Doorstep Address</th>
+              <th className="p-3.5">Orders</th>
+              <th className="p-3.5">Total Spent</th>
+              <th className="p-3.5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 text-slate-700">
+            {filteredCustomers.length === 0 ? (
               <tr>
-                <th className="p-3.5">Customer</th>
-                <th className="p-3.5">Contact Details</th>
-                <th className="p-3.5">Doorstep Address</th>
-                <th className="p-3.5">Orders</th>
-                <th className="p-3.5">Total Spent</th>
-                <th className="p-3.5 text-right">Actions</th>
+                <td colSpan={6} className="p-8 text-center text-slate-400 italic">
+                  No customers match your search criteria.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
-              {filteredCustomers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400 italic">
-                    No customers match your search criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredCustomers.map((cust) => {
-                  const custTotalSpent = cust.orders.reduce((sum, o) => sum + o.total_amount, 0);
+            ) : (
+              filteredCustomers.map((cust) => {
+                const custTotalSpent = cust.orders.reduce((sum, o) => sum + o.total_amount, 0);
 
-                  return (
-                    <tr key={cust.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-slate-100 text-slate-800 font-black flex items-center justify-center text-xs shrink-0">
-                            {cust.full_name.charAt(0)}
-                          </div>
-                          <div>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCustomer(cust)}
-                              className="font-bold text-slate-900 hover:text-[#1E88C7] transition-colors text-left cursor-pointer"
-                            >
-                              {cust.full_name}
-                            </button>
-                            <span className="text-[10px] text-slate-400 block font-mono">
-                              ID: {cust.id} • Joined {cust.joined_date}
-                            </span>
-                          </div>
+                return (
+                  <tr key={cust.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl bg-slate-100 text-slate-800 font-black flex items-center justify-center text-xs shrink-0">
+                          {cust.full_name.charAt(0)}
                         </div>
-                      </td>
-
-                      <td className="p-3.5 space-y-1">
-                        <div className="flex items-center gap-1.5 text-slate-600">
-                          <Mail className="h-3 w-3 text-slate-400 shrink-0" />
-                          <a href={`mailto:${cust.email}`} className="hover:text-[#1E88C7] truncate max-w-[180px]">
-                            {cust.email}
-                          </a>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCustomer(cust)}
+                            className="font-bold text-slate-900 hover:text-[#1E88C7] transition-colors text-left cursor-pointer"
+                          >
+                            {cust.full_name}
+                          </button>
+                          <span className="text-[10px] text-slate-400 block font-mono">
+                            ID: {cust.id} • Joined {cust.joined_date}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-600">
-                          <Phone className="h-3 w-3 text-slate-400 shrink-0" />
-                          <a href={`tel:${cust.phone}`} className="hover:text-[#1E88C7] font-medium">
-                            {cust.phone}
-                          </a>
-                        </div>
-                      </td>
+                      </div>
+                    </td>
 
-                      <td className="p-3.5 max-w-xs truncate text-slate-600 font-medium">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                          <span className="truncate">{cust.address}</span>
-                        </div>
-                      </td>
+                    <td className="p-3.5 space-y-1">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <Mail className="h-3 w-3 text-slate-400 shrink-0" />
+                        <a href={`mailto:${cust.email}`} className="hover:text-[#1E88C7] truncate max-w-[180px]">
+                          {cust.email}
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <Phone className="h-3 w-3 text-slate-400 shrink-0" />
+                        <a href={`tel:${cust.phone}`} className="hover:text-[#1E88C7] font-medium">
+                          {cust.phone}
+                        </a>
+                      </div>
+                    </td>
 
-                      <td className="p-3.5 font-bold text-slate-800">
-                        <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold text-[11px]">
-                          {cust.orders.length} order{cust.orders.length !== 1 ? "s" : ""}
-                        </span>
-                      </td>
+                    <td className="p-3.5 max-w-xs truncate text-slate-600 font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                        <span className="truncate">{cust.address}</span>
+                      </div>
+                    </td>
 
-                      <td className="p-3.5 font-extrabold text-slate-900">
-                        {formatCurrency(custTotalSpent)}
-                      </td>
+                    <td className="p-3.5 font-bold text-slate-800">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold text-[11px]">
+                        {cust.orders.length} order{cust.orders.length !== 1 ? "s" : ""}
+                      </span>
+                    </td>
 
-                      <td className="p-3.5 text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-2.5 text-xs text-slate-700 hover:text-[#1E88C7]"
-                          onClick={() => setSelectedCustomer(cust)}
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1 shrink-0" />
-                          View Profile
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                    <td className="p-3.5 font-extrabold text-slate-900">
+                      {formatCurrency(custTotalSpent)}
+                    </td>
+
+                    <td className="p-3.5 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2.5 text-xs text-slate-700 hover:text-[#1E88C7]"
+                        onClick={() => setSelectedCustomer(cust)}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1 shrink-0" />
+                        View Profile
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile & Tablet Card View (No Horizontal Scroll) */}
+      <div className="lg:hidden space-y-3">
+        {filteredCustomers.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-white border border-slate-200 text-slate-400 italic text-xs">
+            No customers match your search criteria.
+          </div>
+        ) : (
+          filteredCustomers.map((cust) => (
+            <CustomerCard
+              key={cust.id}
+              customer={cust}
+              onSelectCustomer={(c) => setSelectedCustomer(c)}
+            />
+          ))
+        )}
       </div>
 
       {/* Customer Full Detail & History Modal */}

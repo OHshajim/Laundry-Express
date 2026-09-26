@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Sparkles, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MascotBadge } from "@/components/shared/mascot-badge";
+import { FloatingBubbles } from "@/components/shared/floating-bubbles";
 
 /**
  * HomeCtaBanner Component
@@ -21,6 +22,9 @@ export function HomeCtaBanner() {
       aria-labelledby="cta-heading"
       className="py-16 bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 text-white relative overflow-hidden"
     >
+      {/* Ambient Floating Mascot Bubbles */}
+      <FloatingBubbles variant="banner" />
+
       {/* Decorative background glow circles */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />

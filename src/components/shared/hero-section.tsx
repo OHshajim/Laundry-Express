@@ -2,10 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FloatingBubbles } from "./floating-bubbles";
 
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-sky-50/70 via-white to-white pt-10 pb-16 lg:pt-16 lg:pb-24">
+      {/* Ambient Floating Mascot Bubbles */}
+      <FloatingBubbles variant="hero" />
+
       {/* Decorative gradient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-sky-200/40 via-rose-200/30 to-amber-200/30 rounded-full blur-3xl pointer-events-none -z-10" />
 

@@ -16,14 +16,7 @@ export interface CustomerAccount {
   joined_date: string;
   orders: Order[];
   reviews: OrderReview[];
-  payments: {
-    id: string;
-    amount: number;
-    date: string;
-    method: string;
-    status: string;
-    order_number: string;
-  }[];
+  payments: { id: string; amount: number; date: string; method: string; status: string; order_number: string }[];
 }
 
 interface CustomerDetailModalProps {
@@ -124,42 +117,64 @@ export function CustomerDetailModal({
             {customer.orders.length === 0 ? (
               <p className="text-slate-400 py-4 text-center italic">No orders logged yet.</p>
             ) : (
-              <div className="rounded-xl border border-slate-200 overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
-                    <tr>
-                      <th className="p-2.5">Order</th>
-                      <th className="p-2.5">Date</th>
-                      <th className="p-2.5">Mode</th>
-                      <th className="p-2.5">Total</th>
-                      <th className="p-2.5">Status</th>
-                      <th className="p-2.5 text-right">Inspect</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {customer.orders.map((ord) => (
-                      <tr key={ord.id} className="hover:bg-slate-50/70">
-                        <td className="p-2.5 font-bold text-slate-900">{ord.order_number}</td>
-                        <td className="p-2.5 text-slate-500">{formatDate(ord.created_at)}</td>
-                        <td className="p-2.5 uppercase text-[10px] font-semibold">{ord.pricing_mode.replace("_", " ")}</td>
-                        <td className="p-2.5 font-extrabold text-slate-900">{formatCurrency(ord.total_amount)}</td>
-                        <td className="p-2.5">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                            {ord.order_status.replace("_", " ")}
-                          </span>
-                        </td>
-                        <td className="p-2.5 text-right">
-                          {onViewOrder && (
-                            <Button variant="outline" size="xs" onClick={() => { onClose(); onViewOrder(ord); }}>
-                              Details
-                            </Button>
-                          )}
-                        </td>
+              <>
+                <div className="hidden sm:block rounded-xl border border-slate-200 overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                      <tr>
+                        <th className="p-2.5">Order</th>
+                        <th className="p-2.5">Date</th>
+                        <th className="p-2.5">Mode</th>
+                        <th className="p-2.5">Total</th>
+                        <th className="p-2.5">Status</th>
+                        <th className="p-2.5 text-right">Inspect</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {customer.orders.map((ord) => (
+                        <tr key={ord.id} className="hover:bg-slate-50/70">
+                          <td className="p-2.5 font-bold text-slate-900">{ord.order_number}</td>
+                          <td className="p-2.5 text-slate-500">{formatDate(ord.created_at)}</td>
+                          <td className="p-2.5 uppercase text-[10px] font-semibold">{ord.pricing_mode.replace("_", " ")}</td>
+                          <td className="p-2.5 font-extrabold text-slate-900">{formatCurrency(ord.total_amount)}</td>
+                          <td className="p-2.5">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                              {ord.order_status.replace("_", " ")}
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-right">
+                            {onViewOrder && (
+                              <Button variant="outline" size="xs" onClick={() => { onClose(); onViewOrder(ord); }}>
+                                Details
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="sm:hidden space-y-2">
+                  {customer.orders.map((ord) => (
+                    <div key={ord.id} className="p-3 rounded-xl border border-slate-200 bg-white space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-900">{ord.order_number}</span>
+                        <span className="font-extrabold text-slate-900">{formatCurrency(ord.total_amount)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-500 text-[11px]">
+                        <span>{formatDate(ord.created_at)}</span>
+                        <span className="capitalize px-1.5 py-0.5 rounded bg-slate-100 font-semibold">{ord.order_status.replace("_", " ")}</span>
+                      </div>
+                      {onViewOrder && (
+                        <Button variant="outline" size="xs" className="w-full mt-1" onClick={() => { onClose(); onViewOrder(ord); }}>
+                          Inspect Order
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
