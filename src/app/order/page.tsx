@@ -68,13 +68,12 @@ export default function OrderPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-              Choose your wash preference, pickup slot, and enter your address. Remember:{" "}
-              <strong>2 or more bags qualify for 100% FREE delivery</strong>.
+              Choose your wash preference, pickup slot, and enter your address. We pick up, professionally wash, crisp fold, and return to your door.
             </p>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2 text-xs text-slate-500">
               <span className="flex items-center gap-1 font-semibold text-emerald-700">
-                <Truck className="h-3.5 w-3.5" /> 2+ Bags = FREE Delivery
+                <Truck className="h-3.5 w-3.5" /> Doorstep Pickup &amp; Return
               </span>
               <span>•</span>
               <span className="flex items-center gap-1 font-semibold text-sky-700">

@@ -49,7 +49,7 @@ export function OrderDetailModal({
       onOpenChange={onClose}
       title={`Order Inspection: ${order.order_number}`}
       description={`Created on ${formatDate(order.created_at)} • Live operations audit`}
-      className="max-w-3xl max-h-[90vh] overflow-y-auto"
+      className="max-w-3xl"
     >
       <div className="space-y-6 text-xs text-slate-700">
         {/* Top Status & Overview Banner */}

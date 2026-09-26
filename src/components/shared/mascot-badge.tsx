@@ -85,7 +85,7 @@ export function MascotBadge({
  * Floating emblem showcase with verified superhero guarantee text.
  */
 export function MascotHeroEmblem({
-  badgeText = "2+ Bags = FREE Delivery",
+  badgeText = "Doorstep Laundry Hero",
   subText = "Photo Proof Guarantee",
 }: {
   badgeText?: string;

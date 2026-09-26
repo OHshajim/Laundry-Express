@@ -1,8 +1,4 @@
-"use client";
-
-import * as React from "react";
 import { MapPin, Phone, Mail, Clock, ArrowRight, ShieldCheck } from "lucide-react";
-import { APP_CONFIG } from "@/lib/constants";
 
 // Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
 
@@ -144,13 +140,12 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
         </div>
 
         {/* Item 5: Full-Width Prominent Bubble Pink Call Now Button */}
-        <div className="pt-2">
+        <div className="pt-2 flex justify-center">
           <a
-            href={`tel:${location.phone}`}
-            className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-base shadow-lg shadow-primary/35 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
+            href="/order"
+            className="inline-flex justify-center w-full px-7 py-4 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-sm shadow-lg shadow-primary/35 transition-all active:scale-[0.98] whitespace-nowrap"
           >
-            <Phone className="h-5 w-5 shrink-0" />
-            <span>Call Now — {location.phone}</span>
+            Schedule Pickup Now
           </a>
         </div>
       </div>

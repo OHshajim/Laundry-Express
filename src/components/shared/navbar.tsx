@@ -35,7 +35,6 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/pricing", label: "Plans & Bags" },
-    { href: "/dashboard", label: "Dashboard" },
     { href: "/contact", label: "Contact Us" },
   ];
 
@@ -104,19 +103,18 @@ export function Navbar() {
 
           {/* Right Action Bar */}
           <div className="hidden sm:flex items-center gap-3">
-            <a
-              href={`tel:${APP_CONFIG.supportPhone}`}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${scrolled
-                ? "text-white hover:text-pink-100"
-                : "text-slate-700 hover:text-primary"
-                }`}
-            >
-              <Phone
-                className={`h-3.5 w-3.5 ${scrolled ? "text-white" : "text-primary"
+            <Link href="/dashboard">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`text-xs font-semibold ${scrolled
+                  ? "text-white hover:bg-white/15 hover:text-white"
+                  : "text-slate-700 hover:text-primary"
                   }`}
-              />
-              <span>{APP_CONFIG.supportPhone}</span>
-            </a>
+              >
+                Dashboard
+              </Button>
+            </Link>
 
             <Link href="/admin">
               <Button
@@ -208,6 +206,16 @@ export function Navbar() {
               );
             })}
             <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`py-1.5 transition-all ${scrolled
+                ? "text-pink-100 hover:text-white"
+                : "text-slate-700 hover:text-primary"
+                }`}
+            >
+              Dashboard
+            </Link>
+            <Link
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
               className={`py-1.5 transition-all ${scrolled
@@ -215,7 +223,7 @@ export function Navbar() {
                 : "text-slate-700 hover:text-primary"
                 }`}
             >
-              Admin Operations
+              Admin
             </Link>
           </div>
           <div

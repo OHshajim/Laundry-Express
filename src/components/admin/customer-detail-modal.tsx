@@ -45,7 +45,7 @@ export function CustomerDetailModal({
       onOpenChange={onClose}
       title={`Customer Profile: ${customer.full_name}`}
       description={`Customer Account #${customer.id} • Registered ${customer.joined_date}`}
-      className="max-w-3xl max-h-[90vh] overflow-y-auto"
+      className="max-w-3xl"
     >
       <div className="space-y-4 text-xs text-slate-700">
         {/* Customer Header Summary Card */}

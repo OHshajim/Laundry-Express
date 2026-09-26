@@ -43,7 +43,7 @@ export const metadata: Metadata = {
  */
 export default function ContactPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-clip pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-clip pb-8 md:py-10">
       {/* Sticky Global Navigation Navbar */}
       <Navbar />
 
@@ -70,28 +70,6 @@ export default function ContactPage() {
 
           {/* Interactive 2-Column Contact Showcase (Left Details, Right Google Map) */}
           <ContactView />
-
-          {/* Service Guarantee Banner in Dark Theme with Punch Pink CTA */}
-          <div className="rounded-3xl bg-gradient-to-r from-black via-neutral-900 to-black text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border border-neutral-800 shadow-xl">
-            <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs font-bold text-primary uppercase tracking-wider block drop-shadow-[0_0_8px_var(--primary)]">
-                The Laundry Express Guarantee
-              </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white">
-                Spotless Wash, Fast Turnaround, Guaranteed Photo Proof
-              </h3>
-              <p className="text-xs text-neutral-400">
-                Pickups scheduled daily: 8:00 AM – 12:00 PM and 1:00 PM – 6:00 PM. 2+ bags enjoy 100% free delivery.
-              </p>
-            </div>
-
-            <a
-              href="/order"
-              className="shrink-0 px-7 py-4 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-sm shadow-lg shadow-primary/35 transition-all active:scale-[0.98] whitespace-nowrap"
-            >
-              Schedule Pickup Now
-            </a>
-          </div>
         </div>
       </main>
 

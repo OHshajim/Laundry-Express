@@ -146,7 +146,7 @@ export function ContactForm() {
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             >
               <option>Pickup &amp; Delivery Inquiry</option>
-              <option>Pricing &amp; 2+ Bag Free Delivery</option>
+              <option>Pricing &amp; Bag Inquiries</option>
               <option>Bedding / Delicates Wash Question</option>
               <option>Commercial / Airbnb Bulk Laundry</option>
               <option>Other Feedback</option>

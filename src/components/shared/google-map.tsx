@@ -1,35 +1,15 @@
-"use client";
-
-import * as React from "react";
-import { Navigation, ExternalLink, ShieldCheck, MapPin, Info } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { SERVICE_CITIES } from "@/lib/constants";
-
-// Address replaced with service-area radius per privacy review — territory map centered on Lake in the Hills.
 
 export interface GoogleMapProps {
   title?: string;
   className?: string;
 }
 
-/**
- * GoggleMap Component
- *
- * Approximate service-area map view with a shaded 30-mile service-radius coverage indicator.
- * Protects facility privacy by displaying regional territory rather than an exact pinpoint address.
- *
- * Included Features:
- * - Regional Google Maps overview centered on Lake in the Hills, IL
- * - Shaded 30-mile service-radius visual indicator overlay
- * - Service area township badge list
- * - Direct external maps linking
- * - Full compliance with semantic CSS variables and theme tokens (--primary, --primary-dark)
- * - Strict adherence to the 100-250 lines architectural rule
- */
 export function GoggleMap({
   title = "Lake in the Hills & 30-Mile Service Area",
   className = "",
 }: GoogleMapProps) {
-  // Approximate regional map centered on Lake in the Hills / Northwest Chicago Suburbs
   const embedUrl = "https://maps.google.com/maps?q=Lake+in+the+Hills,+IL&hl=en&z=11&output=embed";
 
   return (
@@ -60,18 +40,6 @@ export function GoggleMap({
         </div>
       </div>
 
-      {/* Top Coverage Indicator Badge & Privacy Notice */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-primary-pale shadow-md text-xs font-black text-slate-800 pointer-events-auto">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          <span>Lake in the Hills &amp; 30-Mile Territory</span>
-        </div>
-        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary-pale/90 backdrop-blur-md border border-primary-pale text-[11px] font-bold text-primary-dark pointer-events-auto">
-          <Info className="h-3 w-3 text-primary" />
-          <span>Doorstep Pickup &amp; Delivery Only</span>
-        </div>
-      </div>
-
       {/* Bottom Service Towns Bar */}
       <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-primary-pale shadow-lg">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-700 overflow-x-auto w-full sm:w-auto py-1">
@@ -81,17 +49,6 @@ export function GoggleMap({
             {SERVICE_CITIES.slice(0, 4).join(", ")} &amp; nearby
           </span>
         </div>
-
-        <a
-          href="https://maps.google.com/?q=Lake+in+the+Hills,+IL"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary-dark text-white font-black text-xs shadow-md shadow-primary/25 transition-all active:scale-[0.98] whitespace-nowrap cursor-pointer shrink-0"
-        >
-          <Navigation className="h-3.5 w-3.5 shrink-0" />
-          <span>View Territory Map</span>
-          <ExternalLink className="h-3 w-3 shrink-0 ml-0.5" />
-        </a>
       </div>
     </div>
   );

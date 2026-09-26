@@ -54,13 +54,13 @@ export function HowItWorksStep({
       onClick={onClick}
       aria-label={`Step ${step.id}: ${step.shortLabel}`}
       aria-current={isActive ? "step" : undefined}
-      className="relative text-left w-full h-full focus:outline-hidden group cursor-pointer"
+      className="relative text-left w-full h-full focus:outline-hidden group cursor-pointer whitespace-normal"
       initial={prefersReduced ? false : { opacity: 0, y: 16 }}
       animate={prefersReduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, ...springTransition }}
     >
       <div
-        className={`relative rounded-3xl p-5 sm:p-6 transition-all duration-300 border flex flex-col justify-between h-full min-h-[300px] ${
+        className={`relative rounded-3xl p-5 sm:p-6 transition-all duration-300 border flex flex-col justify-between h-full min-h-[300px] overflow-hidden whitespace-normal break-words ${
           isActive
             ? "bg-white border-primary shadow-[0_0_24px_rgba(236,72,153,0.22)] ring-2 ring-primary/30 scale-[1.02]"
             : isCompleted

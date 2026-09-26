@@ -26,7 +26,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
   bag: {
     id: "bag",
     label: "Bag Wash & Fold",
-    badge: "2+ Bags = FREE Delivery",
+    badge: "Most Popular Wash & Fold",
     price: "$32.50 / bag (about 2 loads)",
     icon: Shirt,
     steps: [
@@ -68,7 +68,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         icon: Sparkles,
         actionText: "Washed, folded crisp & returned",
         detail: "Washed with selected detergent and folded crisp.",
-        helperNote: "2+ Bags = FREE delivery!",
+        helperNote: "Returned fresh within 24 hours.",
       },
     ],
   },
@@ -117,7 +117,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         icon: Sparkles,
         actionText: "Sanitized, sorted & delivered",
         detail: "Deep washed, dried, sorted, and packed crisply.",
-        helperNote: "Free delivery over $40!",
+        helperNote: "Returned fresh within 24 hours.",
       },
     ],
   },

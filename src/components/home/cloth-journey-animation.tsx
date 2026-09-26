@@ -58,7 +58,7 @@ const STAGES: JourneyStage[] = [
     headline: "Returned Fresh to Your Doorstep",
     description: "24-hour turnaround. Driver drops off your fresh laundry and snaps the drop-off photo proof confirmation.",
     proofBadge: "Drop-off Photo Proof Sent",
-    metric: "2+ Bags = 100% Free Delivery",
+    metric: "Weather-Sealed Porch Drop",
   },
 ];
 

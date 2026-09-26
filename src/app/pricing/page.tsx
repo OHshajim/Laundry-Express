@@ -53,7 +53,7 @@ export default function PricingPage() {
           {/* Header Title & Core Delivery Fee Rule Callout */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <span className="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 uppercase tracking-wide">
-              Free Delivery On 2+ Bags Guaranteed
+              Zero Hidden Fees &amp; Transparent Rates
             </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
@@ -66,20 +66,6 @@ export default function PricingPage() {
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
               No hidden service surcharges or surprise fees. Choose between standard bags, weighed bulk by the KG, or pre-paid discount saver packages.
             </p>
-
-            {/* Visual Delivery Rule Highlight Box */}
-            <div className="inline-grid grid-cols-1 sm:grid-cols-2 gap-3 p-2 bg-slate-50 border border-slate-200 rounded-2xl max-w-lg mx-auto text-xs text-left">
-              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-                <span className="font-bold text-slate-900 block mb-0.5">1 Bag (About 2 Loads)</span>
-                <span className="text-slate-500">$32.50 wash + </span>
-                <span className="font-extrabold text-amber-700">$10.00 delivery fee</span>
-              </div>
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-2xs">
-                <span className="font-bold text-emerald-950 block mb-0.5">2+ Bags Order</span>
-                <span className="text-emerald-800">$32.50/bag &amp; </span>
-                <span className="font-extrabold text-emerald-600 uppercase">FREE Pickup &amp; Delivery</span>
-              </div>
-            </div>
           </div>
 
           {/* Interactive Plan Selector: Bags vs KG vs Packages */}

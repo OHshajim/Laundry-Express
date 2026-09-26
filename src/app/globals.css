@@ -112,7 +112,6 @@ body {
   scroll-behavior: smooth;
 }
 
-button,
 .btn-element {
   white-space: nowrap;
   flex-shrink: 0;

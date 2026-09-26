@@ -2,114 +2,139 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Sparkles,
   ShieldCheck,
   Zap,
   Heart,
-  CheckCircle2,
-  Star,
-  Award,
 } from "lucide-react";
 
 /**
  * HeroMascot Component
  *
  * Visual hero element featuring the "Bubble Hero" mascot:
- * - Uses semantic CSS variables and Tailwind tokens (--primary, --primary-dark, --primary-pale)
- * - Gentle floating & bobbing keyframe animation
- * - Smooth fade + scale entrance on load
- * - Fully responsive: scales down cleanly on mobile without overlapping text
- * - Clean badges highlighting 24h turnaround, fabric care, and photo proof
+ * - Fluid, attractive animations powered by Framer Motion
+ * - Clean, non-messy composition with contained floating satellites
+ * - Radiant ambient halo and dashed orbital ring
+ * - Interactive spring hover on mascot character
  * - Strict adherence to the 100-250 lines architectural rule
  */
 export function HeroMascot() {
+  const prefersReduced = useReducedMotion();
+
   return (
-    <div className="relative flex flex-col items-center justify-center w-full max-w-md mx-auto animate-in fade-in zoom-in-95 duration-700 select-none">
-      {/* Soft Ambient Halo behind mascot using theme tokens */}
+    <div className="relative flex flex-col items-center justify-center w-full max-w-md mx-auto select-none">
+      {/* Soft Multi-Layered Ambient Halo behind mascot */}
       <div
         aria-hidden="true"
-        className="absolute w-72 h-72 sm:w-88 sm:h-88 rounded-full bg-gradient-to-tr from-primary-pale via-primary-light/25 to-secondary/20 blur-3xl pointer-events-none -z-10 animate-pulse"
+        className="absolute w-72 h-72 sm:w-84 sm:h-84 rounded-full bg-gradient-to-tr from-primary-pale via-primary-light/25 to-secondary/20 blur-3xl pointer-events-none -z-10 animate-pulse"
       />
 
-      {/* Floating & Bobbing Container */}
-      <div className="relative w-72 sm:w-88 h-72 sm:h-88 flex items-center justify-center animate-bubble-wobble">
-        {/* Floating Mini Decorative Badge - Top Left */}
+      {/* Main Animated Levitation Wrapper */}
+      <motion.div
+        className="relative w-72 sm:w-84 h-72 sm:h-84 flex items-center justify-center"
+        animate={
+          prefersReduced
+            ? {}
+            : {
+              y: [-6, 6, -6],
+              rotate: [-1, 1, -1],
+            }
+        }
+        transition={{
+          duration: 4.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      >
+        {/* Subtle Dashed Orbital Halo Ring */}
         <div
           aria-hidden="true"
-          className="absolute -top-2 -left-2 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-primary-pale flex items-center gap-1.5 animate-bounce [animation-duration:3s]"
+          className="absolute -inset-2 sm:-inset-4 rounded-full border border-primary/20 pointer-events-none border-dashed animate-spin [animation-duration:32s]"
+        />
+
+        {/* Floating Mini Satellite Badge - Top Left */}
+        <motion.div
+          aria-hidden="true"
+          className="absolute top-2 left-0 sm:-left-2 z-20 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md border border-primary-pale flex items-center gap-1.5 whitespace-nowrap"
+          animate={prefersReduced ? {} : { y: [3, -4, 3] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
         >
-          <div className="h-6 w-6 rounded-full bg-primary-pale flex items-center justify-center text-primary">
-            <Heart className="h-3.5 w-3.5 fill-primary" />
+          <div className="h-5 w-5 rounded-full bg-primary-pale flex items-center justify-center text-primary">
+            <Heart className="h-3 w-3 fill-primary" />
           </div>
-          <span className="text-[11px] font-bold text-slate-800 pr-1 whitespace-nowrap">
+          <span className="text-[11px] font-bold text-slate-800">
             Pick Up • Wash
           </span>
-        </div>
+        </motion.div>
 
-        {/* Floating Mini Decorative Badge - Top Right */}
-        <div
+        {/* Floating Mini Satellite Badge - Top Right */}
+        <motion.div
           aria-hidden="true"
-          className="absolute top-1/4 -right-10 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-sky-100 flex items-center gap-1.5 animate-bounce [animation-duration:3.6s]"
+          className="absolute top-6 right-0 sm:-right-2 z-20 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md border border-sky-100 flex items-center gap-1.5 whitespace-nowrap"
+          animate={prefersReduced ? {} : { y: [-4, 4, -4] }}
+          transition={{
+            duration: 3.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.3,
+          }}
         >
-          <div className="h-6 w-6 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
-            <Sparkles className="h-3.5 w-3.5 fill-sky-600" />
+          <div className="h-5 w-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+            <Sparkles className="h-3 w-3 fill-sky-600" />
           </div>
-          <span className="text-[11px] font-bold text-slate-800 pr-1 whitespace-nowrap">
+          <span className="text-[11px] font-bold text-slate-800">
             Fold &amp; Deliver
           </span>
-        </div>
+        </motion.div>
 
-        {/* Bubble Hero Mascot Image */}
-        <div className="relative w-64 h-64 sm:w-76 sm:h-76 flex items-center justify-center group">
+        {/* Bubble Hero Mascot Image Container with Interactive Hover Spring */}
+        <motion.div
+          className="relative w-64 h-64 sm:w-76 sm:h-76 flex items-center justify-center group cursor-pointer"
+          whileHover={prefersReduced ? {} : { scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 280, damping: 18 }}
+        >
           <Image
             src="/hero.jpg"
             alt="Laundry Express Bubble Hero Mascot"
             width={340}
             height={340}
             priority
-            className="w-full h-full object-contain mix-blend-multiply drop-shadow-2xl transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain mix-blend-multiply drop-shadow-2xl transition-transform duration-500"
           />
-        </div>
+        </motion.div>
 
-        {/* Floating Bubble Hero Badge: 24h & Photo Proof */}
-        <div className="absolute -bottom-2 sm:-bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-[300px] bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-primary-pale shadow-xl flex items-center justify-between text-xs">
+        {/* Clean Floating Bubble Hero Verified Badge */}
+        <motion.div
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-[275px] z-20 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-primary-pale shadow-xl flex items-center justify-between"
+          animate={prefersReduced ? {} : { y: [-2, 2, -2] }}
+          transition={{
+            duration: 3.6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.6,
+          }}
+        >
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-full bg-primary-pale text-primary flex items-center justify-center font-bold shadow-xs">
+            <div className="h-8 w-8 rounded-full bg-primary-pale text-primary flex items-center justify-center font-bold shadow-xs shrink-0">
               <Zap className="h-4 w-4 fill-primary" />
             </div>
-            <div>
-              <span className="font-extrabold text-slate-900 block leading-tight">
+            <div className="text-left">
+              <h4 className="font-extrabold text-slate-900 text-xs leading-tight">
                 Bubble Hero
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3 text-emerald-600 inline" />
+              </h4>
+              <p className="text-[10px] text-slate-500 font-normal ">
                 Spotless &amp; Protected
-              </span>
+              </p>
             </div>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[11px] font-black text-primary-dark bg-primary-pale px-2.5 py-0.5 rounded-full border border-primary-pale">
-              24h Fast
-            </span>
-            <span className="text-[9px] text-slate-400 font-semibold mt-0.5 flex items-center gap-0.5">
-              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 inline" />
-              Photo Proof
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Trust Micro-Badge below mascot */}
-      <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/60 shadow-xs text-[11px] text-slate-600">
-        <Award className="h-3.5 w-3.5 text-primary" />
-        <span className="font-semibold text-slate-700">100% Satisfaction Guaranteed</span>
-        <span className="text-slate-300">•</span>
-        <div className="flex items-center gap-0.5 text-amber-500">
-          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-          <span className="font-bold text-slate-800">4.9 / 5</span>
-        </div>
-      </div>
+          <span className="text-[11px] font-black text-primary-dark bg-primary-pale px-2.5 py-1 rounded-full border border-primary-light/40 shrink-0 whitespace-nowrap">
+            24h Fast
+          </span>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

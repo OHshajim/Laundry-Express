@@ -52,6 +52,53 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 
 ## 4. Session History Log
 
+### [2026-09-26 14:12] | Step: Executive Professional Refinement of HeroMascot Floating Badge
+- **Prompt:** @[hero-mascot.tsx:L119-L131] mkae that component professional
+- **Output:**
+  1. Refined floating verification badge in `HeroMascot` (`src/components/shared/hero-mascot.tsx`, 152 lines):
+     - Enterprise Glassmorphism: Upgraded container to `backdrop-blur-xl`, `border border-white/80`, `ring-1 ring-slate-900/5`, and deep multi-layered drop shadow (`shadow-[0_12px_30px_rgba(20,27,46,0.08),0_2px_6px_rgba(20,27,46,0.04)]`).
+     - Refined Avatar & Status Radar: Integrated `ShieldCheck` icon housed in an avatar pill with live green radar pulse beacon (`animate-ping`) and an emerald uppercase `VERIFIED` pill tag.
+     - Executive Typography & Layout: "Bubble Hero™" in crisp `font-black text-xs text-slate-900` with "Spotless Wash & Photo Proof" subtitle.
+     - Structured Border Divider: Right cell separated by clean divider (`border-l border-slate-100`) featuring "24h Fast" metric and "Porch Return" confirmation tag.
+  2. Verified 0 line count violations across all 79 files in `src/` (152 lines for `hero-mascot.tsx`).
+  3. Verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to make the Hero Mascot bottom badge component look refined, enterprise-grade, and professional.
+
+### [2026-09-26 14:10] | Step: Clean, Non-Messy Levitation & Orbital Aura Animations in HeroMascot
+- **Prompt:** @[src/components/shared/hero-mascot.tsx] make that more actractive but not messy add animation
+- **Output:**
+  1. Overhauled `HeroMascot` (`src/components/shared/hero-mascot.tsx`, 155 lines):
+     - Fluid Levitation: Integrated Framer Motion gentle continuous floating (`y: [-6, 6, -6]`, `rotate: [-1, 1, -1]`).
+     - Contained Non-Messy Satellites: Repositioned the two satellite chips ("Pick Up • Wash" and "Fold • Deliver") inside the safe boundaries (`left-0 sm:-left-2` and `right-0 sm:-right-2`) with smooth asynchronous bobbing, preventing mobile horizontal overflow.
+     - Interactive Spring Hover: Added interactive spring zoom (`whileHover={{ scale: 1.05 }}`) with a dynamic drop shadow.
+     - Streamlined Bottom Card: Polished the glassmorphic "Bubble Hero • 24h Fast" verification card with balanced flex layout and subtle floating physics.
+     - Multi-Layered Atmosphere: Added soft radiant pulse halo and a gentle dashed orbital spinning ring.
+  2. Verified 0 line count violations across all 79 files in `src/` (155 lines for `hero-mascot.tsx`).
+  3. Verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to make the Hero Mascot more attractive, dynamic, and animated while avoiding messy layouts or overflowing badges.
+
+### [2026-09-26 14:05] | Step: High-Conversion Interactivity & Multi-Layered Animation in HomeCtaBanner
+- **Prompt:** @[src/components/home/home-cta-banner.tsx] add crazy animation for this and make intarest to clients
+- **Output:**
+  1. Overhauled `HomeCtaBanner` (`src/components/home/home-cta-banner.tsx`, 220 lines):
+     - Levitating Mascot Hero: integrated Framer Motion levitation (`y: [-8, 8, -8]`, `rotate: [-1.5, 1.5, -1.5]`) on `/brand/logo.jpg`.
+     - Multi-Layered Radiant Atmosphere: pulsing neon Bubble Pink aura (`blur-3xl bg-gradient-to-tr from-primary/40 via-primary-light/25 to-secondary/30 scale-125 animate-pulse`) and dashed rotating orbital halo ring (`animate-spin [animation-duration:22s]`).
+     - Asynchronous Floating Satellites: two floating badge chips ("⚡ 24h Turnaround" and "🛡️ Photo Proof Logged") independently floating around the mascot.
+     - Shimmer CTA Action: primary "Book Pickup Now" button features a gliding light beam shimmer sweep with hover translation (`group-hover:translate-x-full`).
+     - Live Status Radar Pulse: pinging radar status chip ("● Instant Doorstep Laundry Pickup") and social review star rating bar.
+  2. Verified 0 line count violations across all 79 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to add captivating, high-energy animation to HomeCtaBanner to grab client interest and maximize bookings.
+
+### [2026-09-26 14:02] | Step: Dashboard Sidebar Slimming & Free Delivery Frequency Reduction
+- **Prompt:** in user dashboard the sidebar siize is over and 2+ Bags = FREE Delivery this line you are using most reduce the number just use in 2/3 times
+- **Output:**
+  1. Resized and slimmed Customer Dashboard Sidebar (`src/app/dashboard/layout.tsx`, 172 lines): reduced width from oversized `w-64` to compact `w-56`, reduced internal padding from `p-6` to `p-4`, simplified identity badge and action buttons, and streamlined footer support card.
+  2. Reduced "2+ Bags = FREE Delivery" occurrences site-wide to strictly 2–3 strategic locations:
+     - Preserved in Hero top badge (`src/components/shared/hero-section.tsx`), Pricing bag calculator (`src/components/pricing/plan-bag-card.tsx`), and Checkout bag selector (`src/components/booking/step-pricing-mode.tsx`).
+     - Removed repetitive copies from: Dashboard layout header (`src/app/dashboard/layout.tsx`), Dashboard overview (`src/app/dashboard/page.tsx`), Hero perk cards & description (`src/components/shared/hero-section.tsx`), How It Works tabs & step helper notes (`src/lib/how-it-works-data.ts`), Cloth Journey animation metric (`src/components/home/cloth-journey-animation.tsx`), Mascot Hero emblem default badge (`src/components/shared/mascot-badge.tsx`), Pricing header badge (`src/app/pricing/page.tsx`), Order schedule page (`src/app/order/page.tsx`), Contact view perks (`src/components/contact/contact-view.tsx`), Contact form subject options (`src/components/contact/contact-form.tsx`), and Contact guarantee banner (`src/app/contact/page.tsx`).
+  3. Verified 0 line count violations across all 79 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to prevent oversized dashboard sidebar clutter and eliminate repetitive free delivery phrasing across non-checkout pages.
+
 ### [2026-09-26 13:45] | Step: Full Workspace-Wide Elimination of Hardcoded Hex Colors & CSS Variable Migration
 - **Prompt:** i am seeing that you are still using hardcoded hex color change everything and use css variale
 - **Output:**

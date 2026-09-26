@@ -34,11 +34,9 @@ export function HeroSection() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
               </span>
-              <span className="font-bold text-slate-900">
+              <p className="font-bold text-slate-900">
                 Lake in the Hills &amp; Surrounding (30-Mile Radius)
-              </span>
-              <span className="text-slate-300">•</span>
-              <span className="text-primary-dark font-extrabold">2+ Bags = FREE Delivery</span>
+              </p>
             </div>
 
             {/* Main Headline & Tagline */}
@@ -57,7 +55,7 @@ export function HeroSection() {
                 More Time For What Matters.
               </p>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-                Only <strong className="text-slate-900 font-black">$32.50 per 13-gallon bag</strong> (about 2 loads). <strong className="text-slate-900 font-black">$10 pickup &amp; delivery</strong> — or <strong className="text-primary-dark font-black">FREE on 2+ bags</strong>! Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin &amp; Schaumburg (30-mile radius).
+                Only <strong className="text-slate-900 font-black">$32.50 per 13-gallon bag</strong> (about 2 loads). Professional wash, dry, and crisp fold returned fresh to your doorstep within 24 hours. Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin &amp; Schaumburg (30-mile radius).
               </p>
             </div>
 
@@ -68,12 +66,12 @@ export function HeroSection() {
                 <span className="text-slate-500 font-medium">About 2 Loads (13-Gal)</span>
               </div>
               <div className="p-3 rounded-xl bg-white border border-primary-pale shadow-2xs text-center sm:text-left">
-                <span className="font-bold text-slate-900 block text-sm">2+ Bags</span>
-                <span className="text-primary-dark font-bold">FREE Pickup &amp; Delivery</span>
+                <span className="font-bold text-slate-900 block text-sm">24h Express</span>
+                <span className="text-primary-dark font-bold">Doorstep Turnaround</span>
               </div>
               <div className="p-3 rounded-xl bg-white border border-primary-pale shadow-2xs text-center sm:text-left">
-                <span className="font-bold text-slate-900 block text-sm">1 Bag</span>
-                <span className="text-slate-500 font-medium">$10 Pickup &amp; Delivery</span>
+                <span className="font-bold text-slate-900 block text-sm">Eco Washed</span>
+                <span className="text-slate-500 font-medium">Tide &amp; Hypoallergenic</span>
               </div>
             </div>
 
