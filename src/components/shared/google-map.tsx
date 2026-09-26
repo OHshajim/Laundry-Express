@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Navigation, ExternalLink, ShieldCheck, MapPin } from "lucide-react";
+import { Navigation, ExternalLink, ShieldCheck, MapPin, Info } from "lucide-react";
 import { SERVICE_CITIES } from "@/lib/constants";
 
 // Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
@@ -22,6 +22,7 @@ export interface GoogleMapProps {
  * - Shaded 30-mile service-radius visual indicator overlay
  * - Service area township badge list
  * - Direct external maps linking
+ * - Strict adherence to the 100-250 lines architectural rule
  */
 export function GoggleMap({
   title = "Lake in the Hills & 30-Mile Service Area",
@@ -58,11 +59,15 @@ export function GoggleMap({
         </div>
       </div>
 
-      {/* Top Coverage Indicator Badge */}
-      <div className="absolute top-4 left-4 z-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-pink-200 shadow-md text-xs font-black text-slate-800">
+      {/* Top Coverage Indicator Badge & Privacy Notice */}
+      <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-pink-200 shadow-md text-xs font-black text-slate-800 pointer-events-auto">
           <ShieldCheck className="h-4 w-4 text-[#EC4899]" />
           <span>Lake in the Hills &amp; 30-Mile Territory</span>
+        </div>
+        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-pink-50/90 backdrop-blur-md border border-pink-200/80 text-[11px] font-bold text-[#BE185D] pointer-events-auto">
+          <Info className="h-3 w-3 text-[#EC4899]" />
+          <span>Doorstep Pickup &amp; Delivery Only</span>
         </div>
       </div>
 

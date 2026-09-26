@@ -1,6 +1,6 @@
 # Laundry Express — AI & LLM Service Guide
 
-> Tagline: "Pick Up ♥ Wash ♥ Fold ♥ Deliver"
+> Tagline: "Pick Up • Wash • Fold • Deliver"
 > Sub-tagline: "More Time For What Matters"
 > Hero Headline: "Laundry Piling Up?"
 

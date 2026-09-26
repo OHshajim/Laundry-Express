@@ -122,19 +122,6 @@ export function HeroSection() {
         <div className="pt-4">
           <OrderTrackingSummary />
         </div>
-
-        {/* Subtle Animated Scroll Indicator */}
-        <div className="flex flex-col items-center justify-center text-center pt-2">
-          <a
-            href="#services"
-            className="group inline-flex flex-col items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-[#EC4899] transition-colors"
-          >
-            <span className="tracking-wider uppercase text-[10px]">Scroll to explore plans &amp; process</span>
-            <div className="h-8 w-5 rounded-full border-2 border-slate-300 group-hover:border-[#EC4899] flex items-start justify-center p-1 transition-colors">
-              <div className="h-1.5 w-1 rounded-full bg-slate-400 group-hover:bg-[#EC4899] animate-bounce" />
-            </div>
-          </a>
-        </div>
       </div>
     </section>
   );

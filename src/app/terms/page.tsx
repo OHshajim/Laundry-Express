@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Sparkles, HeartHandshake, AlertCircle, ArrowLeft, Phone, Mail } from "lucide-react";
-import { SiteHeader } from "@/components/shared/site-header";
-import { SiteFooter } from "@/components/shared/site-footer";
+import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
 import { APP_CONFIG, GUARANTEE_POLICIES } from "@/lib/constants";
 
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
  */
 export default function TermsPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
-      <SiteHeader />
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip">
+      <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-12">
         {/* Breadcrumb & Intro */}
@@ -161,7 +161,7 @@ export default function TermsPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

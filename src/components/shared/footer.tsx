@@ -5,15 +5,16 @@ import { MascotBadge } from "@/components/shared/mascot-badge";
 import { FloatingBubbles } from "./floating-bubbles";
 
 /**
- * SiteFooter Component
+ * Footer Component
  *
  * Semantic, SEO-rich pure black footer featuring:
  * - Ambient low-density floating bubbles (count=8)
  * - Operating windows and transparent pricing overview
  * - Service area coverage (without exact GPS per privacy review)
  * - Direct links to Terms & Guarantee Policy and Customer Dashboard
+ * - Strict adherence to the 100-250 lines rule
  */
-export function SiteFooter() {
+export function Footer() {
   return (
     <footer className="relative bg-black text-slate-300 border-t border-neutral-900 pt-16 pb-12 overflow-hidden">
       {/* Ambient Bubble Background Effect (Lower-density count={8}) */}
@@ -154,4 +155,6 @@ export function SiteFooter() {
   );
 }
 
-export default SiteFooter;
+// Backward compatibility alias for any existing references
+export const SiteFooter = Footer;
+export default Footer;

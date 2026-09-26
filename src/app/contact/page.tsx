@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/shared/site-header";
-import { SiteFooter } from "@/components/shared/site-footer";
+import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { ContactView } from "@/components/contact/contact-view";
 import { APP_CONFIG } from "@/lib/constants";
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
  */
 export default function ContactPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-hidden pb-16 md:pb-0">
-      {/* Static Global Navigation Header (Top Nav Removed) */}
-      <SiteHeader />
+    <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-clip pb-16 md:pb-0">
+      {/* Sticky Global Navigation Navbar */}
+      <Navbar />
 
       <main className="flex-1 py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
@@ -96,7 +96,7 @@ export default function ContactPage() {
       </main>
 
       {/* Semantic Pure Black Footer */}
-      <SiteFooter />
+      <Footer />
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />

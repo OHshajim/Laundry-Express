@@ -1,8 +1,8 @@
 import * as React from "react";
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/shared/site-header";
+import { Navbar } from "@/components/shared/navbar";
 import { PromoBanner } from "@/components/shared/promo-banner";
-import { SiteFooter } from "@/components/shared/site-footer";
+import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { OrderFlow } from "@/components/order/order-flow";
 import { Sparkles, ShieldCheck, Truck } from "lucide-react";
@@ -51,12 +51,12 @@ function OrderLoadingSkeleton() {
 
 export default function OrderPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
       {/* Dismissible Promo Banner */}
       <PromoBanner />
 
-      {/* Global Navigation Header */}
-      <SiteHeader />
+      {/* Sticky Global Navigation Navbar */}
+      <Navbar />
 
       <main className="flex-1 py-10 bg-slate-50/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -97,7 +97,7 @@ export default function OrderPage() {
       </main>
 
       {/* Global Semantic Footer */}
-      <SiteFooter />
+      <Footer />
 
       {/* Native Mobile Bottom Navigation Bar */}
       <MobileBottomNav />

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/shared/site-header";
-import { SiteFooter } from "@/components/shared/site-footer";
+import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { PlanSelector } from "@/components/pricing/plan-selector";
 import { PlanComparison } from "@/components/pricing/plan-comparison";
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
  */
 export default function PricingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden pb-16 md:pb-0">
-      {/* Static Global Navigation Header (Top Nav Removed) */}
-      <SiteHeader />
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
+      {/* Sticky Global Navigation Navbar */}
+      <Navbar />
 
       <main className="flex-1 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
@@ -94,7 +94,7 @@ export default function PricingPage() {
       </main>
 
       {/* Semantic Footer */}
-      <SiteFooter />
+      <Footer />
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />

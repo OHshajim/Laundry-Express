@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/shared/site-header";
+import { Navbar } from "@/components/shared/navbar";
 import { HeroSection } from "@/components/shared/hero-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { FaqSection } from "@/components/shared/faq-section";
 import { HomeCtaBanner } from "@/components/home/home-cta-banner";
-import { SiteFooter } from "@/components/shared/site-footer";
+import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { getLocalBusinessSchema, getFaqSchema } from "@/lib/seo/jsonld-schemas";
 import { APP_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_CONFIG.url),
-  title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver | More Time For What Matters",
+  title: "Laundry Express — Pick Up • Wash • Fold • Deliver | More Time For What Matters",
   description:
     "Laundry Piling Up? $32.50 per 13-gallon bag (about 2 loads). $10 pickup & delivery, or FREE on 2+ bags! Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin & Schaumburg (30-mile radius).",
   keywords: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
     description: "Laundry Piling Up? $32.50 per 13-gal bag (about 2 loads). FREE pickup & delivery on 2+ bags! Serving Lake in the Hills & 30-mile radius.",
     url: APP_CONFIG.url,
     siteName: "Laundry Express",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
     description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Daily slots: 8am–12pm & 1pm–6pm.",
     images: ["/brand/logo-badge.jpg"],
   },
@@ -54,7 +54,7 @@ export default function HomePage() {
    * Merges services & 4-step process into single animated HowItWorksSection.
    */
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
       {/* Schema.org Structured Microdata for SEO & AI / LLM Agents */}
       <script
         type="application/ld+json"
@@ -65,8 +65,8 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* Static Main Navigation Header (Top Nav Removed) */}
-      <SiteHeader />
+      {/* Sticky Main Navigation Bar */}
+      <Navbar />
 
       {/* Main Content Sections — Streamlined & Useful */}
       <main className="flex-1">
@@ -95,7 +95,7 @@ export default function HomePage() {
       </main>
 
       {/* Semantic SEO-Rich Pure Black Footer */}
-      <SiteFooter />
+      <Footer />
 
       {/* Native Mobile Bottom App Bar */}
       <MobileBottomNav />

@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Laundry Express",
-    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
     description: "$32.50 per 13-gallon bag (about 2 loads). 1 Bag = $10.00 fee; 2+ Bags = FREE delivery! 100% photo proof guarantee.",
     images: [
       {
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
     description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Photo proof guarantee.",
     images: ["/brand/logo-badge.jpg"],
   },
@@ -100,8 +100,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-sky-500 selection:text-white">
-        {/* Main Application Shell */}
-        <div className="flex-1 flex flex-col w-full overflow-x-hidden">
+        {/* Main Application Shell: overflow-x-clip enables sticky navigation without horizontal overflow */}
+        <div className="flex-1 flex flex-col w-full overflow-x-clip">
           {children}
         </div>
       </body>

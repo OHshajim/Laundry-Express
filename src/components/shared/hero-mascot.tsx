@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Sparkles, ShieldCheck, Zap, Heart } from "lucide-react";
+import { Sparkles, ShieldCheck, Zap, Heart, CheckCircle2, Star } from "lucide-react";
 
 /**
  * HeroMascot Component
@@ -12,7 +12,7 @@ import { Sparkles, ShieldCheck, Zap, Heart } from "lucide-react";
  * - Gentle floating & bobbing keyframe animation
  * - Smooth fade + scale entrance on load
  * - Fully responsive: scales down cleanly on mobile without overlapping text
- * - Clean badges highlighting 24h turnaround and photo proof
+ * - Clean badges highlighting 24h turnaround, fabric care, and photo proof
  * - Strict adherence to the 100-250 lines architectural rule
  */
 export function HeroMascot() {
@@ -26,7 +26,7 @@ export function HeroMascot() {
 
       {/* Floating & Bobbing Container */}
       <div className="relative w-72 sm:w-88 h-72 sm:h-88 flex items-center justify-center animate-bubble-wobble">
-        {/* Floating Mini Decorative Badges */}
+        {/* Floating Mini Decorative Badge - Top Left */}
         <div
           aria-hidden="true"
           className="absolute -top-2 -left-2 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-pink-100 flex items-center gap-1.5 animate-bounce [animation-duration:3s]"
@@ -37,6 +37,7 @@ export function HeroMascot() {
           <span className="text-[11px] font-bold text-slate-800 pr-1">Pick Up • Wash</span>
         </div>
 
+        {/* Floating Mini Decorative Badge - Top Right */}
         <div
           aria-hidden="true"
           className="absolute top-1/4 -right-3 bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-sky-100 flex items-center gap-1.5 animate-bounce [animation-duration:3.6s]"
@@ -45,6 +46,17 @@ export function HeroMascot() {
             <Sparkles className="h-3.5 w-3.5 fill-sky-600" />
           </div>
           <span className="text-[11px] font-bold text-slate-800 pr-1">Fold &amp; Deliver</span>
+        </div>
+
+        {/* Floating Trust Indicator - Mid Left */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-16 -left-3 bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl shadow-md border border-slate-100 flex items-center gap-1.5 hidden sm:flex"
+        >
+          <div className="flex text-amber-400">
+            <Star className="h-3 w-3 fill-amber-400" />
+          </div>
+          <span className="text-[10px] font-bold text-slate-700">5.0 Star Care</span>
         </div>
 
         {/* Bubble Hero Mascot Image */}
@@ -79,7 +91,8 @@ export function HeroMascot() {
             <span className="text-[11px] font-black text-[#BE185D] bg-[#FCE7F3] px-2.5 py-0.5 rounded-full border border-pink-200">
               24h Fast
             </span>
-            <span className="text-[9px] text-slate-400 font-semibold mt-0.5">
+            <span className="text-[9px] text-slate-400 font-semibold mt-0.5 flex items-center gap-0.5">
+              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 inline" />
               Photo Proof
             </span>
           </div>
