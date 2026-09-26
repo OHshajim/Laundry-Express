@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus, Minus, ArrowRight } from "lucide-react";
+import { Plus, Minus, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -21,12 +21,12 @@ interface PlanBagCardProps {
  * - 2+ Bags = FREE ($0.00) delivery fee
  */
 export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
-  const bagSubtotal = bagCount * 15.0;
+  const bagSubtotal = bagCount * 32.50;
   const bagDeliveryFee = bagCount === 1 ? 10.0 : 0.0;
   const bagTotal = bagSubtotal + bagDeliveryFee;
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-sky-200 shadow-xl max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
+    <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-pink-200 shadow-xl max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
           <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 mb-2 uppercase tracking-wide">
@@ -34,11 +34,11 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
           </span>
           <h3 className="text-2xl font-black text-slate-900">Standard 13-Gallon Bags</h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Fill as much clothing as fits into a standard tall kitchen bag.
+            $32.50 per 13-gallon bag (about 2 loads of clothes, towels &amp; daily wear).
           </p>
         </div>
         <div className="text-left sm:text-right">
-          <span className="text-3xl font-black text-slate-900">$15.00</span>
+          <span className="text-3xl font-black text-slate-900">$32.50</span>
           <span className="text-xs text-slate-500 block">per bag</span>
         </div>
       </div>
@@ -103,7 +103,7 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
       {/* Pricing Calculation Summary */}
       <div className="space-y-2 pt-2 text-sm text-slate-600">
         <div className="flex justify-between">
-          <span>{bagCount} Bag{bagCount > 1 ? "s" : ""} Wash &amp; Fold ($15.00/bag):</span>
+          <span>{bagCount} Bag{bagCount > 1 ? "s" : ""} Wash &amp; Fold ($32.50/bag):</span>
           <span className="font-semibold text-slate-900">{formatCurrency(bagSubtotal)}</span>
         </div>
         <div className="flex justify-between items-center">
@@ -114,8 +114,22 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
         </div>
         <div className="flex justify-between pt-3 border-t border-slate-200 text-base font-black text-slate-900">
           <span>Estimated Total:</span>
-          <span className="text-xl text-sky-600">{formatCurrency(bagTotal)}</span>
+          <span className="text-xl text-[#EC4899]">{formatCurrency(bagTotal)}</span>
         </div>
+      </div>
+
+      {/* Guarantee Badge with Link to Policy */}
+      <div className="flex items-center justify-between text-xs pt-1">
+        <span className="flex items-center gap-1.5 font-bold text-slate-700">
+          <ShieldCheck className="h-4 w-4 text-[#EC4899]" />
+          <span>Zero Lost-Garment Guarantee</span>
+        </span>
+        <Link
+          href="/terms#zero-lost"
+          className="text-xs font-bold text-[#EC4899] hover:underline"
+        >
+          See full policy →
+        </Link>
       </div>
 
       {/* CTA to Order with chosen count */}

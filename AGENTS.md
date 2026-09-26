@@ -52,6 +52,49 @@ Modern full-stack web application for **Laundry Express** (baseline: [laundry-ex
 
 ## 4. Session History Log
 
+### [2026-09-26 12:05] | Step: Core Content Upgrade — Tagline, Sub-tagline, Hero Headline, $32.50/Bag Pricing & 7 Service Cities
+- **Prompt:** Tagline: "Pick Up ♥ Wash ♥ Fold ♥ Deliver", Sub-tagline: "More Time For What Matters", Hero headline: "Laundry Piling Up?", Pricing: $32.50 per 13-gallon bag (about 2 loads), $10 pickup & delivery, FREE pickup & delivery on 2+ bags, Service Area: Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, Schaumburg, Radius: 30-mile radius. Upgrade the contents according to this.
+- **Output:**
+  1. Updated global constants in `src/lib/constants.ts` (162 lines): tagline to `"Pick Up • Wash • Fold • Deliver"`, subTagline to `"More Time For What Matters"`, heroHeadline to `"Laundry Piling Up?"`, base bag price to `$32.50`, service radius to `"30-mile radius"`, and added all 7 service cities (`Lake in the Hills`, `Algonquin`, `Crystal Lake`, `Huntley`, `Cary`, `Elgin`, `Schaumburg`).
+  2. Overhauled `HeroSection` (`src/components/shared/hero-section.tsx`, 153 lines) with prominent `"Laundry Piling Up?"` headline, `"Pick Up ♥ Wash ♥ Fold ♥ Deliver"` gradient badge, `"More Time For What Matters"` sub-headline, and service area / pricing callouts.
+  3. Synchronized header brand tagline in `SiteHeader` (`src/components/shared/site-header.tsx`, 181 lines).
+  4. Updated `PricingSection` (`src/components/shared/pricing-section.tsx`, 151 lines), `PlanBagCard` (`src/components/pricing/plan-bag-card.tsx`, 131 lines), `PlanComparison` (`src/components/pricing/plan-comparison.tsx`, 130 lines), and pricing page (`src/app/pricing/page.tsx`, 104 lines) with $32.50/bag (about 2 loads) rate and delivery rules ($10 for 1 bag, FREE for 2+ bags).
+  5. Updated interactive booking flow in `StepPricingMode` (`src/components/booking/step-pricing-mode.tsx`, 117 lines) and `StepBagCounter` (`src/components/booking/step-bag-counter.tsx`, 142 lines).
+  6. Updated `HowItWorksData` (`src/lib/how-it-works-data.ts`, 223 lines) service price descriptors.
+  7. Updated bundle packages in `PlanPackagesGrid` (`src/components/pricing/plan-packages-grid.tsx`, 115 lines) and `PackagesManager` (`src/components/admin/packages-manager.tsx`, 232 lines) to align with $32.50 base bag price (5-Bag Saver $145 vs $162.50, 10-Bag Family Pass $280 vs $325).
+  8. Synchronized footer in `SiteFooter` (`src/components/shared/site-footer.tsx`, 131 lines), `HomeCtaBanner` (`src/components/home/home-cta-banner.tsx`, 109 lines), and `FaqSection` (`src/components/shared/faq-section.tsx`, 114 lines) with live phone link `815-575-9536` and 7 service area cities.
+  9. Updated contact showcase in `ContactView` (`src/components/contact/contact-view.tsx`, 116 lines) and `LocationCard` (`src/components/contact/location-card.tsx`, 161 lines).
+  10. Updated admin pricing defaults in `PricingManager` (`src/components/admin/pricing-manager.tsx`, 202 lines) and mock orders in `mock-admin-data.ts` (224 lines).
+  11. Updated SEO microdata & schemas in `jsonld-schemas.ts` (128 lines), `page.tsx` (105 lines), `layout.tsx` (111 lines), and `public/llms.txt`.
+  12. Verified 100% compliance with strict 100–250 lines rule across all 67 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to synchronize brand messaging, headline, bag pricing, delivery tiers, and exact 7-city service area coverage across every customer touchpoint and backend system.
+
+### [2026-09-26 11:45] | Step: Unified Animated HowItWorksSection (Process + Services) with Framer Motion & LocationCard Simplification
+- **Prompt:** Combine the existing ProcessSection (4-step "How It Works") and ServicesSection (4 service cards) into a single new component called HowItWorksSection, replacing both into one interactive, animated, scroll-driven experience with Framer Motion, large friendly icons, 3-5 word labels, traveling delivery route beacon, inline service tabs (Bag, By KG, Bedding, Express), reduced-motion fallback, and simplify Hours of Operation in LocationCard.
+- **Output:**
+  1. Simplified Hours of Operation display in `LocationCard` (`src/components/contact/location-card.tsx`, 161 lines) to direct single-line format: "All Week: 8:00 AM – 6:00 PM" with morning/afternoon slot note, matching the user's manual edits.
+  2. Built modular service configuration data in `src/lib/how-it-works-data.ts` (223 lines) containing tailored 4-step narratives for Bag Wash & Fold, Weighed KG, Bedding & Delicates, and 24h Express.
+  3. Built `HowItWorksStep` (`src/components/home/how-it-works-step.tsx`, 159 lines) with playful Bubble Hero spring transitions, large friendly icons (`CalendarClock`, `DoorOpen`, `Camera`, `Sparkles`), short 3-5 word primary labels, active glowing Punch Pink styling, and `prefers-reduced-motion` support.
+  4. Built `HowItWorksSection` (`src/components/home/how-it-works-section.tsx`, 159 lines) featuring horizontal timeline with animated Framer Motion progress line, traveling delivery truck beacon, auto-play progression loop (every 3.4s with hover pause), inline service tabs filter (`[Bag] [By KG] [Bedding] [Express]`), and bottom conversion CTA strip ("Book Your Pickup Today").
+  5. Updated `src/app/page.tsx` (105 lines) replacing both `ServicesSection` and `ProcessSection` with `<HowItWorksSection />` while preserving section anchor IDs (`#services`, `#process`, `#how-it-works`).
+  6. Verified 100% compliance with strict 100–250 lines rule across all 67 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive to create an intuitive, zero-technical-background animated visual experience that immediately explains the pickup-to-delivery process and services to children and elderly customers alike without dense text.
+
+
+### [2026-09-26 11:25] | Step: Punch Pink Detailings, Thin Scrollbar, Pure Black Shell, Hero Cloth Lifecycle Journey & McHenry Co. Contact Showcase
+- **Prompt:** Use punch-pink in detailings and scroller bar and make the scroll thin; instead of using navy blue in footer or side bar use black and highlight navs with glowing punch-pink; remove the top nav and make the main nav static when scrolling down; use a linear effect in the hero section with scroll animation and add animation like cloth picked, wash, fold, and delivered; remove Long Beach details and show single official facility: United States, IL · McHenry Co. · Lake in the Hills (42.1903, -88.383743), directions link, phone 815-575-9536 tap to call, email customerservice@laundryexpressservices.com, hours 8am-6pm daily, Call Now button 815-575-9536 in attractive punch pink.
+- **Output:**
+  1. Configured custom thin (5px) Punch Pink (`#E91E63`) scrollbar and glow utilities in `src/app/globals.css` (220 lines).
+  2. Changed `SiteFooter` (`src/components/shared/site-footer.tsx`, 131 lines) and `AdminSidebar` (`src/components/admin/admin-sidebar.tsx`, 226 lines) backgrounds from navy blue to pure black (`bg-black`), highlighted with glowing Punch Pink badges and interactive accents.
+  3. Made `SiteHeader` (`src/components/shared/site-header.tsx`, 181 lines) static (`relative z-30`) so it scrolls naturally with page content; removed `PromoBanner` top announcement bar across all customer pages.
+  4. Built interactive 4-stage `ClothJourneyAnimation` (`src/components/home/cloth-journey-animation.tsx`, 205 lines) demonstrating: Cloth Picked 🛍️ $\rightarrow$ Gentle Wash 🫧 $\rightarrow$ Crisp Fold 👕 $\rightarrow$ Porch Delivered 🚚 with glowing Punch Pink stepper, auto-progression loop, and photo proof verification metrics.
+  5. Updated `HeroSection` (`src/components/shared/hero-section.tsx`, 147 lines) with linear ambient lighting effect, smooth bouncing scroll cue, and embedded `ClothJourneyAnimation`.
+  6. Redesigned `LocationCard` (`src/components/contact/location-card.tsx`, 183 lines) in attractive Punch Pink: removed Long Beach, displaying Lake in the Hills McHenry Co. address, tap-to-call phone `815-575-9536`, email `customerservice@laundryexpressservices.com`, daily hours `8:00 AM – 6:00 PM`, and full-width Punch Pink Call Now button.
+  7. Updated `ContactView` (`src/components/contact/contact-view.tsx`, 126 lines), `GoggleMap` (`src/components/shared/google-map.tsx`, 117 lines), and `src/app/contact/page.tsx` (106 lines) centered on Lake in the Hills (42.1903, -88.383743) with Punch Pink directions actions.
+  8. Verified 100% compliance with strict 100–250 lines rule across all 66 files in `src/` and verified clean Next.js production build (`npm run build`).
+- **Why:** Satisfy user directive for high-converting Punch Pink aesthetic, pure black shell, natural static header scrolling, animated cloth lifecycle journey, and unified McHenry County contact showcase.
+
+
 ### [2026-09-26 10:55] | Step: Zero Horizontal Scroll Responsive Cards, Clickable Review Photos & Floating Bubble Animations
 - **Prompt:** Remove "Live Dispatch Sync McHenry & Long Beach Hubs" and Details button from order table (click row to open inspection dialog); make review photos clickable with preview modal; convert every table across the website into cards in mobile/tablet views to eliminate horizontal scrolling; add SEO-friendly animations, uniform typography hierarchy, and reusable floating bubble component for hero and other sections; ensure full responsiveness across mobile, tablet, and desktop.
 - **Output:**

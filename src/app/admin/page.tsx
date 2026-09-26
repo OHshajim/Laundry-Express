@@ -6,6 +6,7 @@ import { OrderPipeline } from "@/components/admin/order-pipeline";
 import { CustomersManager } from "@/components/admin/customers-manager";
 import { PricingManager } from "@/components/admin/pricing-manager";
 import { ReviewModerator } from "@/components/admin/review-moderator";
+import { TransactionsManager } from "@/components/admin/transactions-manager";
 import { INITIAL_ORDERS, INITIAL_REVIEWS, INITIAL_CUSTOMERS } from "@/lib/mock-admin-data";
 import type { Order, OrderReview, OrderStatus } from "@/types";
 import type { CustomerAccount } from "@/components/admin/customer-detail-modal";
@@ -130,6 +131,12 @@ export default function AdminPage() {
           {activeSection === "customers" && (
             <CustomersManager
               customers={customers}
+              onViewOrder={() => setActiveSection("orders")}
+            />
+          )}
+
+          {activeSection === "transactions" && (
+            <TransactionsManager
               onViewOrder={() => setActiveSection("orders")}
             />
           )}

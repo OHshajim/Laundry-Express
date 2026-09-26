@@ -1,150 +1,107 @@
 "use client";
 
 import * as React from "react";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, ArrowRight, ShieldCheck } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 
-interface ContactLocationInfo {
-  id: "long-beach" | "lake-in-the-hills";
+// Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
+
+export interface ContactLocationInfo {
+  id: string;
   title: string;
   address: string;
   phone: string;
   email: string;
-  hours: {
-    weekdays: string;
-    saturday: string;
-    sunday: string;
-  };
+  hours: string;
   mapsUrl: string;
-  coordinates: { lat: number; lng: number };
 }
 
-const LOCATIONS: Record<string, ContactLocationInfo> = {
-  "long-beach": {
-    id: "long-beach",
-    title: "Long Beach Operations & Express Facility",
-    address: "5210 Long Beach Blvd, Long Beach, CA 90805, United States",
-    phone: "+15623805780",
-    email: "laundryroomcd@gmail.com",
-    hours: {
-      weekdays: "6:00 AM – 10:00 PM",
-      saturday: "6:00 AM – 10:00 PM",
-      sunday: "7:00 AM – 9:00 PM",
-    },
-    mapsUrl: "https://maps.google.com/?q=33.8369,-118.1988",
-    coordinates: { lat: 33.8369, lng: -118.1988 },
-  },
-  "lake-in-the-hills": {
-    id: "lake-in-the-hills",
-    title: "Lake in the Hills Central Hub (30-Mile Radius)",
-    address: "United States, IL · McHenry Co. · Lake in the Hills (42.1903, -88.383743)",
-    phone: APP_CONFIG.supportPhone,
-    email: APP_CONFIG.supportEmail,
-    hours: {
-      weekdays: "8:00 AM – 6:00 PM",
-      saturday: "8:00 AM – 6:00 PM",
-      sunday: "8:00 AM – 6:00 PM",
-    },
-    mapsUrl: "https://maps.google.com/?q=42.1903,-88.383743",
-    coordinates: { lat: 42.1903, lng: -88.383743 },
-  },
+export const OFFICIAL_LOCATION: ContactLocationInfo = {
+  id: "lake-in-the-hills",
+  title: "Lake in the Hills Service Territory",
+  // Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
+  address: "Lake in the Hills & 30-Mile Service Territory (McHenry Co., IL)",
+  phone: "815-575-9536",
+  email: "customerservice@laundryexpressservices.com",
+  hours: "8:00 AM – 6:00 PM",
+  mapsUrl: "https://maps.google.com/?q=Lake+in+the+Hills,+IL",
 };
 
 interface LocationCardProps {
-  activeLocationId?: "long-beach" | "lake-in-the-hills";
-  onLocationChange?: (loc: ContactLocationInfo) => void;
+  location?: ContactLocationInfo;
 }
 
 /**
  * LocationCard Component
  *
- * Implements the contact showcase matching the client specification:
- * 1. Physical Address with "Get Directions →"
- * 2. Click-to-call Phone with direct dialing
- * 3. Support Email
- * 4. Structured Hours of Operation
- * 5. Full-width Call Now action button
+ * Implements the attractive Bubble Pink contact showcase:
+ * 1. Regional Service Territory with "View Coverage Map →"
+ * 2. Click-to-call Phone with direct dialing (815-575-9536)
+ * 3. Support Email (customerservice@laundryexpressservices.com)
+ * 4. Structured Hours of Operation (8:00 AM – 6:00 PM)
+ * 5. Attractive Bubble Pink Call Now button
  */
-export function LocationCard({
-  activeLocationId = "long-beach",
-  onLocationChange,
-}: LocationCardProps) {
-  const [selectedId, setSelectedId] = React.useState<"long-beach" | "lake-in-the-hills">(
-    activeLocationId
-  );
-
-  const loc = LOCATIONS[selectedId];
-
-  const handleSelect = (id: "long-beach" | "lake-in-the-hills") => {
-    setSelectedId(id);
-    if (onLocationChange) {
-      onLocationChange(LOCATIONS[id]);
-    }
-  };
-
+export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps) {
   return (
-    <div className="space-y-6">
-      {/* Location Facility Switcher Tabs */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200/80 max-w-fit">
-        <button
-          type="button"
-          onClick={() => handleSelect("long-beach")}
-          className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            selectedId === "long-beach"
-              ? "bg-[#1E88C7] text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          Long Beach, CA
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSelect("lake-in-the-hills")}
-          className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            selectedId === "lake-in-the-hills"
-              ? "bg-[#1E88C7] text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          Lake in the Hills, IL
-        </button>
+    <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-pink-200/90 shadow-[0_0_35px_rgba(236,72,153,0.12)] p-6 sm:p-8 space-y-7 transition-all">
+      {/* Top Bubble Pink Hub Badge */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-pink-100">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 border border-pink-200 text-[#BE185D] text-xs font-black shadow-xs">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EC4899] opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EC4899]" />
+          </span>
+          <span>Regional Operations Hub</span>
+        </div>
+
+        <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+          <ShieldCheck className="h-4 w-4 text-[#EC4899]" />
+          30-Mile Radius Service Territory
+        </span>
       </div>
 
-      {/* Main Details Stack */}
+      {/* Main Contact Stack with Bubble Pink Accents */}
       <div className="space-y-6 text-slate-800">
-        {/* Item 1: Address */}
+        {/* Item 1: Service Territory & Address */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <MapPin className="h-5 w-5" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-bold text-slate-900 text-base">Address</h4>
-            <p className="text-sm text-slate-500 leading-snug">{loc.address}</p>
+            <h4 className="font-black text-slate-900 text-sm uppercase tracking-wider">
+              Service Area
+            </h4>
+            <p className="text-sm font-semibold text-slate-700 leading-snug">
+              {location.address}
+            </p>
             <a
-              href={loc.mapsUrl}
+              href={location.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block text-xs font-semibold text-[#1E88C7] hover:underline pt-0.5"
+              className="inline-flex items-center gap-1 text-xs font-black text-[#EC4899] hover:text-[#BE185D] hover:underline pt-0.5"
             >
-              Get Directions →
+              <span>Explore Coverage Map</span>
+              <ArrowRight className="h-3 w-3 shrink-0" />
             </a>
           </div>
         </div>
 
-        {/* Item 2: Phone */}
+        {/* Item 2: Phone with Hero Callout */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <Phone className="h-5 w-5" />
           </div>
           <div className="space-y-0.5">
-            <h4 className="font-bold text-slate-900 text-base">Phone</h4>
+            <h4 className="font-black text-slate-900 text-sm uppercase tracking-wider">
+              Phone
+            </h4>
             <a
-              href={`tel:${loc.phone}`}
-              className="font-black text-[#1E88C7] text-2xl tracking-tight block hover:opacity-85 transition-opacity"
+              href={`tel:${location.phone}`}
+              className="font-black text-[#EC4899] text-2xl sm:text-3xl tracking-tight block hover:text-[#BE185D] drop-shadow-[0_0_12px_rgba(236,72,153,0.25)] transition-colors"
             >
-              {loc.phone}
+              {location.phone}
             </a>
-            <span className="text-xs text-slate-400 block font-normal">
+            <span className="text-xs text-slate-500 block font-medium">
               Tap to call directly
             </span>
           </div>
@@ -152,52 +109,48 @@ export function LocationCard({
 
         {/* Item 3: Email */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <Mail className="h-5 w-5" />
           </div>
           <div className="space-y-0.5">
-            <h4 className="font-bold text-slate-900 text-base">Email</h4>
+            <h4 className="font-black text-slate-900 text-sm uppercase tracking-wider">
+              Email
+            </h4>
             <a
-              href={`mailto:${loc.email}`}
-              className="text-sm text-[#1E88C7] hover:underline font-medium block"
+              href={`mailto:${location.email}`}
+              className="text-sm font-bold text-slate-700 hover:text-[#EC4899] hover:underline block break-all transition-colors"
             >
-              {loc.email}
+              {location.email}
             </a>
           </div>
         </div>
 
         {/* Item 4: Hours of Operation */}
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-[#B9E1F5]/40 text-[#1E88C7] flex items-center justify-center shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-pink-100 text-[#EC4899] flex items-center justify-center shrink-0 shadow-xs border border-pink-200/60">
             <Clock className="h-5 w-5" />
           </div>
-          <div className="flex-1 space-y-2">
-            <h4 className="font-bold text-slate-900 text-base">Hours of Operation</h4>
-            <div className="space-y-1.5 text-xs text-slate-600 max-w-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Monday – Friday</span>
-                <span className="font-bold text-slate-900">{loc.hours.weekdays}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Saturday</span>
-                <span className="font-bold text-slate-900">{loc.hours.saturday}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Sunday</span>
-                <span className="font-bold text-slate-900">{loc.hours.sunday}</span>
-              </div>
-            </div>
+          <div className="space-y-0.5">
+            <h4 className="font-black text-slate-900 text-sm uppercase tracking-wider">
+              Hours of Operation
+            </h4>
+            <p className="text-sm font-bold text-slate-800">
+              All Week: <span className="text-[#EC4899] font-black">{location.hours}</span>
+            </p>
+            <span className="text-xs text-slate-400 block font-normal">
+              Morning (8am–12pm) &amp; Afternoon (1pm–6pm) Slots
+            </span>
           </div>
         </div>
 
-        {/* Item 5: Full-Width Prominent Call Now Button */}
+        {/* Item 5: Full-Width Prominent Bubble Pink Call Now Button */}
         <div className="pt-2">
           <a
-            href={`tel:${loc.phone}`}
-            className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-[#1E88C7] hover:bg-[#1670a5] text-white font-black text-base shadow-lg shadow-sky-600/20 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
+            href={`tel:${location.phone}`}
+            className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-[#EC4899] hover:bg-[#BE185D] text-white font-black text-base shadow-lg shadow-pink-500/35 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
           >
             <Phone className="h-5 w-5 shrink-0" />
-            <span>Call Now — {loc.phone}</span>
+            <span>Call Now — {location.phone}</span>
           </a>
         </div>
       </div>

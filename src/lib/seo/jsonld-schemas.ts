@@ -60,14 +60,14 @@ export function getLocalBusinessSchema() {
     ],
     areaServed: {
       "@type": "AdministrativeArea",
-      name: "Lake in the Hills & 30-Mile Radius (Northwest Suburbs of Illinois)",
+      name: "Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, Schaumburg & 30-Mile Radius",
     },
     makesOffer: [
       {
         "@type": "Offer",
-        name: "Standard Bag Wash & Fold Service",
+        name: "13-Gallon Bag Wash & Fold Service (About 2 Loads)",
         description:
-          "Full laundry wash, dry, and fold service. 1 bag delivery fee is $10.00; 2+ bags have FREE delivery.",
+          "Full laundry wash, dry, and fold service. $32.50 per 13-gallon bag (about 2 loads). 1 bag delivery fee is $10.00; 2+ bags have FREE delivery.",
         price: APP_CONFIG.pricing.baseBagPrice,
         priceCurrency: "USD",
       },
@@ -95,7 +95,7 @@ export function getFaqSchema() {
         name: "How much is delivery for laundry pickup and drop-off?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "If you schedule 1 bag, the delivery fee is $10.00. If you schedule 2 or more bags, delivery is 100% FREE ($0.00).",
+          text: "Our standard rate is $32.50 per 13-gallon bag (about 2 loads). If you schedule 1 bag, delivery is $10.00. If you schedule 2 or more bags, delivery is 100% FREE ($0.00).",
         },
       },
       {

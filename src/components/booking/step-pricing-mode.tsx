@@ -20,8 +20,8 @@ export function StepPricingMode({ selectedMode, onSelectMode }: StepPricingModeP
       id: "per_bag",
       title: "By the Bag (Most Popular)",
       badge: "2+ Bags = Free Delivery",
-      description: "Fill our standard laundry bag. Flat rate per bag. $10 fee for 1 bag, $0 fee for 2+ bags!",
-      priceLabel: "$15.00 / bag",
+      description: "Fill our 13-gallon bag (about 2 loads). $10 pickup & delivery, FREE on 2+ bags!",
+      priceLabel: "$32.50 / bag",
       icon: ShoppingBag,
     },
     {

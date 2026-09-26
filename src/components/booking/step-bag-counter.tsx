@@ -76,7 +76,7 @@ export function StepBagCounter({
             <ShoppingBag className="h-4 w-4 text-sky-600" />
             Select Laundry Bags
           </h5>
-          <p className="text-xs text-slate-500 mt-0.5">$15.00 per standard laundry bag</p>
+          <p className="text-xs text-slate-500 mt-0.5">$32.50 per 13-gallon bag (about 2 loads)</p>
         </div>
 
         {/* Quantity Stepper */}

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
-import { PromoBanner } from "@/components/shared/promo-banner";
 import { HeroSection } from "@/components/shared/hero-section";
-import { ServicesSection } from "@/components/home/services-section";
-import { ProcessSection } from "@/components/home/process-section";
+import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { FaqSection } from "@/components/shared/faq-section";
 import { HomeCtaBanner } from "@/components/home/home-cta-banner";
@@ -14,23 +12,23 @@ import { APP_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_CONFIG.url),
-  title: "Laundry Express — Superhero Doorstep Wash & Fold Laundry Service",
+  title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver | More Time For What Matters",
   description:
-    "Professional doorstep laundry pickup & delivery. 1 Bag = $10.00 fee; 2+ Bags = FREE delivery! Operating daily 8am-12pm & 1pm-6pm with photo proof guarantee.",
+    "Laundry Piling Up? $32.50 per 13-gallon bag (about 2 loads). $10 pickup & delivery, or FREE on 2+ bags! Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin & Schaumburg (30-mile radius).",
   keywords: [
     "laundry pickup and delivery",
     "wash and fold service",
     "doorstep laundry service",
-    "same day laundry delivery",
+    "lake in the hills laundry",
+    "algonquin laundry pickup",
     "per bag laundry pricing",
-    "commercial laundry by kg",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Laundry Express — Fast Doorstep Laundry Service",
-    description: "2+ Bags = FREE Delivery. 100% Photo Proof Guarantee.",
+    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    description: "Laundry Piling Up? $32.50 per 13-gal bag (about 2 loads). FREE pickup & delivery on 2+ bags! Serving Lake in the Hills & 30-mile radius.",
     url: APP_CONFIG.url,
     siteName: "Laundry Express",
     images: [{ url: "/brand/logo-badge.jpg", width: 1200, height: 630, alt: "Laundry Express Logo" }],
@@ -39,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laundry Express — Doorstep Laundry Service",
-    description: "2+ Bags = FREE Delivery. Daily slots: 8am–12pm & 1pm–6pm.",
+    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Daily slots: 8am–12pm & 1pm–6pm.",
     images: ["/brand/logo-badge.jpg"],
   },
 };
@@ -49,6 +47,12 @@ export default function HomePage() {
   const localBusinessJsonLd = getLocalBusinessSchema();
   const faqJsonLd = getFaqSchema();
 
+  /**
+   * HomePage Shell
+   * Clean, high-converting layout featuring superhero brand alignment,
+   * static primary navigation bar, and structured schema microdata.
+   * Merges services & 4-step process into single animated HowItWorksSection.
+   */
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden pb-16 md:pb-0">
       {/* Schema.org Structured Microdata for SEO & AI / LLM Agents */}
@@ -61,10 +65,7 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* Dismissible Promo Announcement Bar */}
-      <PromoBanner />
-
-      {/* Global Navigation Header */}
+      {/* Static Main Navigation Header (Top Nav Removed) */}
       <SiteHeader />
 
       {/* Main Content Sections — Streamlined & Useful */}
@@ -72,13 +73,12 @@ export default function HomePage() {
         {/* Superhero Mascot & Core Proposition Hero */}
         <HeroSection />
 
-        {/* Core Laundry Services */}
+        {/* Unified Interactive Services & Process Journey */}
         <div id="services">
-          <ServicesSection />
+          <div id="process">
+            <HowItWorksSection />
+          </div>
         </div>
-
-        {/* 4-Step Process & Photo Proof Journey */}
-        <ProcessSection />
 
         {/* Moderated Customer Reviews & Photos */}
         <div id="reviews">
@@ -94,7 +94,7 @@ export default function HomePage() {
         <HomeCtaBanner />
       </main>
 
-      {/* Semantic SEO-Rich Footer */}
+      {/* Semantic SEO-Rich Pure Black Footer */}
       <SiteFooter />
 
       {/* Native Mobile Bottom App Bar */}

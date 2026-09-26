@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 const COMPARISON_FEATURES = [
   {
     feature: "Base Pricing Rate",
-    bag: "$15.00 / 13-gal bag",
+    bag: "$32.50 / 13-gal bag (about 2 loads)",
     kg: "$2.75 / kg (5kg min)",
     package: "From $12.50 / bag (prepaid)",
   },

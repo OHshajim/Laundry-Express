@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
  * PlanPackagesGrid Component
  *
  * Displays pre-paid saver packages with bundled discounts:
- * 1. 5-Bag Saver Bundle ($65, save $10)
- * 2. 10-Bag Family Pass ($125, save $25)
+ * 1. 5-Bag Saver Bundle ($145, save $17.50)
+ * 2. 10-Bag Family Pass ($280, save $45.00)
  * 3. 25-KG Bulk Pass ($60, save $8.75)
  */
 export function PlanPackagesGrid() {
@@ -20,12 +20,12 @@ export function PlanPackagesGrid() {
       {/* Card 1: 5-Bag Saver */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md flex flex-col justify-between">
         <div>
-          <Badge variant="secondary" className="mb-3">Save $10.00</Badge>
+          <Badge variant="secondary" className="mb-3">Save $17.50</Badge>
           <h3 className="text-xl font-black text-slate-900">5-Bag Saver Bundle</h3>
           <p className="text-xs text-slate-500 mt-1 mb-4">5 standard wash &amp; fold pickups</p>
           <div className="mb-4">
-            <span className="text-3xl font-black text-slate-900">$65.00</span>
-            <span className="text-xs text-slate-400 line-through ml-2">$75.00</span>
+            <span className="text-3xl font-black text-slate-900">$145.00</span>
+            <span className="text-xs text-slate-400 line-through ml-2">$162.50</span>
           </div>
           <ul className="space-y-2 text-xs text-slate-600">
             <li className="flex items-center gap-2">
@@ -53,12 +53,12 @@ export function PlanPackagesGrid() {
           Best Family Value
         </div>
         <div>
-          <Badge variant="success" className="mb-3">Save $25.00</Badge>
+          <Badge variant="success" className="mb-3">Save $45.00</Badge>
           <h3 className="text-xl font-black text-slate-900">10-Bag Family Pass</h3>
           <p className="text-xs text-slate-500 mt-1 mb-4">10 standard wash &amp; fold pickups</p>
           <div className="mb-4">
-            <span className="text-3xl font-black text-slate-900">$125.00</span>
-            <span className="text-xs text-slate-400 line-through ml-2">$150.00</span>
+            <span className="text-3xl font-black text-slate-900">$280.00</span>
+            <span className="text-xs text-slate-400 line-through ml-2">$325.00</span>
           </div>
           <ul className="space-y-2 text-xs text-slate-600">
             <li className="flex items-center gap-2">

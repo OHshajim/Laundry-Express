@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
-import { PromoBanner } from "@/components/shared/promo-banner";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { PlanSelector } from "@/components/pricing/plan-selector";
@@ -40,14 +39,13 @@ export const metadata: Metadata = {
  * Dedicated plans and pricing breakdown page.
  * Displays standard 13-gallon bag options, weighed bulk laundry by the KG,
  * prepaid saver packages, and detailed plan comparison matrix.
+ * Includes instant calculator and side-by-side plan comparisons.
+ * Main navigation stays static as users scroll.
  */
 export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden pb-16 md:pb-0">
-      {/* Dismissible Promo Banner */}
-      <PromoBanner />
-
-      {/* Global Navigation Header */}
+      {/* Static Global Navigation Header (Top Nav Removed) */}
       <SiteHeader />
 
       <main className="flex-1 py-12">
@@ -72,14 +70,14 @@ export default function PricingPage() {
             {/* Visual Delivery Rule Highlight Box */}
             <div className="inline-grid grid-cols-1 sm:grid-cols-2 gap-3 p-2 bg-slate-50 border border-slate-200 rounded-2xl max-w-lg mx-auto text-xs text-left">
               <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-                <span className="font-bold text-slate-900 block mb-0.5">1 Bag Order</span>
-                <span className="text-slate-500">$15.00 wash + </span>
+                <span className="font-bold text-slate-900 block mb-0.5">1 Bag (About 2 Loads)</span>
+                <span className="text-slate-500">$32.50 wash + </span>
                 <span className="font-extrabold text-amber-700">$10.00 delivery fee</span>
               </div>
               <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-2xs">
                 <span className="font-bold text-emerald-950 block mb-0.5">2+ Bags Order</span>
-                <span className="text-emerald-800">$15.00/bag &amp; </span>
-                <span className="font-extrabold text-emerald-600 uppercase">100% Free Delivery ($0.00)</span>
+                <span className="text-emerald-800">$32.50/bag &amp; </span>
+                <span className="font-extrabold text-emerald-600 uppercase">FREE Pickup &amp; Delivery</span>
               </div>
             </div>
           </div>

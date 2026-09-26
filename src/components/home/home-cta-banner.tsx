@@ -45,8 +45,9 @@ export function HomeCtaBanner() {
             </h2>
 
             <p className="text-sm sm:text-base text-sky-100 leading-relaxed font-normal">
-              Book your pickup in under 2 minutes. Remember:{" "}
-              <strong>2 or more bags get 100% FREE delivery ($0.00)</strong>!
+              Book your pickup in under 2 minutes. Only{" "}
+              <strong>$32.50 per 13-gallon bag (about 2 loads)</strong>. $10 pickup &amp; delivery — or{" "}
+              <strong>FREE on 2+ bags ($0.00)</strong>!
               We wash, dry, fold, and return fresh to your doorstep.
             </p>
 

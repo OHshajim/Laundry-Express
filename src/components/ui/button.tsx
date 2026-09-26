@@ -43,19 +43,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E91E63] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer whitespace-nowrap shrink-0 max-w-full";
+      "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4899] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl active:scale-[0.98] select-none cursor-pointer whitespace-nowrap shrink-0 max-w-full";
 
     const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        "bg-[#E91E63] text-white hover:bg-[#d81557] hover:text-white shadow-md shadow-pink-500/20 active:bg-[#c2185b]",
+        "bg-[#EC4899] text-white hover:bg-[#BE185D] hover:text-white shadow-md shadow-pink-500/20 active:bg-[#9D174D]",
       hero:
-        "bg-[#E91E63] text-white hover:bg-[#d81557] hover:text-white shadow-lg shadow-pink-500/25 active:bg-[#c2185b]",
+        "bg-[#EC4899] text-white hover:bg-[#BE185D] hover:text-white shadow-lg shadow-pink-500/25 active:bg-[#9D174D]",
       secondary:
-        "bg-[#B9E1F5]/40 text-[#141B2E] hover:bg-[#B9E1F5] hover:text-[#141B2E] border border-[#B9E1F5] active:bg-[#B9E1F5]/70",
+        "bg-[#38BDF8]/15 text-[#141B2E] hover:bg-[#38BDF8]/30 hover:text-[#141B2E] border border-[#38BDF8]/40 active:bg-[#38BDF8]/20",
       outline:
-        "border border-slate-300 bg-white text-[#141B2E] hover:bg-slate-100 hover:text-[#E91E63] hover:border-slate-400 active:bg-slate-200",
+        "border border-slate-300 bg-white text-[#141B2E] hover:bg-pink-50/50 hover:text-[#EC4899] hover:border-pink-300 active:bg-pink-100",
       ghost:
-        "text-[#141B2E] hover:text-[#E91E63] hover:bg-[#B9E1F5]/30 active:bg-[#B9E1F5]/50",
+        "text-[#141B2E] hover:text-[#EC4899] hover:bg-pink-50 active:bg-pink-100",
       danger:
         "bg-[#D63A3A] text-white hover:bg-[#b82e2e] hover:text-white shadow-sm active:bg-[#a82525]",
       accent:

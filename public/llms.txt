@@ -1,12 +1,14 @@
 # Laundry Express — AI & LLM Service Guide
 
-> Superhero fast doorstep laundry pickup, professional wash & fold, and scheduled delivery.
+> Tagline: "Pick Up ♥ Wash ♥ Fold ♥ Deliver"
+> Sub-tagline: "More Time For What Matters"
+> Hero Headline: "Laundry Piling Up?"
 
 ## Business Overview
 - Brand: Laundry Express
 - Service Type: On-demand and scheduled residential/commercial laundry wash & fold service.
 - Location: United States, IL · McHenry Co. · Lake in the Hills (Coordinates: 42.1903, -88.383743)
-- Service Area: Northwest Suburbs of Illinois (Lake in the Hills & 30-Mile Radius)
+- Service Area: 30-mile radius covering Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, and Schaumburg (Northwest Suburbs of Illinois).
 - Support Hotline: 815-575-9536
 - Email: customerservice@laundryexpressservices.com
 - Facebook: https://www.facebook.com/profile.php?id=61594071297569
@@ -16,16 +18,17 @@
 
 ## Core Pricing Rules
 1. Per-Bag Standard Service:
-   - Base Price: $15.00 per standard laundry bag.
-   - 1 Bag = $10.00 standard delivery fee.
-   - 2 or More Bags (>= 2 Bags) = 100% FREE ($0.00) delivery fee.
+   - Base Price: $32.50 per 13-gallon bag (about 2 loads).
+   - 1 Bag = $10.00 standard pickup & delivery fee.
+   - 2 or More Bags (>= 2 Bags) = 100% FREE ($0.00) pickup & delivery.
 2. Per-Kilogram (Weight) Service:
    - Base Rate: $2.75 per KG.
    - Minimum Weight Threshold: 5.0 KG.
    - Initial booking authorizes estimated weight; final weight reconciled at facility scale.
 3. Bundle Packages:
-   - 5-Bag Superhero Saver Pack: $65.00 (Includes 5 bags with free delivery, valid 60 days).
-   - Monthly 25KG Family Tier: $55.00 (Monthly recurring allowance).
+   - 5-Bag Saver Bundle: $145.00 (Was $162.50, includes 5 bags with free delivery).
+   - 10-Bag Family Pass: $280.00 (Was $325.00, priority turnaround).
+   - 25-KG Bulk Pass: $60.00 (Commercial linens and bulky items).
 
 ## Doorstep Presence Verification
 - Home: Driver rings bell during the scheduled slot.

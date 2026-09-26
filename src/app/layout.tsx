@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0284c7",
+  themeColor: "#EC4899",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -24,11 +24,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(APP_CONFIG.url),
   title: {
-    default: "Laundry Express — Superhero Doorstep Wash & Fold Laundry Service",
+    default: "Laundry Express | Pick Up • Wash • Fold • Deliver",
     template: "%s | Laundry Express",
   },
   description:
-    "Superhero fast doorstep laundry pickup & delivery. 1 Bag = $10.00 fee; 2+ Bags = FREE delivery! Operating daily 8am-12pm & 1pm-6pm with photo proof guarantee.",
+    "Laundry Piling Up? Pick Up • Wash • Fold • Deliver — More Time For What Matters. $32.50 per 13-gallon bag (about 2 loads). $10 pickup & delivery, FREE on 2+ bags! Serving Lake in the Hills & 30-mile radius.",
   keywords: [
     "laundry express",
     "doorstep laundry service",
@@ -64,8 +64,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Laundry Express",
-    title: "Laundry Express — Doorstep Wash & Fold Laundry Service",
-    description: "1 Bag = $10.00 fee; 2+ Bags = FREE delivery! 100% photo proof guarantee.",
+    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    description: "$32.50 per 13-gallon bag (about 2 loads). 1 Bag = $10.00 fee; 2+ Bags = FREE delivery! 100% photo proof guarantee.",
     images: [
       {
         url: "/brand/logo-badge.jpg",
@@ -77,8 +77,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laundry Express — Doorstep Wash & Fold",
-    description: "2+ Bags = FREE delivery. Photo proof guarantee.",
+    title: "Laundry Express — Pick Up ♥ Wash ♥ Fold ♥ Deliver",
+    description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Photo proof guarantee.",
     images: ["/brand/logo-badge.jpg"],
   },
 };

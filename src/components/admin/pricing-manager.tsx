@@ -28,7 +28,7 @@ export function PricingManager({ currentSection = "rates" }: PricingManagerProps
   }, [currentSection]);
 
   // Live rates state
-  const [bagPrice, setBagPrice] = React.useState<number>(15.0);
+  const [bagPrice, setBagPrice] = React.useState<number>(32.50);
   const [deliveryFee, setDeliveryFee] = React.useState<number>(10.0);
   const [freeThresholdBags, setFreeThresholdBags] = React.useState<number>(2);
   const [kgPrice, setKgPrice] = React.useState<number>(2.75);

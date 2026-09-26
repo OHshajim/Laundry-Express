@@ -3,11 +3,16 @@
 import * as React from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_CONFIG } from "@/lib/constants";
 
 const FAQS = [
   {
     q: "How does the $10.00 delivery fee and FREE delivery work?",
-    a: "If you schedule 1 bag, the delivery fee is $10.00. If you schedule 2 or more bags (or spend $40+ on KG orders), your delivery fee is automatically reduced to $0.00 (100% FREE).",
+    a: "Our standard rate is $32.50 per 13-gallon bag (about 2 loads). If you schedule 1 bag, pickup & delivery is $10.00. If you schedule 2 or more bags, pickup & delivery is 100% FREE ($0.00)!",
+  },
+  {
+    q: "Which areas do you service?",
+    a: "We service a 30-mile radius from Lake in the Hills, IL — including Algonquin, Crystal Lake, Huntley, Cary, Elgin, Schaumburg, and surrounding Northwest Suburbs.",
   },
   {
     q: "What time slots can I select for pickup and delivery?",
@@ -27,7 +32,7 @@ const FAQS = [
   },
   {
     q: "What kind of bag should I use for my laundry pickup?",
-    a: "You can use any standard 13-gallon kitchen trash bag, disposable bag, or your own hamper. When our driver delivers your clean laundry, it will be returned neatly folded and sealed in protective, weather-resistant Laundry Express bags.",
+    a: "You can use any standard 13-gallon bag (about 2 loads), disposable bag, or your own hamper. When our driver delivers your clean laundry, it will be returned neatly folded and sealed in protective, weather-resistant bags.",
   },
   {
     q: "Which detergents are available, and is there an extra fee?",
@@ -94,8 +99,11 @@ export function FaqSection() {
         <div className="mt-10 text-center text-xs text-slate-500">
           <p>
             Have a custom inquiry or large hotel/commercial request?{" "}
-            <a href="tel:5551234567" className="text-sky-600 font-bold hover:underline">
-              Call our support superheroes at (555) 123-4567
+            <a
+              href={`tel:${APP_CONFIG.supportPhone.replace(/\D/g, "")}`}
+              className="text-[#E91E63] font-bold hover:underline"
+            >
+              Call our support team at {APP_CONFIG.supportPhone}
             </a>
           </p>
         </div>

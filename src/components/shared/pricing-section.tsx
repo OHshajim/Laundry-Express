@@ -35,12 +35,12 @@ export function PricingSection() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">Standard Bag Wash &amp; Fold</h3>
-                  <p className="text-xs text-slate-500">Per-bag everyday laundry</p>
+                  <p className="text-xs text-slate-500">13-gallon bag (about 2 loads)</p>
                 </div>
               </div>
 
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-slate-900">$15.00</span>
+                <span className="text-4xl font-black text-slate-900">$32.50</span>
                 <span className="text-xs text-slate-500 font-semibold">/ bag</span>
               </div>
 
@@ -48,11 +48,11 @@ export function PricingSection() {
               <div className="p-4 rounded-2xl bg-sky-50/80 border border-sky-100 mb-6 space-y-2 text-xs">
                 <div className="flex justify-between items-center text-slate-700 font-semibold">
                   <span>1 Bag Delivery:</span>
-                  <span className="text-slate-900 font-bold">$10.00 delivery fee</span>
+                  <span className="text-slate-900 font-bold">$10.00 pickup &amp; delivery</span>
                 </div>
                 <div className="flex justify-between items-center text-emerald-800 font-bold bg-emerald-100/80 p-2 rounded-xl">
                   <span>2 or More Bags (≥ 2):</span>
-                  <span className="uppercase text-emerald-700">FREE ($0.00) Delivery</span>
+                  <span className="uppercase text-emerald-700">FREE Pickup &amp; Delivery</span>
                 </div>
               </div>
 

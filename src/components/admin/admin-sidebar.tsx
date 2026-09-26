@@ -14,12 +14,14 @@ import {
   Menu,
   X,
   Users,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type AdminSection =
   | "orders"
   | "customers"
+  | "transactions"
   | "rates"
   | "packages"
   | "detergents"
@@ -70,6 +72,11 @@ export function AdminSidebar({
       icon: Users,
       badge: customersCount > 0 ? customersCount : undefined,
     },
+    {
+      id: "transactions",
+      label: "Transaction History",
+      icon: CreditCard,
+    },
     { id: "rates", label: "Rates & Free Delivery", icon: Sliders },
     { id: "packages", label: "Packages & Bundles", icon: Package },
     { id: "detergents", label: "Detergent Catalog", icon: Sparkles },
@@ -88,11 +95,11 @@ export function AdminSidebar({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#141B2E] text-white border-r border-slate-800">
+    <div className="flex flex-col h-full bg-black text-white border-r border-neutral-800">
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
+      <div className="p-5 border-b border-neutral-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 rounded-xl overflow-hidden border border-slate-700 shrink-0">
+          <div className="relative h-10 w-10 rounded-xl overflow-hidden border border-neutral-700 shrink-0">
             <Image
               src="/brand/logo-badge.jpg"
               alt="Laundry Express Admin"
@@ -105,7 +112,7 @@ export function AdminSidebar({
             <span className="font-black text-base text-white tracking-tight block truncate">
               Laundry Express
             </span>
-            <span className="text-[11px] text-[#B9E1F5] font-semibold block">
+            <span className="text-[11px] text-[#E91E63] font-bold block drop-shadow-[0_0_8px_rgba(233,30,99,0.5)]">
               Admin Dashboard
             </span>
           </div>
@@ -114,16 +121,16 @@ export function AdminSidebar({
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white"
+          className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-white"
           aria-label="Close Sidebar"
         >
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Navigation Links */}
+      {/* Navigation Links with Glowing Punch-Pink */}
       <nav className="flex-1 p-3.5 space-y-1.5 overflow-y-auto">
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-3 block mb-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-2">
           Operations &amp; Catalog
         </span>
 
@@ -138,19 +145,19 @@ export function AdminSidebar({
               onClick={() => handleSelect(item.id)}
               className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                 isActive
-                  ? "bg-[#1E88C7] text-white shadow-md shadow-sky-900/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-[#E91E63] text-white shadow-[0_0_20px_rgba(233,30,99,0.55)] border border-[#E91E63]"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 hover:shadow-[0_0_12px_rgba(233,30,99,0.25)]"
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
+                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-neutral-400"}`} />
                 <span className="truncate">{item.label}</span>
               </div>
 
               {item.badge !== undefined && (
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
-                    isActive ? "bg-white text-[#1E88C7]" : "bg-[#D63A3A] text-white"
+                    isActive ? "bg-white text-[#E91E63]" : "bg-[#E91E63] text-white shadow-[0_0_8px_rgba(233,30,99,0.5)]"
                   }`}
                 >
                   {item.badge}
@@ -162,12 +169,12 @@ export function AdminSidebar({
       </nav>
 
       {/* Bottom Footer Actions */}
-      <div className="p-4 border-t border-slate-800/80 space-y-3">
+      <div className="p-4 border-t border-neutral-800 space-y-3">
         <Link href="/">
           <Button
             variant="outline"
             size="sm"
-            className="w-full bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 hover:text-white text-xs justify-center"
+            className="w-full bg-neutral-900 text-neutral-200 border-neutral-800 hover:bg-neutral-800 hover:text-white text-xs justify-center"
           >
             <ArrowLeft className="h-3.5 w-3.5 mr-1.5 shrink-0" />
             <span>Return to Live Site</span>
@@ -180,12 +187,12 @@ export function AdminSidebar({
   return (
     <>
       {/* Mobile Top Navigation Header */}
-      <div className="lg:hidden bg-[#141B2E] text-white p-4 flex items-center justify-between border-b border-slate-800 sticky top-0 z-30">
+      <div className="lg:hidden bg-black text-white p-4 flex items-center justify-between border-b border-neutral-800 sticky top-0 z-30">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700"
+            className="p-2 rounded-xl bg-neutral-900 text-white hover:bg-neutral-800"
             aria-label="Open Operations Menu"
           >
             <Menu className="h-5 w-5" />
@@ -194,7 +201,7 @@ export function AdminSidebar({
         </div>
 
         <Link href="/">
-          <Button variant="ghost" size="sm" className="text-xs text-slate-300 hover:text-white">
+          <Button variant="ghost" size="sm" className="text-xs text-neutral-300 hover:text-[#E91E63]">
             <ArrowLeft className="h-3.5 w-3.5 mr-1" />
             Live Site
           </Button>
@@ -205,7 +212,7 @@ export function AdminSidebar({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs"
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs"
             onClick={() => setMobileOpen(false)}
           />
           <div className="relative w-72 max-w-[80vw] h-full z-10 animate-in slide-in-from-left duration-200">
