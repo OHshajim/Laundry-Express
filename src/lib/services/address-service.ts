@@ -13,20 +13,7 @@ export interface UserAddress {
   created_at?: string;
 }
 
-const DEFAULT_ADDRESSES: UserAddress[] = [
-  {
-    id: "addr-1",
-    user_id: "cust-demo-001",
-    label: "Home",
-    street_address: "742 Evergreen Terrace",
-    city: "Lake in the Hills",
-    state: "IL",
-    zip_code: "60156",
-    is_default: true,
-  },
-];
-
-let cachedAddresses: UserAddress[] = [...DEFAULT_ADDRESSES];
+let cachedAddresses: UserAddress[] = [];
 
 export class AddressService {
   static async getAddresses(userId: string): Promise<UserAddress[]> {
@@ -37,7 +24,7 @@ export class AddressService {
         return data as UserAddress[];
       }
     } catch {}
-    return cachedAddresses.filter((a) => a.user_id === userId || !a.user_id);
+    return cachedAddresses.filter((a) => a.user_id === userId);
   }
 
   static async saveAddress(addr: Partial<UserAddress>): Promise<UserAddress> {

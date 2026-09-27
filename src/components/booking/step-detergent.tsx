@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Sparkles, Check, ThermometerSnowflake, Flame, SunMedium } from "lucide-react";
-import { DEFAULT_DETERGENTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { DetergentItem } from "@/lib/services/catalog-service";
 
@@ -19,17 +18,23 @@ export function StepDetergent({
   selectedTemp = "cold",
   onSelectTemp,
 }: StepDetergentProps) {
-  const [detergents, setDetergents] = React.useState<DetergentItem[]>(DEFAULT_DETERGENTS as unknown as DetergentItem[]);
+  const [detergents, setDetergents] = React.useState<DetergentItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     fetch("/api/catalog")
       .then((res) => res.json())
       .then((data) => {
-        if (data.detergents && data.detergents.length > 0) {
-          setDetergents(data.detergents.filter((d: DetergentItem) => d.is_active));
+        if (Array.isArray(data.detergents)) {
+          const activeList = data.detergents.filter((d: DetergentItem) => d.is_active);
+          setDetergents(activeList);
+          if (activeList.length > 0 && !selectedDetergentId) {
+            onSelectDetergent(activeList[0].id);
+          }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, []);
 
   const temps = [
@@ -54,35 +59,42 @@ export function StepDetergent({
         <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
           Choose Your Detergent Formula
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {detergents.map((detergent) => {
-            const isSelected = selectedDetergentId === detergent.id;
-            return (
-              <button
-                key={detergent.id}
-                type="button"
-                onClick={() => onSelectDetergent(detergent.id)}
-                className={cn(
-                  "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer",
-                  isSelected
-                    ? "border-sky-500 bg-sky-50/40 ring-2 ring-sky-500/20"
-                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                )}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900">{detergent.name}</span>
-                    {isSelected && <Check className="h-4 w-4 text-sky-600" />}
+        {detergents.length === 0 ? (
+          <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center">
+            <p className="text-xs font-semibold text-slate-700">Standard Premium Eco Formula</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">Gentle, hypoallergenic clean included automatically with your order.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {detergents.map((detergent) => {
+              const isSelected = selectedDetergentId === detergent.id;
+              return (
+                <button
+                  key={detergent.id}
+                  type="button"
+                  onClick={() => onSelectDetergent(detergent.id)}
+                  className={cn(
+                    "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer",
+                    isSelected
+                      ? "border-sky-500 bg-sky-50/40 ring-2 ring-sky-500/20"
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  )}
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900">{detergent.name}</span>
+                      {isSelected && <Check className="h-4 w-4 text-sky-600" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1">{detergent.description}</p>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1">{detergent.description}</p>
-                </div>
-                <span className="text-[10px] font-bold text-slate-400 mt-2 block uppercase tracking-wider">
-                  {detergent.brand} • {detergent.type}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                  <span className="text-[10px] font-bold text-slate-400 mt-2 block uppercase tracking-wider">
+                    {detergent.brand} • {detergent.type}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2 pt-2 border-t border-slate-100">

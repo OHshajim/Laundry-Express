@@ -1,6 +1,5 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Order, OrderStatus } from "@/types";
-import { INITIAL_ORDERS } from "@/lib/mock-admin-data";
 
 /**
  * Order Service
@@ -9,9 +8,8 @@ import { INITIAL_ORDERS } from "@/lib/mock-admin-data";
  * Strictly complies with the < 250 lines architectural rule.
  */
 
-// Resilient memory cache seeded with initial demonstration records
+// Runtime memory cache for active server operations
 const ORDERS_MEMORY_STORE = new Map<string, Order>();
-INITIAL_ORDERS.forEach((order) => ORDERS_MEMORY_STORE.set(order.id, order));
 
 export class OrderService {
   /**

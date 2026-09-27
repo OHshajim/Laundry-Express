@@ -31,6 +31,22 @@ export function PlanPackagesGrid() {
     );
   }
 
+  if (plans.length === 0) {
+    return (
+      <div className="max-w-md mx-auto p-8 rounded-3xl bg-slate-50 border border-slate-200 text-center space-y-4">
+        <h4 className="font-bold text-sm text-slate-800">No Package Passes Currently Published</h4>
+        <p className="text-xs text-slate-500">
+          Discounted multi-bag saver bundles are added periodically by admin. You can book individual loads immediately with our standard plans!
+        </p>
+        <Link href="/order" className="inline-block">
+          <Button size="sm" className="bg-primary hover:bg-primary-dark text-white font-bold text-xs">
+            Book By Bag / KG
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto animate-in fade-in duration-200">
       {plans.map((pkg, idx) => {

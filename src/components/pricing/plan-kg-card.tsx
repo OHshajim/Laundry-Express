@@ -18,8 +18,25 @@ interface PlanKgCardProps {
  * Designed for bulky loads, Airbnb hosts, and sports teams.
  */
 export function PlanKgCard({ weightKg, onWeightKgChange }: PlanKgCardProps) {
-  const kgSubtotal = Math.round(weightKg * 2.75 * 100) / 100;
-  const kgDeliveryFee = kgSubtotal >= 40 ? 0.0 : 10.0;
+  const [rates, setRates] = React.useState({ baseKgPrice: 2.75, freeDeliveryThreshold: 40.0, deliveryFee: 10.0 });
+
+  React.useEffect(() => {
+    fetch("/api/pricing")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.pricing) {
+          setRates({
+            baseKgPrice: Number(d.pricing.base_kg_price || 2.75),
+            freeDeliveryThreshold: Number(d.pricing.free_delivery_threshold || 40.0),
+            deliveryFee: Number(d.pricing.one_bag_delivery_fee || 10.0),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const kgSubtotal = Math.round(weightKg * rates.baseKgPrice * 100) / 100;
+  const kgDeliveryFee = kgSubtotal >= rates.freeDeliveryThreshold ? 0.0 : rates.deliveryFee;
   const kgTotal = kgSubtotal + kgDeliveryFee;
 
   return (
@@ -36,7 +53,7 @@ export function PlanKgCard({ weightKg, onWeightKgChange }: PlanKgCardProps) {
           </p>
         </div>
         <div className="text-left sm:text-right">
-          <span className="text-3xl font-black text-slate-900">$2.75</span>
+          <span className="text-3xl font-black text-slate-900">${rates.baseKgPrice.toFixed(2)}</span>
           <span className="text-xs text-slate-500 block">per kg (5kg min)</span>
         </div>
       </div>

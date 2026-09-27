@@ -21,8 +21,24 @@ interface PlanBagCardProps {
  * - 2+ Bags = FREE ($0.00) delivery fee
  */
 export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
-  const bagSubtotal = bagCount * 32.50;
-  const bagDeliveryFee = bagCount === 1 ? 10.0 : 0.0;
+  const [rates, setRates] = React.useState({ baseBagPrice: 32.50, deliveryFee: 10.0 });
+
+  React.useEffect(() => {
+    fetch("/api/pricing")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.pricing) {
+          setRates({
+            baseBagPrice: Number(d.pricing.base_bag_price || 32.50),
+            deliveryFee: Number(d.pricing.one_bag_delivery_fee || 10.0),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const bagSubtotal = bagCount * rates.baseBagPrice;
+  const bagDeliveryFee = bagCount === 1 ? rates.deliveryFee : 0.0;
   const bagTotal = bagSubtotal + bagDeliveryFee;
 
   return (
@@ -34,11 +50,11 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
           </span>
           <h3 className="text-2xl font-black text-slate-900">Standard 13-Gallon Bags</h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            $32.50 per 13-gallon bag (about 2 loads of clothes, towels &amp; daily wear).
+            ${rates.baseBagPrice.toFixed(2)} per 13-gallon bag (about 2 loads of clothes, towels &amp; daily wear).
           </p>
         </div>
         <div className="text-left sm:text-right">
-          <span className="text-3xl font-black text-slate-900">$32.50</span>
+          <span className="text-3xl font-black text-slate-900">${rates.baseBagPrice.toFixed(2)}</span>
           <span className="text-xs text-slate-500 block">per bag</span>
         </div>
       </div>

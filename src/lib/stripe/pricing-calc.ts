@@ -1,4 +1,4 @@
-import { APP_CONFIG, DEFAULT_DETERGENTS } from "@/lib/constants";
+import { APP_CONFIG } from "@/lib/constants";
 import type { PricingMode } from "@/types";
 
 export interface CalculatePriceInput {
@@ -6,6 +6,7 @@ export interface CalculatePriceInput {
   bag_count?: number;
   estimated_weight_kg?: number;
   detergent_id?: string;
+  detergent_fee?: number;
   promo_code?: string;
 }
 
@@ -63,13 +64,7 @@ export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPrice
   }
 
   // 2. Detergent add-on
-  let detergentFee = 0;
-  if (input.detergent_id) {
-    const detergent = DEFAULT_DETERGENTS.find((d) => d.id === input.detergent_id);
-    if (detergent && detergent.price_adjustment > 0) {
-      detergentFee = detergent.price_adjustment;
-    }
-  }
+  const detergentFee = Math.max(0, Number(input.detergent_fee || 0));
 
   // 3. Promotional discounts
   let discountAmount = 0;

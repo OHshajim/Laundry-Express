@@ -24,22 +24,10 @@ export interface BusinessSettings {
   standard_delivery_fee: number;
 }
 
-const DEFAULT_FAQS: FaqItem[] = [
-  { id: "faq-1", question: "How does the $10 or FREE delivery rule work?", answer: "When you book 1 standard 13-gallon laundry bag, a $10.00 delivery fee applies. When you book 2 or more bags, delivery is 100% FREE!", display_order: 1 },
-  { id: "faq-2", question: "What size is the 13-gallon bag?", answer: "A 13-gallon bag is standard tall kitchen size and comfortably holds about 2 full loads of laundry (roughly 12-15 lbs).", display_order: 2 },
-  { id: "faq-3", question: "What are your daily pickup windows?", answer: "We offer two daily windows: Morning (8:00 AM – 12:00 PM) and Afternoon (1:00 PM – 6:00 PM), 7 days a week.", display_order: 3 },
-  { id: "faq-4", question: "Do I need to be home for pickup and delivery?", answer: "No! You can choose contactless doorstep pickup. Just leave your bags securely outside your door or porch.", display_order: 4 },
-];
-
-const DEFAULT_TERMS: TermItem[] = [
-  { id: "term-1", title: "Fabric Protection & Care Guarantee", subtitle: "Zero-Shrinkage & Color Separation", description: "All fabrics are sorted by color and temperature according to your preference. If an item is damaged under our care, we reimburse up to 10x the wash charge." },
-  { id: "term-2", title: "24-Hour Delivery Promise", subtitle: "Rapid Doorstep Turnaround", description: "Leave your drop-off date blank and we return your crisply folded garments within 24 hours of facility check-in." },
-];
-
-let cachedFaqs: FaqItem[] = [...DEFAULT_FAQS];
-let cachedTerms: TermItem[] = [...DEFAULT_TERMS];
+let cachedFaqs: FaqItem[] = [];
+let cachedTerms: TermItem[] = [];
 let cachedSettings: BusinessSettings = {
-  operating_hours: "8:00 AM – 8:00 PM Daily",
+  operating_hours: "8:00 AM – 6:00 PM Daily",
   delivery_zones: ["Lake in the Hills", "Algonquin", "Crystal Lake", "Huntley", "Cary", "Elgin", "Schaumburg"],
   min_order_bag: 1,
   min_order_kg: 5,
@@ -51,14 +39,16 @@ export class ContentService {
   static async getFaqs(): Promise<FaqItem[]> {
     try {
       const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("faqs").select("*").order("display_order", { ascending: true });
+      const { data, error } = await supabase.from("faqs_and_terms").select("*").eq("category", "faq").order("sort_order", { ascending: true });
       if (!error && data && data.length > 0) {
-        return data.map((d) => ({
+        cachedFaqs = data.map((d) => ({
           id: d.id,
-          question: d.title || d.question,
-          answer: d.description || d.answer,
-          display_order: d.display_order ?? 1,
+          question: d.title,
+          answer: d.description,
+          display_order: d.sort_order ?? 1,
         }));
+      } else if (!error && data && data.length === 0) {
+        cachedFaqs = [];
       }
     } catch {}
     return cachedFaqs;
@@ -78,7 +68,14 @@ export class ContentService {
 
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("faqs").upsert({ id, title: full.question, description: full.answer, display_order: full.display_order });
+      await supabase.from("faqs_and_terms").upsert({
+        id,
+        category: "faq",
+        title: full.question,
+        description: full.answer,
+        sort_order: full.display_order,
+        is_active: true,
+      });
     } catch {}
     return full;
   }
@@ -87,7 +84,7 @@ export class ContentService {
     cachedFaqs = cachedFaqs.filter((f) => f.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("faqs").delete().eq("id", id);
+      await supabase.from("faqs_and_terms").delete().eq("id", id);
     } catch {}
     return true;
   }
@@ -95,14 +92,16 @@ export class ContentService {
   static async getTerms(): Promise<TermItem[]> {
     try {
       const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("terms").select("*");
+      const { data, error } = await supabase.from("faqs_and_terms").select("*").in("category", ["term", "guarantee"]).order("sort_order", { ascending: true });
       if (!error && data && data.length > 0) {
-        return data.map((d) => ({
+        cachedTerms = data.map((d) => ({
           id: d.id,
           title: d.title,
-          subtitle: d.subtitle,
+          subtitle: d.subtitle || "",
           description: d.description,
         }));
+      } else if (!error && data && data.length === 0) {
+        cachedTerms = [];
       }
     } catch {}
     return cachedTerms;
@@ -114,7 +113,7 @@ export class ContentService {
       id,
       title: term.title || "Policy Title",
       subtitle: term.subtitle || "Service Guarantee",
-      description: term.description || "Policy terms.",
+      description: term.description || "",
     };
     const idx = cachedTerms.findIndex((t) => t.id === id);
     if (idx >= 0) cachedTerms[idx] = full;
@@ -122,7 +121,14 @@ export class ContentService {
 
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("terms").upsert(full);
+      await supabase.from("faqs_and_terms").upsert({
+        id,
+        category: "term",
+        title: full.title,
+        subtitle: full.subtitle,
+        description: full.description,
+        is_active: true,
+      });
     } catch {}
     return full;
   }
@@ -142,7 +148,12 @@ export class ContentService {
     cachedSettings = { ...cachedSettings, ...updates };
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("system_settings").upsert({ key: "business_operations", value: cachedSettings, updated_at: new Date().toISOString() });
+      await supabase.from("system_settings").upsert({
+        key: "business_operations",
+        value: cachedSettings,
+        description: "Operating hours, delivery zones, and thresholds",
+        updated_at: new Date().toISOString(),
+      });
     } catch {}
     return cachedSettings;
   }

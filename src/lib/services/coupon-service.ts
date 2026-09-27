@@ -10,29 +10,25 @@ export interface CouponItem {
   is_active: boolean;
 }
 
-const DEFAULT_COUPONS: CouponItem[] = [
-  { id: "cp-1", code: "HEROFRESH", title: "Welcome Superhero 15% Off", discount_type: "percentage", discount_value: 15, min_order_amount: 25, is_active: true },
-  { id: "cp-2", code: "FREESHIP", title: "Free Doorstep Delivery", discount_type: "free_delivery", discount_value: 10, min_order_amount: 0, is_active: true },
-  { id: "cp-3", code: "SAVE5", title: "$5 Off First Booking", discount_type: "fixed_amount", discount_value: 5, min_order_amount: 30, is_active: true },
-];
-
-let cachedCoupons: CouponItem[] = [...DEFAULT_COUPONS];
+let cachedCoupons: CouponItem[] = [];
 
 export class CouponService {
   static async getCoupons(): Promise<CouponItem[]> {
     try {
       const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("promotions").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
       if (!error && data && data.length > 0) {
         cachedCoupons = data.map((d) => ({
           id: d.id,
           code: d.code,
-          title: d.title,
+          title: d.title || "",
           discount_type: d.discount_type,
           discount_value: Number(d.discount_value ?? 0),
           min_order_amount: Number(d.min_order_amount ?? 0),
           is_active: d.is_active ?? true,
         }));
+      } else if (!error && data && data.length === 0) {
+        cachedCoupons = [];
       }
     } catch {}
     return cachedCoupons;
@@ -70,7 +66,7 @@ export class CouponService {
 
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("promotions").upsert({
+      await supabase.from("coupons").upsert({
         id,
         code: full.code,
         title: full.title,
@@ -78,7 +74,7 @@ export class CouponService {
         discount_value: full.discount_value,
         min_order_amount: full.min_order_amount,
         is_active: full.is_active,
-      });
+      }, { onConflict: "code" });
     } catch {}
 
     return full;
@@ -88,7 +84,7 @@ export class CouponService {
     cachedCoupons = cachedCoupons.filter((c) => c.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("promotions").delete().eq("id", id);
+      await supabase.from("coupons").delete().eq("id", id);
     } catch {}
     return true;
   }

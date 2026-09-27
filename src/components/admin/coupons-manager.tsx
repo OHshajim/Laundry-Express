@@ -15,14 +15,8 @@ export interface CouponItem {
   active: boolean;
 }
 
-const INITIAL_COUPONS: CouponItem[] = [
-  { id: "cpn-1", code: "HEROFRESH", discount: "15% OFF Subtotal", discount_amount: 15, discount_type: "percentage", active: true },
-  { id: "cpn-2", code: "FREESHIP", discount: "Free 1-Bag Delivery ($10 OFF)", discount_amount: 10, discount_type: "free_delivery", active: true },
-  { id: "cpn-3", code: "WELCOME5", discount: "$5.00 Flat Discount", discount_amount: 5, discount_type: "fixed_amount", active: false },
-];
-
 export function CouponsManager() {
-  const [coupons, setCoupons] = React.useState<CouponItem[]>(INITIAL_COUPONS);
+  const [coupons, setCoupons] = React.useState<CouponItem[]>([]);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editCode, setEditCode] = React.useState("");
   const [editDiscount, setEditDiscount] = React.useState("");

@@ -24,22 +24,10 @@ export interface TemperatureConfig {
   description: string;
 }
 
-const INITIAL_DETERGENTS: DetergentConfig[] = [
-  { id: "det-1", name: "Tide Original Power Pods", brand: "Tide", type: "pods", description: "3-in-1 detergent, stain remover, and color protector.", price: 0.0, in_stock: true },
-  { id: "det-2", name: "Seventh Generation Eco-Plant", brand: "Seventh Generation", type: "liquid", description: "100% bio-based enzymes, zero artificial fragrances.", price: 0.0, in_stock: true },
-  { id: "det-3", name: "All Free & Clear Powder", brand: "All", type: "powder", description: "Hypoallergenic powder formula recommended by dermatologists.", price: 0.0, in_stock: true },
-];
-
-const INITIAL_TEMPERATURES: TemperatureConfig[] = [
-  { id: "temp-cold", name: "Eco Cold Cycle", type: "cold", price: 0.0, description: "Gentle on delicates, preserves vibrant fabric dyes." },
-  { id: "temp-warm", name: "Balanced Warm Cycle", type: "warm", price: 0.0, description: "Everyday optimal temperature for linens and daily wear." },
-  { id: "temp-hot", name: "Sanitizing Hot Cycle", type: "hot", price: 0.0, description: "Maximum sanitation cycle for towels, bedding, and workout gear." },
-];
-
 export function DetergentsManager() {
   const [activeCatalog, setActiveCatalog] = React.useState<"detergents" | "temperatures">("detergents");
-  const [detergents, setDetergents] = React.useState<DetergentConfig[]>(INITIAL_DETERGENTS);
-  const [temperatures, setTemperatures] = React.useState<TemperatureConfig[]>(INITIAL_TEMPERATURES);
+  const [detergents, setDetergents] = React.useState<DetergentConfig[]>([]);
+  const [temperatures, setTemperatures] = React.useState<TemperatureConfig[]>([]);
 
   const [name, setName] = React.useState("");
   const [brand, setBrand] = React.useState("");

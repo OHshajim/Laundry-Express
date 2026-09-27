@@ -12,30 +12,8 @@ export interface FaqOrTermItem {
   description: string;
 }
 
-const INITIAL_ITEMS: FaqOrTermItem[] = [
-  {
-    id: "faq-1",
-    category: "faq",
-    title: "How does the doorstep pickup window work?",
-    description: "Choose between **8am–12pm** or **1pm–6pm**. If you are home, our driver rings your bell. If away, leave your bags outside and confirm contactless pickup.",
-  },
-  {
-    id: "faq-2",
-    category: "faq",
-    title: "How is free delivery calculated?",
-    description: "Orders with **2 or more bags** receive **$0.00 FREE delivery**. Single bag orders have a standard $10.00 delivery fee.",
-  },
-  {
-    id: "term-1",
-    category: "terms",
-    title: "24-Hour Turnaround Guarantee",
-    subtitle: "Prompt next-day doorstep return",
-    description: "We guarantee delivery back to your doorstep within **24 hours** from pickup.",
-  },
-];
-
 export function FaqsTermsManager() {
-  const [items, setItems] = React.useState<FaqOrTermItem[]>(INITIAL_ITEMS);
+  const [items, setItems] = React.useState<FaqOrTermItem[]>([]);
   const [activeTab, setActiveTab] = React.useState<"faq" | "terms">("faq");
   const [isAdding, setIsAdding] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);

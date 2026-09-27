@@ -1,6 +1,5 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { OrderReview } from "@/types";
-import { INITIAL_REVIEWS } from "@/lib/mock-admin-data";
 
 /**
  * Review Service
@@ -8,7 +7,7 @@ import { INITIAL_REVIEWS } from "@/lib/mock-admin-data";
  * Strictly complies with the < 250 lines architectural rule.
  */
 
-let cachedReviews: OrderReview[] = [...INITIAL_REVIEWS];
+let cachedReviews: OrderReview[] = [];
 
 export class ReviewService {
   /**

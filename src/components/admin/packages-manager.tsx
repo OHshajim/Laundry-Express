@@ -17,14 +17,8 @@ export interface PackageConfig {
   is_active: boolean;
 }
 
-const INITIAL_PACKAGES: PackageConfig[] = [
-  { id: "pkg-saver-5", name: "5-Bag Saver Bundle", description: "5 standard wash & fold pickups with free delivery.", unit_type: "bag", capacity: 5, original_price: 162.5, discounted_price: 145.0, is_active: true },
-  { id: "pkg-family-10", name: "10-Bag Family Pass", description: "10 standard wash & fold pickups with priority turnaround.", unit_type: "bag", capacity: 10, original_price: 325.0, discounted_price: 280.0, is_active: true },
-  { id: "pkg-bulk-25kg", name: "25-KG Bulk Pass", description: "Bulky bedsheets, comforters, and salon linen wash.", unit_type: "kg", capacity: 25, original_price: 68.75, discounted_price: 60.0, is_active: true },
-];
-
 export function PackagesManager() {
-  const [packages, setPackages] = React.useState<PackageConfig[]>(INITIAL_PACKAGES);
+  const [packages, setPackages] = React.useState<PackageConfig[]>([]);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
   const [editName, setEditName] = React.useState("");
