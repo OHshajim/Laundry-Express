@@ -32,8 +32,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     const requestedUserId = (formData.get("userId") as string | null) || token.id;
 
-    // Prevent IDOR: Customers can only update their own avatar
-    if (token.role !== "admin" && requestedUserId !== token.id) {
+    if (requestedUserId !== token.id) {
       return NextResponse.json(
         { success: false, error: "Forbidden. You cannot modify another user's avatar." },
         { status: 403 }
@@ -91,6 +90,8 @@ export async function POST(req: NextRequest) {
         { status: 200 }
       );
     }
+
+    await UserDbService.updateAvatar(requestedUserId, uploadResult.url, token.email || undefined);
 
     return NextResponse.json(
       {

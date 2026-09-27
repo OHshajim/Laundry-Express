@@ -61,22 +61,25 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error("Please enter both email and password.");
         }
 
-        const verifiedUser = await UserDbService.verifyCredentials(
+        const result = await UserDbService.verifyCredentialsWithStatus(
           credentials.email,
           credentials.password
         );
 
-        if (!verifiedUser) {
-          return null;
+        if (!result.success || !result.user) {
+          throw new Error(result.error || "Invalid email or password.");
         }
+
+        const verifiedUser = result.user;
 
         return {
           id: verifiedUser.id,
           name: verifiedUser.full_name,
           email: verifiedUser.email,
+          image: verifiedUser.avatar_url || null,
           role: verifiedUser.role,
           phone: verifiedUser.phone,
         };
@@ -108,7 +111,7 @@ export const authOptions: NextAuthOptions = {
           id: dbUser.id,
           name: dbUser.full_name,
           email: dbUser.email,
-          image: profile.picture,
+          image: profile.picture || dbUser.avatar_url || null,
           role: dbUser.role,
           phone: dbUser.phone,
         };
@@ -125,6 +128,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             role: user.role,
             phone: user.phone,
+            avatar_url: user.image || undefined,
           });
         } catch {
           // Gracefully continue sign in
@@ -132,11 +136,16 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role || "customer";
         token.phone = user.phone;
+        token.picture = user.image || (user as any).avatar_url || token.picture;
+      }
+      if (trigger === "update" && session) {
+        if (session.image) token.picture = session.image;
+        if (session.avatar_url) token.picture = session.avatar_url;
       }
       return token;
     },
@@ -145,6 +154,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.role = (token.role as "admin" | "customer") || "customer";
         session.user.phone = token.phone;
+        session.user.image = (token.picture as string) || session.user.image || null;
       }
       return session;
     },

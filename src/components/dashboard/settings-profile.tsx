@@ -110,15 +110,15 @@ export function SettingsProfile() {
     }
   };
 
+  const avatarSrc = user?.avatar_url || (user as { image?: string })?.image;
   return (
     <div className="space-y-6">
       {feedback && (
         <div
-          className={`flex items-center gap-3 p-3.5 rounded-xl text-xs font-semibold border ${
-            feedback.type === "success"
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-rose-50 text-rose-800 border-rose-200"
-          }`}
+          className={`flex items-center gap-3 p-3.5 rounded-xl text-xs font-semibold border ${feedback.type === "success"
+            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+            : "bg-rose-50 text-rose-800 border-rose-200"
+            }`}
         >
           {feedback.type === "success" ? (
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -139,8 +139,14 @@ export function SettingsProfile() {
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="relative group shrink-0">
             <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-100 border-2 border-primary/20 shadow-xs relative flex items-center justify-center">
-              {user?.avatar_url ? (
-                <Image src={user.avatar_url} alt={user.full_name || user.name || "Customer"} fill className="object-cover" />
+              {avatarSrc ? (
+                <Image
+                  src={avatarSrc}
+                  alt={user?.full_name || user?.name || "Customer Avatar"}
+                  fill
+                  unoptimized={avatarSrc.startsWith("data:")}
+                  className="object-cover"
+                />
               ) : (
                 <UserIcon className="h-10 w-10 text-slate-400" />
               )}

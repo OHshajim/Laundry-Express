@@ -37,12 +37,15 @@ export class ImageStorageService {
       // 1. Retrieve user's existing avatar URL before updating
       let oldAvatarUrl: string | null = null;
       try {
-        const { data: existingUser } = await supabase
-          .from("users")
-          .select("avatar_url")
-          .eq("id", userId)
-          .maybeSingle();
-        oldAvatarUrl = existingUser?.avatar_url || null;
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+        if (isUUID) {
+          const { data: existingUser } = await supabase
+            .from("users")
+            .select("avatar_url")
+            .eq("id", userId)
+            .maybeSingle();
+          oldAvatarUrl = existingUser?.avatar_url || null;
+        }
       } catch {
         // Continue if profile read fails
       }

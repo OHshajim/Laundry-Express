@@ -12,38 +12,8 @@ export interface StoredUser extends User {
   passwordHash: string;
 }
 
-// In-memory user registry for active server processes
+// In-memory runtime identity registry (populated dynamically from DB & registration)
 const USER_REGISTRY = new Map<string, StoredUser>();
-
-// Pre-seed default administrative account for immediate operational access
-const DEFAULT_ADMIN: StoredUser = {
-  id: "admin-ops-001",
-  email: "admin@laundryexpress.com",
-  passwordHash: hashPassword("admin123"),
-  full_name: "Operations Administrator",
-  phone: "815-575-9536",
-  address: "Operations Center, Lake in the Hills, IL 60156",
-  role: "admin",
-  is_active: true,
-  created_at: "2026-01-01T00:00:00.000Z",
-  updated_at: "2026-01-01T00:00:00.000Z",
-};
-USER_REGISTRY.set(DEFAULT_ADMIN.email, DEFAULT_ADMIN);
-
-// Pre-seed verified customer account
-const DEFAULT_CUSTOMER: StoredUser = {
-  id: "cust-demo-001",
-  email: "customer@laundryexpress.com",
-  passwordHash: hashPassword("customer123"),
-  full_name: "Sarah Jenkins",
-  phone: "815-575-9536",
-  address: "742 Evergreen Terrace, Lake in the Hills, IL 60156",
-  role: "customer",
-  is_active: true,
-  created_at: "2026-01-15T00:00:00.000Z",
-  updated_at: "2026-01-15T00:00:00.000Z",
-};
-USER_REGISTRY.set(DEFAULT_CUSTOMER.email, DEFAULT_CUSTOMER);
 
 export class CustomUserStore {
   /**
@@ -219,12 +189,8 @@ export class CustomUserStore {
     const normalized = googleUser.email.trim().toLowerCase();
     const existing = USER_REGISTRY.get(normalized);
     if (existing) {
-      if (googleUser.avatar_url && !existing.avatar_url) {
-        existing.avatar_url = googleUser.avatar_url;
-      }
-      if (googleUser.role) {
-        existing.role = googleUser.role;
-      }
+      if (googleUser.avatar_url && !existing.avatar_url) existing.avatar_url = googleUser.avatar_url;
+      if (googleUser.role) existing.role = googleUser.role;
       return existing;
     }
 

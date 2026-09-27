@@ -54,7 +54,7 @@ export default function HomePage() {
    * Merges services & 4-step process into single animated HowItWorksSection.
    */
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-clip pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-clip max-md:pb-20">
       {/* Schema.org Structured Microdata for SEO & AI / LLM Agents */}
       <script
         type="application/ld+json"

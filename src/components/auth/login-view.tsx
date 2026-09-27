@@ -123,8 +123,16 @@ export function LoginView() {
       </div>
 
       {errorMsg && (
-        <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200 leading-relaxed">
-          {errorMsg}
+        <div className="p-3.5 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200 leading-relaxed space-y-1.5">
+          <p>{errorMsg}</p>
+          {(errorMsg.toLowerCase().includes("forgot password") || errorMsg.toLowerCase().includes("google")) && (
+            <Link
+              href={`/forgot-password${email ? `?email=${encodeURIComponent(email.trim().toLowerCase())}` : ""}`}
+              className="inline-block font-bold text-primary hover:underline pt-0.5"
+            >
+              Reset / Create a password &rarr;
+            </Link>
+          )}
         </div>
       )}
 

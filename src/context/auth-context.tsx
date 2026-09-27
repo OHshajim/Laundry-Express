@@ -26,7 +26,7 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 const LOCAL_STORAGE_USER_KEY = "lx_auth_session_user";
 
 function AuthStateBridge({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const [localUser, setLocalUser] = React.useState<User | null>(() => {
     if (typeof window === "undefined") return null;
     try {
@@ -37,31 +37,52 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
     }
   });
 
+  // Dynamically sync profile and avatar from database
+  React.useEffect(() => {
+    if (session?.user?.email) {
+      fetch("/api/user/profile")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.success && data?.user?.avatar_url) {
+            setLocalUser((prev) => {
+              if (!prev || prev.avatar_url === data.user.avatar_url) return prev;
+              const updated = { ...prev, avatar_url: data.user.avatar_url };
+              try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
+              return updated;
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [session?.user?.email]);
+
   React.useEffect(() => {
     if (session?.user) {
       const userEmail = session.user.email || "";
       const sessionRole = (session.user as { role?: "admin" | "customer" }).role;
       const role = sessionRole || "customer";
 
-      const activeUser: User = {
-        id: session.user.id || `u-${Date.now()}`,
-        email: userEmail,
-        full_name: session.user.name || "Customer",
-        avatar_url: session.user.image || undefined,
-        phone: (session.user as { phone?: string }).phone || "815-575-9536",
-        role,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
       setLocalUser((prev) => {
+        const resolvedAvatar = session.user.image || (session.user as { avatar_url?: string }).avatar_url || prev?.avatar_url || undefined;
+        const activeUser: User = {
+          id: session.user.id || prev?.id || `u-${Date.now()}`,
+          email: userEmail,
+          full_name: session.user.name || prev?.full_name || "Customer",
+          avatar_url: resolvedAvatar,
+          phone: (session.user as { phone?: string }).phone || prev?.phone || "815-575-9536",
+          role,
+          is_active: true,
+          created_at: prev?.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
         if (
           prev?.id === activeUser.id &&
           prev?.email === activeUser.email &&
           prev?.role === activeUser.role &&
           prev?.avatar_url === activeUser.avatar_url &&
-          prev?.full_name === activeUser.full_name
+          prev?.full_name === activeUser.full_name &&
+          prev?.phone === activeUser.phone
         ) {
           return prev;
         }
@@ -127,6 +148,9 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
       try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+    if (updateSession) {
+      updateSession({ image: avatarUrl, avatar_url: avatarUrl });
+    }
   };
 
   const updateUserProfile = (updates: Partial<Pick<User, "full_name" | "phone" | "address">>) => {

@@ -49,13 +49,10 @@ export function DetergentsManager() {
   const [description, setDescription] = React.useState("");
 
   React.useEffect(() => {
-    fetch("/api/catalog")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.detergents && data.detergents.length > 0) setDetergents(data.detergents);
-        if (data.temperatures && data.temperatures.length > 0) setTemperatures(data.temperatures);
-      })
-      .catch(() => {});
+    fetch("/api/catalog").then((res) => res.json()).then((data) => {
+      if (data.detergents?.length > 0) setDetergents(data.detergents);
+      if (data.temperatures?.length > 0) setTemperatures(data.temperatures);
+    }).catch(() => {});
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {

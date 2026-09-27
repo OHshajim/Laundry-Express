@@ -32,22 +32,15 @@ export function CouponsManager() {
   const [newType, setNewType] = React.useState<"percentage" | "fixed_amount" | "free_delivery">("percentage");
 
   React.useEffect(() => {
-    fetch("/api/coupons")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.coupons && data.coupons.length > 0) {
-          setCoupons(data.coupons.map((c: any) => ({
-            id: c.id,
-            code: c.code,
-            title: c.title,
-            discount: `${c.discount_value}${c.discount_type === "percentage" ? "%" : "$"} OFF`,
-            discount_amount: c.discount_value,
-            discount_type: c.discount_type,
-            active: c.is_active,
-          })));
-        }
-      })
-      .catch(() => {});
+    fetch("/api/coupons").then((res) => res.json()).then((data) => {
+      if (data.coupons?.length > 0) {
+        setCoupons(data.coupons.map((c: any) => ({
+          id: c.id, code: c.code, title: c.title,
+          discount: `${c.discount_value}${c.discount_type === "percentage" ? "%" : "$"} OFF`,
+          discount_amount: c.discount_value, discount_type: c.discount_type, active: c.is_active,
+        })));
+      }
+    }).catch(() => {});
   }, []);
 
   const handleAddCoupon = async (e: React.FormEvent) => {
