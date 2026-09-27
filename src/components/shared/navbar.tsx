@@ -37,7 +37,7 @@ export function Navbar() {
     { href: "/contact", label: "Contact" },
   ];
 
-  const userDisplayName = user?.full_name?.split(" ")[0] || "Account";
+  const userDisplayName = user?.full_name || user?.email?.split("@")[0] || "Account";
   const userAvatarUrl = user?.avatar_url;
 
   return (
@@ -117,7 +117,7 @@ export function Navbar() {
                         {userDisplayName[0]}
                       </div>
                     )}
-                    <span className="truncate max-w-[100px]">{userDisplayName}</span>
+                    <span className="truncate max-w-[150px]">{userDisplayName}</span>
                   </div>
                 </Link>
               </div>

@@ -26,9 +26,9 @@ export function PlanKgCard({ weightKg, onWeightKgChange }: PlanKgCardProps) {
       .then((d) => {
         if (d.pricing) {
           setRates({
-            baseKgPrice: Number(d.pricing.base_kg_price || 2.75),
-            freeDeliveryThreshold: Number(d.pricing.free_delivery_threshold || 40.0),
-            deliveryFee: Number(d.pricing.one_bag_delivery_fee || 10.0),
+            baseKgPrice: Number(d.pricing.kg_price ?? d.pricing.base_kg_price ?? 2.75),
+            freeDeliveryThreshold: Number(d.pricing.free_delivery_threshold ?? 40.0),
+            deliveryFee: Number(d.pricing.standard_delivery_fee ?? d.pricing.one_bag_delivery_fee ?? 10.0),
           });
         }
       })

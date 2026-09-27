@@ -57,6 +57,23 @@ export function BookingWizard({
   const [appliedPromo, setAppliedPromo] = React.useState<string>("");
   const [promoError, setPromoError] = React.useState<string>("");
   const [paymentMethod, setPaymentMethod] = React.useState<"card" | "apple_pay" | "cash_on_delivery">("card");
+  const [rates, setRates] = React.useState({ bagPrice: 32.50, kgPrice: 2.75, deliveryFee: 10.0, freeDeliveryThreshold: 2 });
+
+  React.useEffect(() => {
+    fetch("/api/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.pricing) {
+          setRates({
+            bagPrice: Number(data.pricing.bag_price ?? data.pricing.base_bag_price ?? 32.50),
+            kgPrice: Number(data.pricing.kg_price ?? data.pricing.base_kg_price ?? 2.75),
+            deliveryFee: Number(data.pricing.standard_delivery_fee ?? data.pricing.one_bag_delivery_fee ?? 10.0),
+            freeDeliveryThreshold: Number(data.pricing.free_delivery_threshold ?? 2),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const { checkout, isProcessing, invoice, setInvoice } = useBookingCheckout();
 
@@ -67,8 +84,12 @@ export function BookingWizard({
       estimated_weight_kg: weightKg,
       detergent_id: selectedDetergentId,
       promo_code: appliedPromo,
+      base_bag_price: rates.bagPrice,
+      base_kg_price: rates.kgPrice,
+      one_bag_delivery_fee: rates.deliveryFee,
+      free_delivery_threshold: rates.freeDeliveryThreshold,
     });
-  }, [pricingMode, bagCount, weightKg, selectedDetergentId, appliedPromo]);
+  }, [pricingMode, bagCount, weightKg, selectedDetergentId, appliedPromo, rates]);
 
   const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
@@ -117,13 +138,15 @@ export function BookingWizard({
         <div className="lg:col-span-2 space-y-6">
           {activeStep === 1 && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} />
+              <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} bagPrice={rates.bagPrice} kgPrice={rates.kgPrice} />
               <StepBagCounter
                 pricingMode={pricingMode}
                 bagCount={bagCount}
                 onBagCountChange={setBagCount}
                 weightKg={weightKg}
                 onWeightKgChange={setWeightKg}
+                bagPrice={rates.bagPrice}
+                freeDeliveryBags={rates.freeDeliveryThreshold}
               />
               <div className="flex justify-end pt-2">
                 <Button variant="hero" size="lg" onClick={() => setStep(2)}>
@@ -207,19 +230,11 @@ export function BookingWizard({
 
         <div className="lg:col-span-1">
           <OrderSummaryCard
-            pricingMode={pricingMode}
-            bagCount={bagCount}
-            weightKg={weightKg}
-            priceResult={priceResult}
-            promoCode={promoCode}
-            promoError={promoError}
-            onPromoCodeChange={setPromoCode}
-            onApplyPromo={handleApplyPromo}
-            selectedPaymentMethod={paymentMethod as any}
-            onSelectPaymentMethod={(m) => setPaymentMethod(m)}
-            onProceedToCheckout={handleCheckout}
-            isProcessing={isProcessing}
-            disabled={activeStep !== 4}
+            pricingMode={pricingMode} bagCount={bagCount} weightKg={weightKg}
+            priceResult={priceResult} promoCode={promoCode} promoError={promoError}
+            onPromoCodeChange={setPromoCode} onApplyPromo={handleApplyPromo}
+            selectedPaymentMethod={paymentMethod as any} onSelectPaymentMethod={setPaymentMethod}
+            onProceedToCheckout={handleCheckout} isProcessing={isProcessing} disabled={activeStep !== 4}
           />
         </div>
       </div>

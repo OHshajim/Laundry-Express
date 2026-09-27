@@ -7,7 +7,10 @@ const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-
 export async function GET() {
   try {
     const pricing = await PricingPlanService.getPricing();
-    return NextResponse.json({ success: true, pricing }, { status: 200 });
+    return NextResponse.json(
+      { success: true, pricing },
+      { status: 200, headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load pricing";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

@@ -31,7 +31,7 @@ export class AddressService {
     const id = addr.id || `addr-${Date.now()}`;
     const full: UserAddress = {
       id,
-      user_id: addr.user_id || "cust-demo-001",
+      user_id: addr.user_id || "",
       label: addr.label || "Home",
       street_address: addr.street_address || "",
       apt_unit: addr.apt_unit || "",

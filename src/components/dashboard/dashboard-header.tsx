@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, ArrowLeft } from "lucide-react";
+import { Menu, X, ArrowLeft, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MascotBadge } from "@/components/shared/mascot-badge";
+import { useAuth } from "@/context/auth-context";
 
 export interface DashboardHeaderProps {
   title: string;
@@ -35,6 +36,7 @@ const BADGE_CLASSES = {
  * - Mobile hamburger trigger with live drawer state
  * - Clean white background with slate border and soft shadow
  * - Back to live site link and action button slots
+ * - One-click Sign Out button
  * - Strict adherence to the 100-250 lines rule
  */
 export function DashboardHeader({
@@ -48,6 +50,8 @@ export function DashboardHeader({
   portalName = "Dashboard",
   showBackToSite = false,
 }: DashboardHeaderProps) {
+  const { logout } = useAuth();
+
   return (
     <header className="bg-white border-b border-slate-200/80 sticky top-0 z-20 shadow-2xs">
       {/* Mobile Top Bar (< lg screens) */}
@@ -75,7 +79,7 @@ export function DashboardHeader({
         <div className="flex items-center gap-2">
           {showBackToSite && (
             <Link href="/">
-              <Button variant="ghost" size="sm" className="text-xs text-slate-600 hover:text-primary px-2.5">
+              <Button variant="ghost" size="sm" className="text-xs text-slate-600 hover:text-primary px-2">
                 <ArrowLeft className="h-3.5 w-3.5 mr-1" />
                 <span>Site</span>
               </Button>
@@ -83,6 +87,17 @@ export function DashboardHeader({
           )}
 
           {actions}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 h-8 font-bold"
+            title="Log Out"
+          >
+            <LogOut className="h-3.5 w-3.5 mr-1" />
+            <span>Logout</span>
+          </Button>
         </div>
       </div>
 
@@ -126,6 +141,16 @@ export function DashboardHeader({
           )}
 
           {actions}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={logout}
+            className="text-xs border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 h-8.5 font-bold cursor-pointer transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+            <span>Log Out</span>
+          </Button>
         </div>
       </div>
     </header>

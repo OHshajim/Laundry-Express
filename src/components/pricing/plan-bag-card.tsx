@@ -29,8 +29,8 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
       .then((d) => {
         if (d.pricing) {
           setRates({
-            baseBagPrice: Number(d.pricing.base_bag_price || 32.50),
-            deliveryFee: Number(d.pricing.one_bag_delivery_fee || 10.0),
+            baseBagPrice: Number(d.pricing.bag_price ?? d.pricing.base_bag_price ?? 32.50),
+            deliveryFee: Number(d.pricing.standard_delivery_fee ?? d.pricing.one_bag_delivery_fee ?? 10.0),
           });
         }
       })

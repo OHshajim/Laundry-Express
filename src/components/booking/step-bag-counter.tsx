@@ -9,6 +9,8 @@ interface StepBagCounterProps {
   onBagCountChange: (count: number) => void;
   weightKg: number;
   onWeightKgChange: (kg: number) => void;
+  bagPrice?: number;
+  freeDeliveryBags?: number;
 }
 
 export function StepBagCounter({
@@ -17,6 +19,8 @@ export function StepBagCounter({
   onBagCountChange,
   weightKg,
   onWeightKgChange,
+  bagPrice = 32.50,
+  freeDeliveryBags = 2,
 }: StepBagCounterProps) {
   if (pricingMode === "package") {
     return (
@@ -66,7 +70,7 @@ export function StepBagCounter({
   }
 
   // per_bag mode
-  const isFreeDelivery = bagCount >= APP_CONFIG.pricing.freeDeliveryThresholdBags;
+  const isFreeDelivery = bagCount >= freeDeliveryBags;
 
   return (
     <div className="space-y-4 p-5 rounded-2xl bg-white border border-slate-200">
@@ -76,7 +80,7 @@ export function StepBagCounter({
             <ShoppingBag className="h-4 w-4 text-sky-600" />
             Select Laundry Bags
           </h5>
-          <p className="text-xs text-slate-500 mt-0.5">$32.50 per 13-gallon bag (about 2 loads)</p>
+          <p className="text-xs text-slate-500 mt-0.5">${bagPrice.toFixed(2)} per 13-gallon bag (about 2 loads)</p>
         </div>
 
         {/* Quantity Stepper */}

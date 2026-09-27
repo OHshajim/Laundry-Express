@@ -7,8 +7,10 @@ const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-
 export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: AUTH_SECRET });
-    const userId = token?.id || "cust-demo-001";
-    const addresses = await AddressService.getAddresses(userId);
+    if (!token?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    const addresses = await AddressService.getAddresses(token.id);
     return NextResponse.json({ success: true, addresses });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load addresses";
@@ -19,10 +21,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: AUTH_SECRET });
+    if (!token?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
     const saved = await AddressService.saveAddress({
       ...body,
-      user_id: token?.id || "cust-demo-001",
+      user_id: token.id,
     });
     return NextResponse.json({ success: true, address: saved }, { status: 201 });
   } catch (error: unknown) {

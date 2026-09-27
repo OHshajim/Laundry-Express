@@ -8,6 +8,10 @@ export interface CalculatePriceInput {
   detergent_id?: string;
   detergent_fee?: number;
   promo_code?: string;
+  base_bag_price?: number;
+  base_kg_price?: number;
+  one_bag_delivery_fee?: number;
+  free_delivery_threshold?: number;
 }
 
 export interface CalculatedPriceResult {
@@ -28,32 +32,38 @@ export interface CalculatedPriceResult {
 
 /**
  * Server-side zero-trust pricing engine.
- * Computes exact dollar and cent totals based on verified business rules.
+ * Computes exact dollar and cent totals based on verified business rules and live admin rates.
  */
 export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPriceResult {
   let subtotal = 0;
   let deliveryFee = 0;
   let unitCount = 0;
   let unitName = "bags";
-  let unitRate: number = APP_CONFIG.pricing.baseBagPrice;
+
+  const bagPrice = input.base_bag_price ?? APP_CONFIG.pricing.baseBagPrice;
+  const kgPrice = input.base_kg_price ?? APP_CONFIG.pricing.baseKgPrice;
+  const stdDeliveryFee = input.one_bag_delivery_fee ?? APP_CONFIG.pricing.oneBagDeliveryFee;
+  const freeThreshold = input.free_delivery_threshold ?? 2;
+
+  let unitRate: number = bagPrice;
 
   // 1. Base cost calculation by mode
   if (input.pricing_mode === "per_bag") {
     unitCount = Math.max(1, Math.floor(input.bag_count || 1));
     unitName = "bags";
-    unitRate = APP_CONFIG.pricing.baseBagPrice;
+    unitRate = bagPrice;
     subtotal = unitCount * unitRate;
 
-    // Delivery Fee rule: 1 Bag = $10.00, 2+ Bags = FREE ($0.00)
-    deliveryFee = unitCount === 1 ? APP_CONFIG.pricing.oneBagDeliveryFee : 0;
+    // Delivery Fee rule: >= freeThreshold = FREE ($0.00), otherwise stdDeliveryFee
+    deliveryFee = unitCount >= freeThreshold ? 0 : stdDeliveryFee;
   } else if (input.pricing_mode === "per_kg") {
     unitCount = Math.max(APP_CONFIG.pricing.minKgOrder, Number(input.estimated_weight_kg || APP_CONFIG.pricing.minKgOrder));
     unitName = "kg";
-    unitRate = APP_CONFIG.pricing.baseKgPrice;
+    unitRate = kgPrice;
     subtotal = Math.round(unitCount * unitRate * 100) / 100;
 
-    // Free delivery if order >= $40, otherwise $10
-    deliveryFee = subtotal >= 40 ? 0 : APP_CONFIG.pricing.oneBagDeliveryFee;
+    // Free delivery if order >= $40, otherwise standard delivery fee
+    deliveryFee = subtotal >= 40 ? 0 : stdDeliveryFee;
   } else if (input.pricing_mode === "package") {
     // Covered by pre-paid package credit
     unitCount = 1;

@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,13 +12,26 @@ import { OrderTrackingSummary } from "@/components/home/order-tracking-summary";
  * HeroSection Component
  *
  * Primary landing hero experience featuring:
- * - Solid two-stop linear gradient: Bubble Pink (var(--primary-pale)) -> Foam White (var(--foam-white))
+ * - Dynamic live bag pricing synced directly from admin settings
  * - Animated transparent vector Bubble Hero mascot with gentle bobbing
  * - High-conversion value propositions, bag pricing, and delivery thresholds
- * - Static 4-stage order transparency overview
  * - Strict adherence to CSS variables and the 100-250 lines rule
  */
 export function HeroSection() {
+  const [bagPrice, setBagPrice] = React.useState<number>(32.50);
+
+  React.useEffect(() => {
+    fetch("/api/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.pricing) {
+          const price = Number(data.pricing.bag_price ?? data.pricing.base_bag_price);
+          if (price > 0) setBagPrice(price);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section
       className="relative overflow-hidden pt-20 pb-16 lg:pt-28 lg:pb-20"
@@ -55,14 +71,14 @@ export function HeroSection() {
                 More Time For What Matters.
               </p>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-                Only <strong className="text-slate-900 font-black">$32.50 per 13-gallon bag</strong> (about 2 loads). Professional wash, dry, and crisp fold returned fresh to your doorstep within 24 hours. Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin &amp; Schaumburg (30-mile radius).
+                Only <strong className="text-slate-900 font-black">${bagPrice.toFixed(2)} per 13-gallon bag</strong> (about 2 loads). Professional wash, dry, and crisp fold returned fresh to your doorstep within 24 hours. Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin &amp; Schaumburg (30-mile radius).
               </p>
             </div>
 
             {/* Core Perks */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 max-w-lg mx-auto lg:mx-0 text-xs">
               <div className="p-3 rounded-xl bg-white border border-primary-pale shadow-2xs text-center sm:text-left">
-                <span className="font-bold text-slate-900 block text-sm">$32.50 / Bag</span>
+                <span className="font-bold text-slate-900 block text-sm">${bagPrice.toFixed(2)} / Bag</span>
                 <span className="text-slate-500 font-medium">About 2 Loads (13-Gal)</span>
               </div>
               <div className="p-3 rounded-xl bg-white border border-primary-pale shadow-2xs text-center sm:text-left">

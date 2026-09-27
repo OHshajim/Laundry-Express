@@ -95,7 +95,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
             <tr>
               <th className="p-3.5">Customer</th>
               <th className="p-3.5">Contact Details</th>
-              <th className="p-3.5">Doorstep Address</th>
+              <th className="p-3.5">Address</th>
               <th className="p-3.5">Orders</th>
               <th className="p-3.5">Total Spent</th>
               <th className="p-3.5 text-right">Actions</th>
@@ -158,7 +158,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
 
                     <td className="p-3.5 font-bold text-slate-800">
                       <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold text-[11px]">
-                        {cust.orders.length} order{cust.orders.length !== 1 ? "s" : ""}
+                        {cust.orders.length}
                       </span>
                     </td>
 

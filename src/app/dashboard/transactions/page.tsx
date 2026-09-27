@@ -46,9 +46,9 @@ export default function CustomerTransactionsPage() {
       amount: o.total_amount,
       status: o.order_status === "cancelled" ? ("refunded" as const) : (o.payment_status === "paid" || o.order_status === "completed" ? ("succeeded" as const) : ("pending" as const)),
       date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Today",
-      method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Cash/Card",
-      card_last4: "4242",
-      receipt_url: `https://pay.stripe.com/receipts/acct_demo/${o.order_number.toLowerCase()}`,
+      method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Payment",
+      card_last4: o.payment_method === "card" ? "Online" : "",
+      receipt_url: o.stripe_payment_intent ? `https://dashboard.stripe.com/payments/${o.stripe_payment_intent}` : undefined,
     }));
   }, [orders]);
 
@@ -163,7 +163,7 @@ export default function CustomerTransactionsPage() {
                     </Badge>
                   </div>
                   <span className="text-xs text-slate-500 block">
-                    {txn.date} • {txn.method} (ending in {txn.card_last4})
+                    {txn.date} • {txn.method} {txn.card_last4 ? `(${txn.card_last4})` : ""}
                   </span>
                 </div>
               </div>

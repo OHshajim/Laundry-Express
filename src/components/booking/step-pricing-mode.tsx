@@ -5,9 +5,16 @@ import { cn } from "@/lib/utils";
 interface StepPricingModeProps {
   selectedMode: PricingMode;
   onSelectMode: (mode: PricingMode) => void;
+  bagPrice?: number;
+  kgPrice?: number;
 }
 
-export function StepPricingMode({ selectedMode, onSelectMode }: StepPricingModeProps) {
+export function StepPricingMode({
+  selectedMode,
+  onSelectMode,
+  bagPrice = 32.50,
+  kgPrice = 2.75,
+}: StepPricingModeProps) {
   const modes: Array<{
     id: PricingMode;
     title: string;
@@ -21,7 +28,7 @@ export function StepPricingMode({ selectedMode, onSelectMode }: StepPricingModeP
       title: "By the Bag (Most Popular)",
       badge: "2+ Bags = Free Delivery",
       description: "Fill our 13-gallon bag (about 2 loads). $10 pickup & delivery, FREE on 2+ bags!",
-      priceLabel: "$32.50 / bag",
+      priceLabel: `$${bagPrice.toFixed(2)} / bag`,
       icon: ShoppingBag,
     },
     {
@@ -29,7 +36,7 @@ export function StepPricingMode({ selectedMode, onSelectMode }: StepPricingModeP
       title: "By Weight (Per KG)",
       badge: "Commercial & Bulk",
       description: "Pay purely by weighed volume. Weighed on precision scale at our facility.",
-      priceLabel: "$2.75 / KG (5KG min)",
+      priceLabel: `$${kgPrice.toFixed(2)} / KG (5KG min)`,
       icon: Scale,
     },
     {

@@ -37,16 +37,27 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Dynamically sync profile and avatar from database
+  // Dynamically sync complete profile from database (source of truth)
   React.useEffect(() => {
     if (session?.user?.email) {
       fetch("/api/user/profile")
         .then((res) => res.json())
         .then((data) => {
-          if (data?.success && data?.user?.avatar_url) {
+          if (data?.success && data?.user) {
+            const db = data.user;
             setLocalUser((prev) => {
-              if (!prev || prev.avatar_url === data.user.avatar_url) return prev;
-              const updated = { ...prev, avatar_url: data.user.avatar_url };
+              const updated: User = {
+                id: db.id || prev?.id || session.user.id || `u-${Date.now()}`,
+                email: db.email || session.user.email || "",
+                full_name: db.full_name || prev?.full_name || session.user.name || "Customer",
+                avatar_url: db.avatar_url || prev?.avatar_url || session.user.image,
+                phone: db.phone || prev?.phone,
+                address: db.address || prev?.address,
+                role: db.role || prev?.role || (session.user as { role?: "admin" | "customer" }).role || "customer",
+                is_active: db.is_active ?? true,
+                created_at: db.created_at || prev?.created_at,
+                updated_at: db.updated_at || new Date().toISOString(),
+              };
               try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
               return updated;
             });
@@ -63,13 +74,15 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
       const role = sessionRole || "customer";
 
       setLocalUser((prev) => {
-        const resolvedAvatar = session.user.image || (session.user as { avatar_url?: string }).avatar_url || prev?.avatar_url || undefined;
+        const resolvedName = prev?.full_name || session.user.name || "Customer";
+        const resolvedAvatar = prev?.avatar_url || session.user.image || (session.user as { avatar_url?: string }).avatar_url || undefined;
         const activeUser: User = {
           id: session.user.id || prev?.id || `u-${Date.now()}`,
           email: userEmail,
-          full_name: session.user.name || prev?.full_name || "Customer",
+          full_name: resolvedName,
           avatar_url: resolvedAvatar,
-          phone: (session.user as { phone?: string }).phone || prev?.phone || "815-575-9536",
+          phone: prev?.phone || (session.user as { phone?: string }).phone,
+          address: prev?.address,
           role,
           is_active: true,
           created_at: prev?.created_at || new Date().toISOString(),
@@ -160,6 +173,9 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
       try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+    if (updateSession && updates.full_name) {
+      updateSession({ name: updates.full_name });
+    }
   };
 
   const logout = () => {

@@ -27,6 +27,28 @@ export function HowItWorksSection() {
 
   const currentService = SERVICES_DATA[activeService];
 
+  const [rates, setRates] = React.useState({ bagPrice: 32.50, kgPrice: 2.75 });
+
+  React.useEffect(() => {
+    fetch("/api/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.pricing) {
+          setRates({
+            bagPrice: Number(data.pricing.bag_price ?? data.pricing.base_bag_price ?? 32.50),
+            kgPrice: Number(data.pricing.kg_price ?? data.pricing.base_kg_price ?? 2.75),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const displayPrice = activeService === "bag"
+    ? `$${rates.bagPrice.toFixed(2)} / bag (about 2 loads)`
+    : activeService === "kg"
+      ? `$${rates.kgPrice.toFixed(2)} / KG (weighed intake)`
+      : currentService.price;
+
   // Auto-cycle through the 4 steps along the delivery route on desktop/idle
   React.useEffect(() => {
     if (isPaused || prefersReduced) return;
@@ -90,7 +112,7 @@ export function HowItWorksSection() {
 
           {/* Active Service Inline Price & Delivery Perk */}
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 pt-0.5">
-            <span className="text-slate-900 font-black">{currentService.price}</span>
+            <span className="text-slate-900 font-black">{displayPrice}</span>
             <span className="text-slate-300">•</span>
             <span className="text-primary">{currentService.badge}</span>
           </div>

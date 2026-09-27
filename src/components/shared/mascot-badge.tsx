@@ -1,4 +1,3 @@
-import * as React from "react";
 import Image from "next/image";
 import { Sparkles, Zap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";

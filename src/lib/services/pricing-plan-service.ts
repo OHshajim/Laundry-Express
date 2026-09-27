@@ -21,6 +21,9 @@ export interface PricingConfig {
   max_kg: number;
   free_delivery_threshold: number;
   standard_delivery_fee: number;
+  base_bag_price: number;
+  base_kg_price: number;
+  one_bag_delivery_fee: number;
 }
 
 let cachedPlans: PackagePlan[] = [];
@@ -33,6 +36,9 @@ let cachedPricing: PricingConfig = {
   max_kg: 50,
   free_delivery_threshold: 2,
   standard_delivery_fee: 10,
+  base_bag_price: 32.5,
+  base_kg_price: 2.75,
+  one_bag_delivery_fee: 10,
 };
 
 export class PricingPlanService {
@@ -113,41 +119,67 @@ export class PricingPlanService {
       if (!error && data && data.length > 0) {
         const bagRow = data.find((r) => r.pricing_type === "per_bag");
         const kgRow = data.find((r) => r.pricing_type === "per_kg");
+        const bPrice = Number(bagRow?.unit_price ?? 32.5);
+        const kPrice = Number(kgRow?.unit_price ?? 2.75);
+        const dFee = Number(bagRow?.standard_delivery_fee ?? 10);
         cachedPricing = {
-          bag_price: Number(bagRow?.unit_price ?? 32.5),
+          bag_price: bPrice,
           min_bags: Number(bagRow?.min_order_quantity ?? 1),
           max_bags: Number(bagRow?.max_orders_per_slot ?? 10),
-          kg_price: Number(kgRow?.unit_price ?? 2.75),
+          kg_price: kPrice,
           min_kg: Number(kgRow?.min_order_quantity ?? 5),
           max_kg: 50,
           free_delivery_threshold: Number(bagRow?.free_delivery_threshold ?? 2),
-          standard_delivery_fee: Number(bagRow?.standard_delivery_fee ?? 10),
+          standard_delivery_fee: dFee,
+          base_bag_price: bPrice,
+          base_kg_price: kPrice,
+          one_bag_delivery_fee: dFee,
         };
       }
     } catch {}
     return cachedPricing;
   }
 
-  static async updatePricing(updates: Partial<PricingConfig>): Promise<PricingConfig> {
-    cachedPricing = { ...cachedPricing, ...updates };
+  static async updatePricing(updates: Partial<PricingConfig> & Record<string, any>): Promise<PricingConfig> {
+    const bPrice = Number(updates.bag_price ?? updates.base_bag_price ?? cachedPricing.bag_price);
+    const kPrice = Number(updates.kg_price ?? updates.base_kg_price ?? cachedPricing.kg_price);
+    const dFee = Number(updates.standard_delivery_fee ?? updates.one_bag_delivery_fee ?? cachedPricing.standard_delivery_fee);
+    const freeThresh = Number(updates.free_delivery_threshold ?? cachedPricing.free_delivery_threshold);
+    const minBags = Number(updates.min_bags ?? cachedPricing.min_bags);
+    const minKg = Number(updates.min_kg ?? cachedPricing.min_kg);
+
+    cachedPricing = {
+      bag_price: bPrice,
+      min_bags: minBags,
+      max_bags: Number(updates.max_bags ?? cachedPricing.max_bags),
+      kg_price: kPrice,
+      min_kg: minKg,
+      max_kg: Number(updates.max_kg ?? cachedPricing.max_kg),
+      free_delivery_threshold: freeThresh,
+      standard_delivery_fee: dFee,
+      base_bag_price: bPrice,
+      base_kg_price: kPrice,
+      one_bag_delivery_fee: dFee,
+    };
+
     try {
       const supabase = createAdminSupabaseClient();
       await supabase.from("pricing_configs").upsert([
         {
           pricing_type: "per_bag",
-          unit_price: cachedPricing.bag_price,
-          min_order_quantity: cachedPricing.min_bags,
-          free_delivery_threshold: cachedPricing.free_delivery_threshold,
-          standard_delivery_fee: cachedPricing.standard_delivery_fee,
+          unit_price: bPrice,
+          min_order_quantity: minBags,
+          free_delivery_threshold: freeThresh,
+          standard_delivery_fee: dFee,
           is_active: true,
           updated_at: new Date().toISOString(),
         },
         {
           pricing_type: "per_kg",
-          unit_price: cachedPricing.kg_price,
-          min_order_quantity: cachedPricing.min_kg,
-          free_delivery_threshold: cachedPricing.free_delivery_threshold,
-          standard_delivery_fee: cachedPricing.standard_delivery_fee,
+          unit_price: kPrice,
+          min_order_quantity: minKg,
+          free_delivery_threshold: freeThresh,
+          standard_delivery_fee: dFee,
           is_active: true,
           updated_at: new Date().toISOString(),
         },

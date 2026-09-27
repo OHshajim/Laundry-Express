@@ -38,8 +38,8 @@ export function TransactionsManager({ orders, onViewOrder }: TransactionsManager
       status: o.order_status === "cancelled" ? ("refunded" as const) : (o.payment_status === "paid" || o.order_status === "completed" ? ("succeeded" as const) : ("pending" as const)),
       date: o.created_at || new Date().toISOString(),
       method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Cash/Card",
-      card_last4: "4242",
-      stripe_payment_intent: o.stripe_payment_intent || `pi_live_${o.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16)}`,
+      card_last4: o.payment_method === "card" ? "Card" : "",
+      stripe_payment_intent: o.stripe_payment_intent || "Direct/Cash",
     }));
   }, [orders]);
 
