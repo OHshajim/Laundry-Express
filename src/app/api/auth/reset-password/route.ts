@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { OtpService } from "@/lib/security/otp-service";
+import { UserDbService } from "@/lib/services/user-db-service";
 
 // Rate limiting map for reset password execution (5 requests per minute per IP)
 const executeRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
@@ -25,11 +27,10 @@ function checkExecuteRateLimit(ip: string): boolean {
 /**
  * POST /api/auth/reset-password
  *
- * Finalizes user password update:
+ * Finalizes user password update via verified email OTP:
  * - Rate limiting check (5 attempts/min)
- * - Validates reset token format and signature
- * - Enforces minimum password strength requirements (min 6 characters)
- * - Returns confirmation payload with secure caching headers
+ * - Cryptographically verifies matching 6-digit email OTP
+ * - Updates hashed credentials across database and memory store
  * - Strictly complies with 100-250 lines rule
  */
 export async function POST(req: Request) {
@@ -53,11 +54,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { token, newPassword } = body;
+    const { email, otp, newPassword } = body;
 
-    if (!token || typeof token !== "string" || token.trim().length === 0) {
+    if (!email || typeof email !== "string") {
       return NextResponse.json(
-        { success: false, error: "Invalid or expired reset token." },
+        { success: false, error: "Email address is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!otp || typeof otp !== "string" || otp.trim().length !== 6) {
+      return NextResponse.json(
+        { success: false, error: "Please enter a valid 6-digit verification code." },
         { status: 400 }
       );
     }
@@ -72,11 +80,33 @@ export async function POST(req: Request) {
       );
     }
 
-    // In a production database, this would update the bcrypt/argon2 hash and revoke the token
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 1. Strictly verify 6-digit OTP dispatched to this email
+    const verifyResult = await OtpService.verifyAndConsumeOtp(normalizedEmail, otp.trim(), "reset_password");
+    if (!verifyResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: verifyResult.error || "Incorrect or expired verification code. Please check your email.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 2. Persist new hashed password into database and memory registry
+    const updated = await UserDbService.updatePassword(normalizedEmail, newPassword);
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, error: "Unable to update password. Please retry." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
-        message: "Your password has been successfully updated. You may now sign in.",
+        message: "Your password has been successfully reset. You may now sign in.",
       },
       {
         status: 200,
@@ -87,13 +117,8 @@ export async function POST(req: Request) {
         },
       }
     );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Unable to update password at this time. Please retry.",
-      },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Password reset service temporarily unavailable.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

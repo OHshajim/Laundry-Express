@@ -4,9 +4,8 @@ import * as React from "react";
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CUSTOMER_REVIEWS } from "@/lib/mock-customer-data";
 import { ReviewSubmitForm } from "@/components/dashboard/review-submit-form";
-import type { OrderReview } from "@/types";
+import type { Order, OrderReview } from "@/types";
 
 /**
  * Customer Ratings & Reviews Page (/dashboard/ratings)
@@ -14,7 +13,20 @@ import type { OrderReview } from "@/types";
  * 1 to 5 star rating picker, text feedback, and 3 compressed photo attachments.
  */
 export default function CustomerRatingsPage() {
-  const [reviews, setReviews] = React.useState<OrderReview[]>(CUSTOMER_REVIEWS);
+  const [reviews, setReviews] = React.useState<OrderReview[]>([]);
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    Promise.all([
+      fetch("/api/reviews").then((res) => res.json()).catch(() => ({ reviews: [] })),
+      fetch("/api/orders").then((res) => res.json()).catch(() => ({ orders: [] })),
+    ]).then(([revData, ordData]) => {
+      if (Array.isArray(revData.reviews)) setReviews(revData.reviews);
+      if (Array.isArray(ordData.orders)) setOrders(ordData.orders);
+      setIsLoading(false);
+    });
+  }, []);
 
   const handleReviewSubmitted = (newReview: OrderReview) => {
     setReviews((prev) => [newReview, ...prev]);
@@ -33,11 +45,16 @@ export default function CustomerRatingsPage() {
       </div>
 
       {/* Review Submission Form Component */}
-      <ReviewSubmitForm onReviewSubmitted={handleReviewSubmitted} />
+      <ReviewSubmitForm orders={orders} onReviewSubmitted={handleReviewSubmitted} />
 
       {/* Submitted Reviews History */}
       <div className="space-y-4">
         <h3 className="font-black text-slate-900 text-base">Your Previously Submitted Reviews</h3>
+        {reviews.length === 0 && !isLoading && (
+          <div className="p-8 text-center rounded-3xl bg-white border border-slate-200 text-slate-400 text-xs">
+            No reviews submitted yet. Rate one of your completed orders above to share your feedback.
+          </div>
+        )}
         {reviews.map((rev) => (
           <div key={rev.id} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3">
             <div className="flex items-center justify-between">

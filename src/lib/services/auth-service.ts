@@ -1,15 +1,14 @@
+import type { User } from "@/types";
+
 /**
  * Authentication Service
- *
  * Production-ready authentication service managing:
  * - Credentials login and registration via /api/auth
  * - Google OAuth authentication flow
- * - Forgot & reset password workflows with token verification
- * - Client-side persistence fallback and secure header handling
+ * - Email OTP dispatch and verification for password changes and resets
+ * - Zero static admin whitelists (dynamic roles from PostgreSQL database)
  * - Strict adherence to the 100-250 lines architectural rule
  */
-
-import type { User, UserRole } from "@/types";
 
 export interface AuthResponse {
   success: boolean;
@@ -50,19 +49,10 @@ class AuthService {
 
       return data;
     } catch {
-      // Fallback for offline or local preview environments
-      const normalizedEmail = email.trim().toLowerCase();
-      const isAdmin = normalizedEmail.includes("admin");
-      const fallbackUser: User = {
-        id: `u-${Date.now()}`,
-        email: normalizedEmail,
-        full_name: isAdmin ? "Operations Admin" : "Verified Customer",
-        role: isAdmin ? "admin" : "customer",
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      return {
+        success: false,
+        error: "Unable to connect to authentication server. Please check your network.",
       };
-      return { success: true, user: fallbackUser };
     }
   }
 
@@ -87,17 +77,10 @@ class AuthService {
 
       return data;
     } catch {
-      const fallbackUser: User = {
-        id: `u-${Date.now()}`,
-        email: payload.email.trim().toLowerCase(),
-        full_name: payload.fullName.trim() || "Valued Customer",
-        phone: payload.phone || "815-575-9536",
-        role: "customer",
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      return {
+        success: false,
+        error: "Unable to submit registration. Please verify your connection.",
       };
-      return { success: true, user: fallbackUser };
     }
   }
 
@@ -111,69 +94,92 @@ class AuthService {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.user) {
-          return data;
-        }
-      }
-    } catch {
-      // Offline fallback
-    }
-
-    // Standard fallback Google customer profile
-    const googleUser: User = {
-      id: `u-google-${Date.now()}`,
-      email: "google.user@example.com",
-      full_name: "Google Account Customer",
-      role: "customer",
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    return { success: true, user: googleUser };
-  }
-
-  /**
-   * Request password reset instructions
-   */
-  async forgotPassword(email: string): Promise<AuthResponse> {
-    try {
-      const res = await fetch(`${this.baseUrl}/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-
       const data = await res.json();
+      if (!res.ok || !data.success) {
+        return {
+          success: false,
+          error: data.error || "Google authentication failed.",
+        };
+      }
+
       return data;
     } catch {
       return {
-        success: true,
-        message: "If an account exists with this email, password reset instructions have been sent.",
+        success: false,
+        error: "Google authentication service temporarily unreachable.",
       };
     }
   }
 
   /**
-   * Reset password with verification token
+   * Request 6-digit email OTP for password change or reset
    */
-  async resetPassword(token: string, newPassword: string): Promise<AuthResponse> {
+  async sendOtp(
+    email: string,
+    purpose: "change_password" | "reset_password"
+  ): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await fetch(`${this.baseUrl}/otp/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), purpose }),
+      });
+
+      const data = await res.json();
+      return {
+        success: !!data.success,
+        message: data.message,
+        error: data.error,
+      };
+    } catch {
+      return {
+        success: false,
+        error: "Unable to dispatch verification code. Please check your connection.",
+      };
+    }
+  }
+
+  /**
+   * Change password via verified email OTP
+   */
+  async changePasswordWithOtp(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${this.baseUrl}/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim(), newPassword }),
+      });
+
+      const data = await res.json();
+      return { success: !!data.success, error: data.error };
+    } catch {
+      return { success: false, error: "Password update failed. Please retry." };
+    }
+  }
+
+  /**
+   * Reset forgotten password via verified email OTP
+   */
+  async resetPasswordWithOtp(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const res = await fetch(`${this.baseUrl}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim(), newPassword }),
       });
 
       const data = await res.json();
-      return data;
+      return { success: !!data.success, error: data.error };
     } catch {
-      return {
-        success: true,
-        message: "Your password has been securely reset. You can now log in.",
-      };
+      return { success: false, error: "Password reset service temporarily unavailable." };
     }
   }
 }

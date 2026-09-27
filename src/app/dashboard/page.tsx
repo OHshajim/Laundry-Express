@@ -7,9 +7,8 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useAuth } from "@/context/auth-context";
-import { CURRENT_CUSTOMER } from "@/lib/mock-customer-data";
-import { INITIAL_ORDERS, INITIAL_REVIEWS, INITIAL_CUSTOMERS } from "@/lib/mock-admin-data";
 import type { Order, OrderReview, OrderStatus } from "@/types";
+import type { CustomerAccount } from "@/components/admin/customer-detail-modal";
 
 // Admin views
 import { AdminOverview } from "@/components/admin/admin-overview";
@@ -30,8 +29,8 @@ import { DashboardSettings } from "@/components/dashboard/dashboard-settings";
 
 const ADMIN_HEADER_CONFIG: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Operations Overview", subtitle: "Live facility telemetry, revenue, and active dispatches" },
-  orders: { title: "Orders Pipeline & Fulfillment", subtitle: "Accept bookings, inspect fabrics, and upload proof photos" },
-  customers: { title: "Customers Directory", subtitle: "Customer accounts, order history, and account settings" },
+  orders: { title: "Orders & Fulfillment", subtitle: "Accept bookings, inspect fabrics, and upload proof photos" },
+  customers: { title: "Customers", subtitle: "Customer accounts, order history, and account settings" },
   transactions: { title: "Transaction & Payment History", subtitle: "Stripe payment intents, receipts, and order billing logs" },
   packages: { title: "Saver Packages & Bundles", subtitle: "Create, edit, and toggle active status of discounted bundles" },
   detergents: { title: "Detergent & Temperature Catalog", subtitle: "Manage laundry detergents and wash temperature options" },
@@ -51,37 +50,84 @@ const CUSTOMER_HEADER_CONFIG: Record<string, { title: string; subtitle: string }
   account_settings: { title: "Account & Security Settings", subtitle: "Manage profile, saved addresses, and change password via email" },
 };
 
+function extractCustomers(list: Order[]): CustomerAccount[] {
+  const map = new Map<string, CustomerAccount>();
+  for (const o of list) {
+    const k = o.customer_email || o.user_id || "guest";
+    const e = map.get(k);
+    if (e) {
+      e.orders.push(o);
+    } else {
+      map.set(k, {
+        id: o.user_id || `cust-${o.id}`,
+        full_name: o.customer_name || o.user?.full_name || "Customer",
+        email: o.customer_email || "customer@example.com",
+        phone: o.customer_phone || "(847) 555-0100",
+        address: o.pickup_address || "Lake in the Hills, IL",
+        joined_date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Recently",
+        orders: [o],
+        reviews: [],
+        payments: [],
+      });
+    }
+  }
+  return Array.from(map.values());
+}
+
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAdmin, isLoading } = useAuth();
 
   const tabParam = searchParams.get("tab");
-  const defaultTab = isAdmin ? "orders" : "overview";
-  const activeTab = tabParam || defaultTab;
+  const customerAllowedTabs = React.useMemo(() => new Set(["overview", "orders", "transactions", "ratings", "account_settings"]), []);
+  const activeTab = isAdmin
+    ? (tabParam || "orders")
+    : (tabParam && customerAllowedTabs.has(tabParam) ? tabParam : "overview");
 
-  const [orders, setOrders] = React.useState<Order[]>(INITIAL_ORDERS);
-  const [reviews, setReviews] = React.useState<OrderReview[]>(INITIAL_REVIEWS);
-  const [customers, setCustomers] = React.useState(INITIAL_CUSTOMERS);
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [reviews, setReviews] = React.useState<OrderReview[]>([]);
+  const [customers, setCustomers] = React.useState<CustomerAccount[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/orders")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.orders)) {
+          setOrders(data.orders);
+          setCustomers(extractCustomers(data.orders));
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/reviews")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.reviews)) setReviews(data.reviews);
+      })
+      .catch(() => {});
+  }, [user, isAdmin]);
 
   const handleSelectTab = (tabId: string) => {
     router.push(`/dashboard?tab=${tabId}`);
   };
 
-  const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus, updated_at: new Date().toISOString() } : o)));
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, status: newStatus }) }); } catch {}
   };
 
-  const handleUpdateFinalWeight = (orderId: string, finalWeight: number) => {
+  const handleUpdateFinalWeight = async (orderId: string, finalWeight: number) => {
     setOrders((prev) => prev.map((o) => {
       if (o.id !== orderId) return o;
       const subtotal = Math.round(finalWeight * 2.75 * 100) / 100;
       const deliveryFee = subtotal >= 40 ? 0 : 10;
       return { ...o, final_weight_kg: finalWeight, subtotal, delivery_fee: deliveryFee, total_amount: subtotal + deliveryFee };
     }));
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, finalWeight }) }); } catch {}
   };
 
-  const handleUploadProof = (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
+  const handleUploadProof = async (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
     setOrders((prev) => prev.map((o) => {
       if (o.id !== orderId) return o;
       const isDamage = proofType === "damage";
@@ -94,24 +140,36 @@ function DashboardContent() {
         proofs: [...(o.proofs || []), { id: `prf-${Date.now()}`, order_id: orderId, proof_type: proofType, image_url: imageUrl, notes, uploaded_by: "operations-admin", created_at: new Date().toISOString() }],
       };
     }));
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, proofType, imageUrl, notes }) }); } catch {}
   };
 
-  const handleApproveReview = (id: string) => setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "approved" as const } : r)));
-  const handleRejectReview = (id: string) => setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "rejected" as const } : r)));
-  const handleDeleteReview = (id: string) => setReviews((p) => p.filter((r) => r.id !== id));
-  const handleChangeReviewStatus = (id: string, s: "pending" | "approved" | "rejected") => setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: s } : r)));
+  const handleApproveReview = async (id: string) => {
+    setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "approved" as const } : r)));
+    try { await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "approved" }) }); } catch {}
+  };
+  const handleRejectReview = async (id: string) => {
+    setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "rejected" as const } : r)));
+    try { await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "rejected" }) }); } catch {}
+  };
+  const handleDeleteReview = async (id: string) => {
+    setReviews((p) => p.filter((r) => r.id !== id));
+    try { await fetch(`/api/reviews?id=${encodeURIComponent(id)}`, { method: "DELETE" }); } catch {}
+  };
+  const handleChangeReviewStatus = (id: string, s: "pending" | "approved" | "rejected") => {
+    if (s === "approved") handleApproveReview(id);
+    else if (s === "rejected") handleRejectReview(id);
+    else setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: s } : r)));
+  };
 
   const pendingReviewsCount = reviews.filter((r) => r.status === "pending").length;
   const activeOrdersCount = orders.filter((o) => o.order_status !== "completed" && o.order_status !== "cancelled").length;
 
-  const displayName = user?.full_name || (isAdmin ? "Operations Admin" : CURRENT_CUSTOMER.full_name);
+  const displayName = user?.full_name || (isAdmin ? "Operations Admin" : "Valued Customer");
   const activeHeader = isAdmin
     ? ADMIN_HEADER_CONFIG[activeTab] || { title: "Admin Operations", subtitle: "Lake in the Hills Hub" }
     : CUSTOMER_HEADER_CONFIG[activeTab] || { title: `Welcome Back, ${displayName}`, subtitle: "Doorstep Laundry Service" };
 
-  if (isLoading) {
-    return <div className="h-96 rounded-3xl bg-slate-100 animate-pulse m-6" />;
-  }
+  if (isLoading) return <div className="h-96 rounded-3xl bg-slate-100 animate-pulse m-6" />;
 
   return (
     <DashboardShell
@@ -137,14 +195,13 @@ function DashboardContent() {
         ) : undefined
       }
     >
-      {/* Role-Based Dynamic Service Workspace */}
       <div className="space-y-6">
         {isAdmin ? (
           <>
             {activeTab === "overview" && <AdminOverview orders={orders} customers={customers} onNavigate={handleSelectTab} />}
             {activeTab === "orders" && <OrderPipeline orders={orders} onUpdateStatus={handleUpdateStatus} onUpdateFinalWeight={handleUpdateFinalWeight} onUploadProof={handleUploadProof} />}
             {activeTab === "customers" && <CustomersManager customers={customers} onViewOrder={() => handleSelectTab("orders")} />}
-            {activeTab === "transactions" && <TransactionsManager onViewOrder={() => handleSelectTab("orders")} />}
+            {activeTab === "transactions" && <TransactionsManager orders={orders} onViewOrder={() => handleSelectTab("orders")} />}
             {(activeTab === "settings" || activeTab === "rates") && <AdminSettingsManager />}
             {activeTab === "packages" && <PricingManager currentSection="packages" />}
             {activeTab === "detergents" && <PricingManager currentSection="detergents" />}
@@ -155,8 +212,8 @@ function DashboardContent() {
           </>
         ) : (
           <>
-            {activeTab === "overview" && <CustomerOverview onNavigate={handleSelectTab} />}
-            {activeTab === "orders" && <CustomerOrdersPage />}
+            {activeTab === "overview" && <CustomerOverview orders={orders} onNavigate={handleSelectTab} />}
+            {activeTab === "orders" && <CustomerOrdersPage orders={orders} />}
             {activeTab === "transactions" && <CustomerTransactionsPage />}
             {activeTab === "ratings" && <CustomerRatingsPage />}
             {activeTab === "account_settings" && <DashboardSettings />}

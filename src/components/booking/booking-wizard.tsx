@@ -11,8 +11,9 @@ import { StepDetergent } from "./step-detergent";
 import { StepOutOfHome, type AddressDetails } from "./step-out-of-home";
 import { StepReview } from "./step-review";
 import { OrderSummaryCard } from "./order-summary-card";
-import { OrderInvoiceModal, type InvoiceData } from "./order-invoice-modal";
+import { OrderInvoiceModal } from "./order-invoice-modal";
 import { Button } from "@/components/ui/button";
+import { useBookingCheckout } from "./use-booking-checkout";
 
 export interface BookingWizardProps {
   initialMode?: PricingMode;
@@ -56,8 +57,8 @@ export function BookingWizard({
   const [appliedPromo, setAppliedPromo] = React.useState<string>("");
   const [promoError, setPromoError] = React.useState<string>("");
   const [paymentMethod, setPaymentMethod] = React.useState<"card" | "apple_pay" | "cash_on_delivery">("card");
-  const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
-  const [invoice, setInvoice] = React.useState<InvoiceData | null>(null);
+
+  const { checkout, isProcessing, invoice, setInvoice } = useBookingCheckout();
 
   const priceResult = React.useMemo(() => {
     return calculateOrderPrice({
@@ -69,13 +70,20 @@ export function BookingWizard({
     });
   }, [pricingMode, bagCount, weightKg, selectedDetergentId, appliedPromo]);
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
-    if (code === "HEROFRESH" || code === "FREESHIP") {
-      setAppliedPromo(code);
-      setPromoError("");
-    } else {
-      setPromoError("Invalid or expired coupon code");
+    if (!code) return;
+    try {
+      const res = await fetch(`/api/coupons?code=${encodeURIComponent(code)}&subtotal=${priceResult.subtotal}`);
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedPromo(code);
+        setPromoError("");
+      } else {
+        setPromoError(data.error || "Invalid coupon code.");
+      }
+    } catch {
+      setPromoError("Failed to validate promo code.");
     }
   };
 
@@ -83,31 +91,24 @@ export function BookingWizard({
 
   const handleCheckout = () => {
     if (!isStep3Valid) return;
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      const randomSeq = Math.floor(1000 + Math.random() * 9000);
-      const delivery = dropoffDate || new Date(Date.now() + 24 * 3600 * 1000).toISOString().split("T")[0];
-      setInvoice({
-        orderId: `LX-${new Date().getFullYear()}-${randomSeq}`,
-        orderDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-        pickupDate: selectedDate,
-        pickupSlot: selectedSlot === "8am-12pm" ? "8am – 12pm" : "1pm – 6pm",
-        deliveryDate: delivery,
-        paymentMethod,
-        totalAmount: priceResult.total_amount,
-        customerName: currentUser?.full_name || "Customer",
-        customerEmail: currentUser?.email || "customer@laundryexpress.com",
-        address,
-        orderDetails: {
-          planName: pricingMode === "per_bag" ? "By The Bag (13 Gal)" : "By The KG",
-          quantity: pricingMode === "per_bag" ? `${bagCount} Bag(s)` : `${weightKg} KG`,
-          detergent: selectedDetergentId,
-          temperature: selectedTemp,
-          specialRequest: isOutOfHome ? "Away (Contactless Doorstep)" : "Home (Ring Bell)",
-        },
-      });
-    }, 1000);
+    checkout({
+      currentUser,
+      pricingMode,
+      bagCount,
+      weightKg,
+      selectedDetergentId,
+      selectedTemp,
+      selectedDate,
+      selectedSlot,
+      dropoffDate,
+      address,
+      addressDetails,
+      isOutOfHome,
+      bagConfirmed,
+      notes,
+      priceResult,
+      paymentMethod,
+    });
   };
 
   return (
@@ -138,16 +139,16 @@ export function BookingWizard({
               <StepDetergent
                 selectedDetergentId={selectedDetergentId}
                 onSelectDetergent={setSelectedDetergentId}
-                selectedTemperature={selectedTemp}
-                onSelectTemperature={setSelectedTemp}
+                selectedTemp={selectedTemp}
+                onSelectTemp={setSelectedTemp}
               />
               <div className="flex items-center justify-between pt-2">
                 <Button variant="outline" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  <span>Back to Bags</span>
+                  <span>Back to Plan</span>
                 </Button>
                 <Button variant="hero" size="lg" onClick={() => setStep(3)}>
-                  <span>Continue to Schedule &amp; Address</span>
+                  <span>Continue to Pickup &amp; Address</span>
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
@@ -206,24 +207,24 @@ export function BookingWizard({
 
         <div className="lg:col-span-1">
           <OrderSummaryCard
-            priceResult={priceResult}
             pricingMode={pricingMode}
             bagCount={bagCount}
             weightKg={weightKg}
-            selectedPaymentMethod={paymentMethod}
-            onSelectPaymentMethod={setPaymentMethod}
+            priceResult={priceResult}
             promoCode={promoCode}
+            promoError={promoError}
             onPromoCodeChange={setPromoCode}
             onApplyPromo={handleApplyPromo}
-            promoError={promoError}
+            selectedPaymentMethod={paymentMethod as any}
+            onSelectPaymentMethod={(m) => setPaymentMethod(m)}
+            onProceedToCheckout={handleCheckout}
             isProcessing={isProcessing}
-            onProceedToCheckout={activeStep === 4 ? handleCheckout : () => setStep(Math.min(4, activeStep + 1))}
-            disabled={activeStep === 3 && !isStep3Valid}
+            disabled={activeStep !== 4}
           />
         </div>
       </div>
 
-      <OrderInvoiceModal invoice={invoice} onClose={() => { setInvoice(null); setStep(1); }} />
+      <OrderInvoiceModal invoice={invoice} onClose={() => setInvoice(null)} />
     </div>
   );
 }

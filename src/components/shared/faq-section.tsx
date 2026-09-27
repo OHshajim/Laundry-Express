@@ -46,6 +46,18 @@ const FAQS = [
 
 export function FaqSection() {
   const [openIndex, setOpenIndex] = React.useState<number | null>(0);
+  const [faqList, setFaqList] = React.useState<{ q: string; a: string }[]>(FAQS);
+
+  React.useEffect(() => {
+    fetch("/api/content?type=faqs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.faqs && data.faqs.length > 0) {
+          setFaqList(data.faqs.map((f: { question: string; answer: string }) => ({ q: f.question, a: f.answer })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section id="faq" className="py-20 bg-slate-50/60 scroll-mt-20">
@@ -64,7 +76,7 @@ export function FaqSection() {
         </div>
 
         <div className="space-y-3">
-          {FAQS.map((faq, index) => {
+          {faqList.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
               <div

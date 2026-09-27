@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { User } from "@/types";
-import { CustomUserStore } from "@/lib/services/custom-user-store";
+import { UserDbService } from "@/lib/services/user-db-service";
 
 // In-memory rate limiting tracker (5 requests per 60 seconds per IP)
 const rateLimitMap = new Map<string, { count: number; expiresAt: number }>();
@@ -78,8 +78,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Strictly verify credentials using CustomUserStore
-    const user = CustomUserStore.verifyCredentials(normalizedEmail, password);
+    // Strictly verify credentials using database records
+    const user = await UserDbService.verifyCredentials(normalizedEmail, password);
     if (!user) {
       return NextResponse.json(
         { success: false, error: "Invalid email or password." },

@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { UserPlus, Eye, EyeOff, Globe, Check } from "lucide-react";
+import { UserPlus, Eye, EyeOff, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 
@@ -22,7 +22,7 @@ export function RegisterView() {
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("callbackUrl") || searchParams.get("redirect");
 
-  const { register, loginWithGoogle, isAuthenticated, user, isAdmin } = useAuth();
+  const { register, loginWithGoogle, isAuthenticated, user } = useAuth();
 
   const [fullName, setFullName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -38,7 +38,7 @@ export function RegisterView() {
     if (isAuthenticated && user) {
       router.push(redirectPath || "/dashboard");
     }
-  }, [isAuthenticated, user, isAdmin, redirectPath, router]);
+  }, [isAuthenticated, user, redirectPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

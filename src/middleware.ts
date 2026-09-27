@@ -2,32 +2,41 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
 
 /**
  * Enterprise Next.js Security Middleware
  *
- * Enforces route-level authentication & unified dashboard routing:
+ * Enforces route-level authentication & role authorization:
  * 1. /order/:path* -> Strictly requires authentication. Unauthenticated users redirected to /login.
  * 2. /dashboard/:path* -> Strictly requires customer or admin authentication.
- * 3. /admin/:path* -> Automatically redirects to unified /dashboard where role-based services reside.
+ * 3. /admin/:path* -> Strictly requires admin role; non-admins redirected to /dashboard.
  * 4. Auth pages (/login, /register, etc.) -> Authenticated users redirected to /dashboard.
  *
  * Adheres strictly to the < 250 lines rule and Next.js App Router conventions.
  */
 export async function middleware(req: NextRequest) {
-  const { pathname, search } = req.nextUrl;
+  const { pathname, search, searchParams } = req.nextUrl;
 
-  // Retrieve token using next-auth/jwt
   const token = await getToken({
     req,
     secret: AUTH_SECRET,
   });
 
   const isAuthenticated = !!token;
+  const userRole = token?.role as string | undefined;
+  const isAdmin = userRole === "admin";
 
-  // 1. Automatically redirect legacy /admin requests to unified /dashboard
+  // 1. Guard legacy /admin routes - strictly require admin role
   if (pathname.startsWith("/admin")) {
+    if (!isAuthenticated) {
+      const loginUrl = new URL(`/login?callbackUrl=${encodeURIComponent("/dashboard")}`, req.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (!isAdmin) {
+      // Customer trying to access admin route is safely redirected to customer dashboard
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
@@ -39,7 +48,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password");
 
-  // 2. Guard protected user & checkout routes
+  // 2. Guard protected customer & checkout routes
   if (isOrderRoute || isDashboardRoute) {
     if (!isAuthenticated) {
       const fullPath = pathname + (search || "");
@@ -47,9 +56,29 @@ export async function middleware(req: NextRequest) {
       const loginUrl = new URL(`/login?callbackUrl=${callbackUrl}`, req.url);
       return NextResponse.redirect(loginUrl);
     }
+
+    // 3. Guard against customer accessing admin-exclusive tabs via query parameters
+    if (isDashboardRoute && !isAdmin) {
+      const requestedTab = searchParams.get("tab");
+      const adminExclusiveTabs = new Set([
+        "customers",
+        "packages",
+        "detergents",
+        "coupons",
+        "reviews",
+        "faqs",
+        "rates",
+        "settings",
+      ]);
+
+      if (requestedTab && adminExclusiveTabs.has(requestedTab)) {
+        const sanitizedUrl = new URL("/dashboard?tab=overview", req.url);
+        return NextResponse.redirect(sanitizedUrl);
+      }
+    }
   }
 
-  // 3. Prevent already authenticated users from landing on auth pages
+  // 4. Prevent already authenticated users from landing on auth pages
   if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }

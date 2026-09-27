@@ -18,21 +18,32 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CUSTOMER_ORDERS } from "@/lib/mock-customer-data";
 import { formatCurrency } from "@/lib/utils";
 import type { Order } from "@/types";
 
-/**
- * Customer Orders & Live Timeline Tracking Page (/dashboard/orders)
- *
- * Implements:
- * - Full customer order history
- * - Interactive order inspection modal with the real 4-stage status timeline
- * - Dual photo proof gallery (pickup + drop-off photos)
- * - Itemized billing breakdown (bags, detergent, delivery tier)
- */
-export default function CustomerOrdersPage() {
+interface CustomerOrdersPageProps {
+  orders?: Order[];
+}
+
+export default function CustomerOrdersPage({ orders: initialOrders }: CustomerOrdersPageProps) {
+  const [orders, setOrders] = React.useState<Order[]>(initialOrders || []);
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [isLoading, setIsLoading] = React.useState(!initialOrders);
+
+  React.useEffect(() => {
+    if (initialOrders) {
+      setOrders(initialOrders);
+      setIsLoading(false);
+    } else {
+      fetch("/api/orders")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.orders)) setOrders(data.orders);
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }
+  }, [initialOrders]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 ">
@@ -56,7 +67,17 @@ export default function CustomerOrdersPage() {
 
       {/* Orders Directory List */}
       <div className="space-y-4">
-        {CUSTOMER_ORDERS.map((order) => {
+        {orders.length === 0 && !isLoading && (
+          <div className="p-8 text-center rounded-3xl bg-white border border-slate-200 text-slate-400 text-xs space-y-3">
+            <p>No orders found. When you book a wash or package, your order status and doorstep photo proofs will be tracked here in real time.</p>
+            <Link href="/order">
+              <Button size="sm" className="bg-primary hover:bg-primary-dark text-white text-xs mt-2">
+                Book Your First Pickup
+              </Button>
+            </Link>
+          </div>
+        )}
+        {orders.map((order) => {
           const isComplete = order.order_status === "completed";
           return (
             <div

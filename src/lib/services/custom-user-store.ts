@@ -1,14 +1,11 @@
 import type { User, UserRole } from "@/types";
+import { hashPassword, verifyPassword } from "@/lib/security/password";
 
 /**
  * Custom User Store & Authentication Registry
- *
- * Dedicated custom authentication store for Laundry Express:
- * - Decoupled from third-party auth services
- * - Manages custom customer registrations & administrator credentials
- * - Verifies real passwords with strict matching
- * - Supports email-based password resets
- * - Strictly complies with the 100-250 lines architectural rule
+ * In-memory fallback and identity registry for server processes.
+ * Adheres to dynamic database roles (admin can be any email configured in database).
+ * Strictly complies with the < 250 lines architectural rule.
  */
 
 export interface StoredUser extends User {
@@ -18,11 +15,11 @@ export interface StoredUser extends User {
 // In-memory user registry for active server processes
 const USER_REGISTRY = new Map<string, StoredUser>();
 
-// Pre-seed primary administrative account with password
+// Pre-seed default administrative account for immediate operational access
 const DEFAULT_ADMIN: StoredUser = {
   id: "admin-ops-001",
   email: "admin@laundryexpress.com",
-  passwordHash: "admin123",
+  passwordHash: hashPassword("admin123"),
   full_name: "Operations Administrator",
   phone: "815-575-9536",
   address: "Operations Center, Lake in the Hills, IL 60156",
@@ -33,11 +30,11 @@ const DEFAULT_ADMIN: StoredUser = {
 };
 USER_REGISTRY.set(DEFAULT_ADMIN.email, DEFAULT_ADMIN);
 
-// Pre-seed verified customer account with password
+// Pre-seed verified customer account
 const DEFAULT_CUSTOMER: StoredUser = {
   id: "cust-demo-001",
   email: "customer@laundryexpress.com",
-  passwordHash: "customer123",
+  passwordHash: hashPassword("customer123"),
   full_name: "Sarah Jenkins",
   phone: "815-575-9536",
   address: "742 Evergreen Terrace, Lake in the Hills, IL 60156",
@@ -70,30 +67,48 @@ export class CustomUserStore {
   }
 
   /**
-   * Create or register a new customer in the custom store with password
+   * Dynamically assign or update a user's role
+   */
+  static setUserRole(email: string, role: UserRole): boolean {
+    if (!email) return false;
+    const existing = this.findByEmail(email);
+    if (!existing) return false;
+    existing.role = role;
+    existing.updated_at = new Date().toISOString();
+    return true;
+  }
+
+  /**
+   * Create or register a new user in the custom store with hashed password
    */
   static createCustomer(params: {
     email: string;
     fullName: string;
     phone?: string;
     password?: string;
+    role?: UserRole;
   }): StoredUser {
     const normalized = params.email.trim().toLowerCase();
     const existing = USER_REGISTRY.get(normalized);
     if (existing) {
       if (params.password) {
-        existing.passwordHash = params.password;
+        existing.passwordHash = hashPassword(params.password);
+      }
+      if (params.role) {
+        existing.role = params.role;
       }
       return existing;
     }
 
+    const assignedRole = params.role || "customer";
+
     const newUser: StoredUser = {
       id: `u-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       email: normalized,
-      passwordHash: params.password || "customer123",
+      passwordHash: hashPassword(params.password || "customer123"),
       full_name: params.fullName.trim() || "Valued Customer",
       phone: params.phone?.trim() || "815-575-9536",
-      role: "customer",
+      role: assignedRole,
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -114,55 +129,36 @@ export class CustomUserStore {
     const normalized = email.trim().toLowerCase();
     const existing = USER_REGISTRY.get(normalized);
 
-    // If user exists, strictly verify their password
-    if (existing) {
-      if (existing.passwordHash && existing.passwordHash !== password) {
-        return null; // Invalid password
-      }
-
-      return {
-        id: existing.id,
-        email: existing.email,
-        full_name: existing.full_name,
-        phone: existing.phone,
-        address: existing.address,
-        role: existing.role,
-        is_active: existing.is_active,
-        created_at: existing.created_at,
-        updated_at: existing.updated_at,
-      };
+    if (!existing) {
+      return null;
     }
 
-    // Auto-provision initial administrator or customer with provided password
-    const isAdmin = normalized.includes("admin");
-    const autoUser: StoredUser = {
-      id: `u-${Date.now()}`,
-      email: normalized,
-      passwordHash: password,
-      full_name: isAdmin ? "Operations Admin" : "Verified Customer",
-      phone: "815-575-9536",
-      role: isAdmin ? "admin" : "customer",
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    const isValid = verifyPassword(password, existing.passwordHash);
+    if (!isValid) {
+      return null;
+    }
 
-    USER_REGISTRY.set(normalized, autoUser);
+    // Upgrade legacy plaintext hash to scrypt if needed
+    if (!existing.passwordHash.includes(":")) {
+      existing.passwordHash = hashPassword(password);
+    }
+
     return {
-      id: autoUser.id,
-      email: autoUser.email,
-      full_name: autoUser.full_name,
-      phone: autoUser.phone,
-      address: autoUser.address,
-      role: autoUser.role,
-      is_active: autoUser.is_active,
-      created_at: autoUser.created_at,
-      updated_at: autoUser.updated_at,
+      id: existing.id,
+      email: existing.email,
+      full_name: existing.full_name,
+      phone: existing.phone,
+      address: existing.address,
+      role: existing.role,
+      avatar_url: existing.avatar_url,
+      is_active: existing.is_active,
+      created_at: existing.created_at,
+      updated_at: existing.updated_at,
     };
   }
 
   /**
-   * Update user password by verified email
+   * Update user password directly by email
    */
   static updatePassword(email: string, newPassword: string): boolean {
     if (!email || !newPassword || newPassword.length < 6) {
@@ -175,9 +171,39 @@ export class CustomUserStore {
       return false;
     }
 
-    existing.passwordHash = newPassword;
+    existing.passwordHash = hashPassword(newPassword);
     existing.updated_at = new Date().toISOString();
     return true;
+  }
+
+  /**
+   * Change password requiring verification of current password
+   */
+  static verifyAndUpdatePassword(
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): { success: boolean; error?: string } {
+    if (!email || !currentPassword || !newPassword) {
+      return { success: false, error: "Missing required password fields." };
+    }
+    if (newPassword.length < 6) {
+      return { success: false, error: "New password must be at least 6 characters long." };
+    }
+
+    const normalized = email.trim().toLowerCase();
+    const existing = USER_REGISTRY.get(normalized);
+    if (!existing) {
+      return { success: false, error: "User account not found." };
+    }
+
+    if (!verifyPassword(currentPassword, existing.passwordHash)) {
+      return { success: false, error: "Current password does not match our records." };
+    }
+
+    existing.passwordHash = hashPassword(newPassword);
+    existing.updated_at = new Date().toISOString();
+    return { success: true };
   }
 
   /**
@@ -188,6 +214,7 @@ export class CustomUserStore {
     email: string;
     name?: string;
     avatar_url?: string;
+    role?: UserRole;
   }): User {
     const normalized = googleUser.email.trim().toLowerCase();
     const existing = USER_REGISTRY.get(normalized);
@@ -195,17 +222,22 @@ export class CustomUserStore {
       if (googleUser.avatar_url && !existing.avatar_url) {
         existing.avatar_url = googleUser.avatar_url;
       }
+      if (googleUser.role) {
+        existing.role = googleUser.role;
+      }
       return existing;
     }
+
+    const assignedRole = googleUser.role || "customer";
 
     const newUser: StoredUser = {
       id: `u-google-${Date.now()}`,
       email: normalized,
-      passwordHash: "oauth-google-managed-session",
+      passwordHash: hashPassword(Math.random().toString(36)),
       full_name: googleUser.name || "Google Customer",
       avatar_url: googleUser.avatar_url,
       phone: "815-575-9536",
-      role: normalized.includes("admin") ? "admin" : "customer",
+      role: assignedRole,
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

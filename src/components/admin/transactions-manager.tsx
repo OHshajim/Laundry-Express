@@ -14,27 +14,38 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-import {
-  INITIAL_ADMIN_TRANSACTIONS,
-  getTransactionSummaryStats,
-  type AdminPaymentTransaction,
-} from "@/lib/mock-transactions-data";
+import type { Order, AdminPaymentTransaction } from "@/types";
 
 interface TransactionsManagerProps {
+  orders?: Order[];
   onViewOrder?: (orderId: string) => void;
 }
 
-/**
- * TransactionsManager Component
- * Searchable & filterable table of customer payments with zero horizontal scrolling.
- */
-export function TransactionsManager({ onViewOrder }: TransactionsManagerProps) {
-  const [transactions] = React.useState<AdminPaymentTransaction[]>(INITIAL_ADMIN_TRANSACTIONS);
+export function TransactionsManager({ orders, onViewOrder }: TransactionsManagerProps) {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [dateRange, setDateRange] = React.useState<"all" | "today" | "month">("month");
 
-  const { totalRevenue, totalRefunds, pendingCount } = getTransactionSummaryStats(transactions);
+  const transactions: AdminPaymentTransaction[] = React.useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+    return orders.map((o) => ({
+      id: `txn-${o.id}`,
+      order_id: o.id,
+      order_number: o.order_number,
+      customer_name: o.customer_name || o.user?.full_name || "Customer",
+      customer_email: o.customer_email || "customer@example.com",
+      amount: o.total_amount,
+      status: o.order_status === "cancelled" ? ("refunded" as const) : (o.payment_status === "paid" || o.order_status === "completed" ? ("succeeded" as const) : ("pending" as const)),
+      date: o.created_at || new Date().toISOString(),
+      method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Cash/Card",
+      card_last4: "4242",
+      stripe_payment_intent: o.stripe_payment_intent || `pi_live_${o.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16)}`,
+    }));
+  }, [orders]);
+
+  const totalRevenue = transactions.filter((t) => t.status === "succeeded").reduce((acc, t) => acc + t.amount, 0);
+  const totalRefunds = transactions.filter((t) => t.status === "refunded").reduce((acc, t) => acc + t.amount, 0);
+  const pendingCount = transactions.filter((t) => t.status === "pending").length;
 
   const filteredTransactions = transactions.filter((txn) => {
     const matchesSearch =

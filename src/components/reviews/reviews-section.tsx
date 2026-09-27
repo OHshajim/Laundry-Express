@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Star, Sparkles, MessageSquareHeart } from "lucide-react";
+import { Star } from "lucide-react";
 import { ReviewCard } from "./review-card";
-import { ReviewFormDialog } from "./review-form-dialog";
-import { Button } from "@/components/ui/button";
 import type { OrderReview } from "@/types";
 
 const INITIAL_REVIEWS: OrderReview[] = [
@@ -54,7 +52,21 @@ const INITIAL_REVIEWS: OrderReview[] = [
 
 export function ReviewsSection() {
   const [reviews, setReviews] = React.useState<OrderReview[]>(INITIAL_REVIEWS);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
+
+  const fetchReviews = React.useCallback(() => {
+    fetch("/api/reviews?public=true")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reviews && data.reviews.length > 0) {
+          setReviews(data.reviews);
+        }
+      })
+      .catch(() => { });
+  }, []);
+
+  React.useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   return (
     <section id="reviews" className="py-20 bg-slate-50/60 border-y border-slate-200/60 scroll-mt-20">
@@ -72,15 +84,6 @@ export function ReviewsSection() {
               Real reviews from real doorstep customers. Every review is verified against a completed order and inspected by our team.
             </p>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setDialogOpen(true)}
-            className="self-start md:self-auto shadow-xs"
-          >
-            <MessageSquareHeart className="h-4 w-4 mr-2 text-rose-500" />
-            Review a Completed Order
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -89,15 +92,6 @@ export function ReviewsSection() {
           ))}
         </div>
       </div>
-
-      <ReviewFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        orderNumber="LX-2026-0042"
-        onSubmitted={() => {
-          // Callback after review submission
-        }}
-      />
     </section>
   );
 }

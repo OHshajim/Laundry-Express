@@ -5,29 +5,34 @@ import Link from "next/link";
 import { Clock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  CURRENT_CUSTOMER,
-  CUSTOMER_ORDERS,
-} from "@/lib/mock-customer-data";
 import { formatCurrency } from "@/lib/utils";
+import type { Order } from "@/types";
 
 interface CustomerOverviewProps {
+  orders?: Order[];
   onNavigate?: (tab: string) => void;
 }
 
-/**
- * CustomerOverview Component
- *
- * Primary customer portal view:
- * - Active Order Tracker widget with current stage and progress
- * - Quick stats (Total Orders, Lifetime Spend, Saved Address)
- * - "Book Again" action button
- * - Recent orders quick inspection
- * - Strictly complies with the < 250 lines rule
- */
-export function CustomerOverview({ onNavigate }: CustomerOverviewProps) {
-  const activeOrder = CUSTOMER_ORDERS.find((o) => o.order_status !== "completed");
-  const pastOrders = CUSTOMER_ORDERS.filter((o) => o.order_status === "completed");
+export function CustomerOverview({ orders: initialOrders, onNavigate }: CustomerOverviewProps) {
+  const [orders, setOrders] = React.useState<Order[]>(initialOrders || []);
+
+  React.useEffect(() => {
+    if (initialOrders) {
+      setOrders(initialOrders);
+    } else {
+      fetch("/api/orders")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.orders)) setOrders(data.orders);
+        })
+        .catch(() => {});
+    }
+  }, [initialOrders]);
+
+  const activeOrder = orders.find((o) => o.order_status !== "completed" && o.order_status !== "cancelled");
+  const pastOrders = orders.filter((o) => o.order_status === "completed");
+  const totalLoads = orders.reduce((sum, o) => sum + (o.bag_count || 1) * 3, 0);
+  const primaryAddress = activeOrder?.pickup_address || orders[0]?.pickup_address || "No address saved yet";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -59,20 +64,20 @@ export function CustomerOverview({ onNavigate }: CustomerOverviewProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-500 block">Total Lifetime Orders</span>
-          <span className="text-2xl font-black text-slate-900">{CURRENT_CUSTOMER.total_orders} Orders</span>
+          <span className="text-2xl font-black text-slate-900">{orders.length} Order{orders.length !== 1 ? "s" : ""}</span>
           <span className="text-[11px] text-emerald-600 font-semibold block">All photo proof verified</span>
         </div>
 
         <div className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-500 block">Total Laundry Saved</span>
-          <span className="text-2xl font-black text-primary">~16 Loads</span>
+          <span className="text-2xl font-black text-primary">~{totalLoads > 0 ? totalLoads : 0} Loads</span>
           <span className="text-[11px] text-slate-500 font-medium block">Over 24 hours of free time</span>
         </div>
 
         <div className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-500 block">Saved Doorstep Address</span>
-          <span className="text-sm font-black text-slate-900 truncate block">1420 Algonquin Rd</span>
-          <span className="text-[11px] text-slate-400 font-medium block">Lake in the Hills, IL 60156</span>
+          <span className="text-sm font-black text-slate-900 truncate block">{primaryAddress}</span>
+          <span className="text-[11px] text-slate-400 font-medium block">Used for fast doorstep pickups</span>
         </div>
       </div>
 

@@ -25,7 +25,7 @@ export function DashboardSettings() {
   const tabs = [
     { id: "profile" as const, label: "Profile", icon: UserIcon },
     { id: "address" as const, label: "Addresses", icon: MapPin },
-    { id: "password" as const, label: "Password (OTP)", icon: KeyRound },
+    { id: "password" as const, label: "Password & Security", icon: KeyRound },
     { id: "notifications" as const, label: "Notifications", icon: Bell },
   ];
 

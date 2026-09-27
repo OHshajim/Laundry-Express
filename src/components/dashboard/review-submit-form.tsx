@@ -4,20 +4,34 @@ import * as React from "react";
 import Image from "next/image";
 import { Star, Camera, CheckCircle2, AlertCircle, Plus, Sparkles, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CUSTOMER_ORDERS } from "@/lib/mock-customer-data";
 import { compressImage } from "@/lib/image-compressor";
-import type { OrderReview } from "@/types";
+import type { Order, OrderReview } from "@/types";
 
 interface ReviewSubmitFormProps {
+  orders?: Order[];
   onReviewSubmitted: (newReview: OrderReview) => void;
 }
 
-export function ReviewSubmitForm({ onReviewSubmitted }: ReviewSubmitFormProps) {
-  const [selectedOrderId, setSelectedOrderId] = React.useState("ord-prev-1");
+export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmitFormProps) {
+  const completedOrders = React.useMemo(() => {
+    return orders.filter((o) => o.order_status === "completed");
+  }, [orders]);
+
+  const [selectedOrderId, setSelectedOrderId] = React.useState<string>(() => {
+    return completedOrders[0]?.id || orders[0]?.id || "";
+  });
+
+  React.useEffect(() => {
+    if (!selectedOrderId && (completedOrders[0] || orders[0])) {
+      setSelectedOrderId((completedOrders[0] || orders[0]).id);
+    }
+  }, [completedOrders, orders, selectedOrderId]);
+
   const [rating, setRating] = React.useState(5);
   const [comment, setComment] = React.useState("");
   const [photos, setPhotos] = React.useState<string[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [submittedMessage, setSubmittedMessage] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -47,7 +61,7 @@ export function ReviewSubmitForm({ onReviewSubmitted }: ReviewSubmitFormProps) {
         const formData = new FormData();
         formData.append("file", compressed);
         formData.append("bucket", "review-photos");
-        formData.append("entityId", selectedOrderId);
+        formData.append("entityId", selectedOrderId || "review");
         formData.append("subType", String(photos.length + uploaded.length + 1));
 
         const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -64,35 +78,37 @@ export function ReviewSubmitForm({ onReviewSubmitted }: ReviewSubmitFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!comment.trim() || !selectedOrderId) return;
 
-    const reviewId = `rev-${Date.now()}`;
-    const newRev: OrderReview = {
-      id: reviewId,
-      order_id: selectedOrderId,
-      user_id: "u-1",
-      rating,
-      comment: comment.trim(),
-      status: "pending",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user: { full_name: "Sarah Jenkins" },
-      photos: photos.map((url, idx) => ({
-        id: `photo-${reviewId}-${idx}`,
-        review_id: reviewId,
-        photo_url: url,
-        display_order: Math.min(Math.max(idx + 1, 1), 3) as 1 | 2 | 3,
-        created_at: new Date().toISOString(),
-      })),
-    };
-
-    onReviewSubmitted(newRev);
-    setComment("");
-    setPhotos([]);
-    setSubmittedMessage(true);
-    setTimeout(() => setSubmittedMessage(false), 4500);
+    setIsSubmitting(true);
+    setUploadError(null);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: selectedOrderId,
+          rating,
+          comment: comment.trim(),
+          photos,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.review) {
+        throw new Error(data.error || "Failed to submit review.");
+      }
+      onReviewSubmitted(data.review);
+      setComment("");
+      setPhotos([]);
+      setSubmittedMessage(true);
+      setTimeout(() => setSubmittedMessage(false), 4500);
+    } catch (err: any) {
+      setUploadError(err.message || "Failed to submit review.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -129,12 +145,16 @@ export function ReviewSubmitForm({ onReviewSubmitted }: ReviewSubmitFormProps) {
               value={selectedOrderId}
               onChange={(e) => setSelectedOrderId(e.target.value)}
               className="w-full p-2.5 text-xs rounded-xl border border-slate-200 bg-white"
+              disabled={completedOrders.length === 0 && orders.length === 0}
             >
-              {CUSTOMER_ORDERS.map((ord) => (
+              {(completedOrders.length > 0 ? completedOrders : orders).map((ord) => (
                 <option key={ord.id} value={ord.id}>
                   Order #{ord.order_number} ({ord.pickup_date} • {ord.bag_count} Bag(s))
                 </option>
               ))}
+              {orders.length === 0 && (
+                <option value="">No completed orders available yet</option>
+              )}
             </select>
           </div>
 

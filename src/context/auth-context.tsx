@@ -1,12 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  SessionProvider,
-  useSession,
-  signIn,
-  signOut,
-} from "next-auth/react";
+import { SessionProvider, useSession, signIn, signOut } from "next-auth/react";
 import type { User } from "@/types";
 import { authService, type RegisterPayload } from "@/lib/services/auth-service";
 
@@ -19,61 +14,70 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: (callbackUrl?: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterPayload) => Promise<{ success: boolean; error?: string }>;
-  forgotPassword: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
-  resetPassword: (token: string, newPass: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  sendOtp: (email: string, purpose: "change_password" | "reset_password") => Promise<{ success: boolean; message?: string; error?: string }>;
+  changePasswordWithOtp: (email: string, otp: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
+  resetPasswordWithOtp: (email: string, otp: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
   updateAvatar: (avatarUrl: string) => void;
+  updateUserProfile: (updates: Partial<Pick<User, "full_name" | "phone" | "address">>) => void;
   logout: () => void;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
-
 const LOCAL_STORAGE_USER_KEY = "lx_auth_session_user";
 
-/**
- * Internal Auth Consumer synchronizing NextAuth session state
- */
 function AuthStateBridge({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  const [localUser, setLocalUser] = React.useState<User | null>(null);
+  const [localUser, setLocalUser] = React.useState<User | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  // Sync session from NextAuth into local user state
   React.useEffect(() => {
     if (session?.user) {
+      const userEmail = session.user.email || "";
+      const sessionRole = (session.user as { role?: "admin" | "customer" }).role;
+      const role = sessionRole || "customer";
+
       const activeUser: User = {
         id: session.user.id || `u-${Date.now()}`,
-        email: session.user.email || "",
+        email: userEmail,
         full_name: session.user.name || "Customer",
         avatar_url: session.user.image || undefined,
-        phone: (session.user as any).phone || "815-575-9536",
-        role: ((session.user as any).role as "admin" | "customer") || "customer",
+        phone: (session.user as { phone?: string }).phone || "815-575-9536",
+        role,
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      setLocalUser(activeUser);
-      try {
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(activeUser));
-      } catch {
-        // Fallback for private mode
-      }
-    } else if (status === "unauthenticated") {
-      try {
-        const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-        if (stored) {
-          setLocalUser(JSON.parse(stored));
-        } else {
-          setLocalUser(null);
+
+      setLocalUser((prev) => {
+        if (
+          prev?.id === activeUser.id &&
+          prev?.email === activeUser.email &&
+          prev?.role === activeUser.role &&
+          prev?.avatar_url === activeUser.avatar_url &&
+          prev?.full_name === activeUser.full_name
+        ) {
+          return prev;
         }
-      } catch {
-        setLocalUser(null);
-      }
+        try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(activeUser)); } catch {}
+        return activeUser;
+      });
+    } else if (status === "unauthenticated") {
+      setLocalUser((prev) => {
+        if (!prev) return null;
+        try { localStorage.removeItem(LOCAL_STORAGE_USER_KEY); } catch {}
+        return null;
+      });
     }
   }, [session, status]);
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string) => {
     try {
       const res = await signIn("credentials", {
         redirect: false,
@@ -85,128 +89,96 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
         return { success: false, error: res?.error || "Invalid email or password." };
       }
 
-      const isAdmin = email.trim().toLowerCase().includes("admin");
-      const immediateUser: User = {
-        id: `u-${Date.now()}`,
-        email: email.trim().toLowerCase(),
-        full_name: isAdmin ? "Operations Admin" : "Verified Customer",
-        phone: "815-575-9536",
-        role: isAdmin ? "admin" : "customer",
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setLocalUser(immediateUser);
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(immediateUser));
-
       return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message || "Authentication failed." };
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : "Authentication failed." };
     }
   };
 
-  const loginWithGoogle = async (
-    callbackUrl: string = "/dashboard"
-  ): Promise<{ success: boolean; error?: string }> => {
+  const loginWithGoogle = async (callbackUrl: string = "/dashboard") => {
     try {
       await signIn("google", { callbackUrl });
       return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message || "Google sign-in failed." };
+    } catch {
+      return { success: false, error: "Google authentication failed. Please try again." };
     }
   };
 
-  const register = async (
-    data: RegisterPayload
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const res = await authService.register(data);
-      if (!res.success) {
-        return { success: false, error: res.error || "Registration failed." };
-      }
+  const register = async (data: RegisterPayload) => {
+    const res = await authService.register(data);
+    if (!res.success) return { success: false, error: res.error || "Registration failed." };
 
-      await signIn("credentials", {
-        redirect: false,
-        email: data.email.trim().toLowerCase(),
-        password: data.password,
-      });
-
-      if (res.user) {
-        setLocalUser(res.user);
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(res.user));
-      }
-
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message || "Account registration failed." };
-    }
+    return login(data.email, data.password);
   };
 
-  const forgotPassword = async (
-    email: string
-  ): Promise<{ success: boolean; message?: string; error?: string }> => {
-    return authService.forgotPassword(email);
-  };
+  const sendOtp = (email: string, purpose: "change_password" | "reset_password") =>
+    authService.sendOtp(email, purpose);
 
-  const resetPassword = async (
-    token: string,
-    newPass: string
-  ): Promise<{ success: boolean; message?: string; error?: string }> => {
-    return authService.resetPassword(token, newPass);
-  };
+  const changePasswordWithOtp = (email: string, otp: string, newPass: string) =>
+    authService.changePasswordWithOtp(email, otp, newPass);
+
+  const resetPasswordWithOtp = (email: string, otp: string, newPass: string) =>
+    authService.resetPasswordWithOtp(email, otp, newPass);
 
   const updateAvatar = (avatarUrl: string) => {
     setLocalUser((prev) => {
       if (!prev) return null;
       const updated = { ...prev, avatar_url: avatarUrl };
-      try {
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
-      } catch {
-        // Storage fallback
-      }
+      try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  const updateUserProfile = (updates: Partial<Pick<User, "full_name" | "phone" | "address">>) => {
+    setLocalUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updates };
+      try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
   };
 
   const logout = () => {
     setLocalUser(null);
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
-    } catch {
-      // Storage access fallback
-    }
+    try { localStorage.removeItem(LOCAL_STORAGE_USER_KEY); } catch {}
     signOut({ callbackUrl: "/login" });
   };
 
   const activeUser = localUser || null;
 
-  const value: AuthContextType = {
-    user: activeUser,
-    isAuthenticated: !!activeUser,
-    isAdmin: activeUser?.role === "admin",
-    isCustomer: activeUser?.role === "customer",
-    isLoading: status === "loading",
-    login,
-    loginWithGoogle,
-    register,
-    forgotPassword,
-    resetPassword,
-    updateAvatar,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user: activeUser,
+        isAuthenticated: !!activeUser,
+        isAdmin: activeUser?.role === "admin",
+        isCustomer: activeUser?.role === "customer",
+        isLoading: status === "loading",
+        login,
+        loginWithGoogle,
+        register,
+        sendOtp,
+        changePasswordWithOtp,
+        resetPasswordWithOtp,
+        updateAvatar,
+        updateUserProfile,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
       <AuthStateBridge>{children}</AuthStateBridge>
     </SessionProvider>
   );
 }
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");

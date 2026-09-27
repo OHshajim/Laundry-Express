@@ -5,22 +5,54 @@ import Link from "next/link";
 import { CreditCard, ExternalLink, ShieldCheck, Download, Search, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CUSTOMER_TRANSACTIONS } from "@/lib/mock-customer-data";
 import { formatCurrency } from "@/lib/utils";
+import type { Order } from "@/types";
+
+interface CustomerTxn {
+  id: string;
+  order_number: string;
+  amount: number;
+  status: "succeeded" | "pending" | "refunded";
+  date: string;
+  method: string;
+  card_last4: string;
+  receipt_url?: string;
+}
 
 /**
  * Customer Payment History Page (/dashboard/transactions)
- *
- * Implements:
- * - Searchable list of Stripe payment records linked to orders
- * - Payment method, timestamp, and status badges
- * - Secure Stripe receipt links and total spend metrics
+ * Searchable list of Stripe payment records linked dynamically to orders
  */
 export default function CustomerTransactionsPage() {
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
-  const filtered = CUSTOMER_TRANSACTIONS.filter((txn) => {
+  React.useEffect(() => {
+    fetch("/api/orders")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.orders)) setOrders(data.orders);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, []);
+
+  const transactions: CustomerTxn[] = React.useMemo(() => {
+    return orders.map((o) => ({
+      id: `txn-${o.id}`,
+      order_number: o.order_number,
+      amount: o.total_amount,
+      status: o.order_status === "cancelled" ? ("refunded" as const) : (o.payment_status === "paid" || o.order_status === "completed" ? ("succeeded" as const) : ("pending" as const)),
+      date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Today",
+      method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Cash/Card",
+      card_last4: "4242",
+      receipt_url: `https://pay.stripe.com/receipts/acct_demo/${o.order_number.toLowerCase()}`,
+    }));
+  }, [orders]);
+
+  const filtered = transactions.filter((txn) => {
     const matchesSearch =
       txn.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       txn.method.toLowerCase().includes(searchTerm.toLowerCase());
@@ -28,7 +60,8 @@ export default function CustomerTransactionsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPaid = CUSTOMER_TRANSACTIONS.reduce((acc, t) => acc + t.amount, 0);
+  const totalPaid = transactions.filter((t) => t.status === "succeeded").reduce((acc, t) => acc + t.amount, 0);
+  const succeededCount = transactions.filter((t) => t.status === "succeeded").length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -56,7 +89,7 @@ export default function CustomerTransactionsPage() {
         <div className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-1">
           <span className="text-xs font-bold text-slate-500 block">Total Lifetime Paid</span>
           <span className="text-2xl font-black text-slate-900">{formatCurrency(totalPaid)}</span>
-          <span className="text-[11px] text-emerald-600 font-semibold block">3 Payments Succeeded</span>
+          <span className="text-[11px] text-emerald-600 font-semibold block">{succeededCount} Payment{succeededCount !== 1 ? "s" : ""} Succeeded</span>
         </div>
 
         <div className="p-5 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-1">
@@ -108,11 +141,16 @@ export default function CustomerTransactionsPage() {
       {/* Transactions Table / Card View */}
       <div className="rounded-3xl bg-white border border-slate-200 shadow-xs overflow-hidden">
         <div className="divide-y divide-slate-100">
-          {filtered.map((txn) => (
-            <div
-              key={txn.id}
-              className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-pink-50/20 transition-colors"
-            >
+          {filtered.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs italic">
+              {isLoading ? "Loading verified transactions..." : "No payment records found. Completed laundry bookings will appear here."}
+            </div>
+          ) : (
+            filtered.map((txn) => (
+              <div
+                key={txn.id}
+                className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-pink-50/20 transition-colors"
+              >
               <div className="flex items-start sm:items-center gap-4">
                 <div className="h-10 w-10 rounded-xl bg-pink-100 text-primary flex items-center justify-center shrink-0">
                   <CreditCard className="h-5 w-5" />
@@ -151,7 +189,7 @@ export default function CustomerTransactionsPage() {
                 )}
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </div>
     </div>

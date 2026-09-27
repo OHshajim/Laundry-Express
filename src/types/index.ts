@@ -101,6 +101,7 @@ export interface Order {
   pricing_mode: PricingMode;
   package_id?: string | null;
   detergent_id: string;
+  wash_temperature?: string;
   bag_count: number;
   estimated_weight_kg?: number | null;
   final_weight_kg?: number | null;
@@ -116,11 +117,23 @@ export interface Order {
   total_amount: number;
   is_out_of_home: boolean;
   bag_outside_door_confirmed: boolean;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  pickup_address?: string;
+  street_address?: string;
+  apt_unit?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   customer_notes?: string;
   admin_notes?: string;
+  payment_method?: string;
+  payment_status?: string;
   order_status: OrderStatus;
   stripe_customer_id?: string;
   stripe_payment_method_id?: string;
+  stripe_payment_intent?: string;
   has_preexisting_damage?: boolean;
   damage_notes?: string;
   damage_photo_url?: string;
@@ -186,7 +199,7 @@ export interface OrderReview {
   id: string;
   order_id: string;
   user_id: string;
-  rating: number; // 1-5
+  rating: number;
   comment: string;
   status: "pending" | "approved" | "rejected";
   moderated_by?: string;
@@ -194,6 +207,8 @@ export interface OrderReview {
   moderated_at?: string;
   created_at: string;
   updated_at?: string;
+  customer_name?: string;
+  photo_urls?: string[];
   photos?: ReviewPhoto[];
   user?: { full_name: string };
   order?: { order_number: string };
@@ -211,4 +226,18 @@ export interface ActivityLog {
   ip_address?: string;
   user_agent?: string;
   created_at: string;
+}
+
+export interface AdminPaymentTransaction {
+  id: string;
+  order_id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  date: string;
+  amount: number;
+  method: string;
+  card_last4: string;
+  status: "succeeded" | "pending" | "refunded";
+  stripe_payment_intent: string;
 }

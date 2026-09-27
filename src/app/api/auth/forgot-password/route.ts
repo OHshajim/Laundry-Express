@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createPasswordResetToken } from "@/lib/security/password";
 
 // Rate limiting map for password reset requests (3 requests per 60 seconds per IP)
 const resetRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
@@ -72,8 +73,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // In production, an email with a signed link containing this token would be dispatched
-    const resetToken = `tok_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    const resetToken = createPasswordResetToken(normalizedEmail);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
     return NextResponse.json(

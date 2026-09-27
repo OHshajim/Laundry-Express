@@ -3,11 +3,10 @@ import { UserDbService } from "@/lib/services/user-db-service";
 
 /**
  * Image Storage Service
- *
  * Primary Supabase image hosting service for Laundry Express:
  * - Manages 'avatars', 'order-proofs', and 'review-photos' storage buckets
- * - Uploads user avatars and associates them with user profiles
- * - Generates public CDN URLs and secure signed inspection links
+ * - Uploads new avatars first, persists to public.users, then cleans up previous avatar files
+ * - Generates public CDN URLs
  * - Strictly complies with the 100-250 lines architectural rule
  */
 
@@ -25,7 +24,7 @@ export interface UploadResult {
 
 export class ImageStorageService {
   /**
-   * Uploads and persists a custom customer or administrator avatar
+   * Uploads and persists a new avatar, updates DB, then deletes previous avatar from storage
    */
   static async uploadAvatar(
     userId: string,
@@ -34,7 +33,22 @@ export class ImageStorageService {
   ): Promise<UploadResult> {
     try {
       const supabase = createAdminSupabaseClient();
-      const ext = mimeType.split("/")[1] || "jpg";
+
+      // 1. Retrieve user's existing avatar URL before updating
+      let oldAvatarUrl: string | null = null;
+      try {
+        const { data: existingUser } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", userId)
+          .maybeSingle();
+        oldAvatarUrl = existingUser?.avatar_url || null;
+      } catch {
+        // Continue if profile read fails
+      }
+
+      // 2. Upload the new avatar to storage first
+      const ext = mimeType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
       const filePath = `user-${userId}-${Date.now()}.${ext}`;
 
       const { data, error } = await supabase.storage
@@ -52,25 +66,41 @@ export class ImageStorageService {
         };
       }
 
-      // Generate public CDN access URL
+      // 3. Generate public CDN access URL
       const { data: publicData } = supabase.storage
         .from(STORAGE_BUCKETS.AVATARS)
         .getPublicUrl(data.path);
 
       const publicUrl = publicData.publicUrl;
 
-      // Persist avatar URL into public.users database
+      // 4. Persist new avatar URL into public.users database
       await UserDbService.updateAvatar(userId, publicUrl);
+
+      // 5. Delete previous avatar file from storage after new one is safely uploaded and saved
+      if (oldAvatarUrl && oldAvatarUrl.includes(`/${STORAGE_BUCKETS.AVATARS}/`)) {
+        try {
+          const parts = oldAvatarUrl.split(`/${STORAGE_BUCKETS.AVATARS}/`);
+          if (parts[1]) {
+            const oldPath = decodeURIComponent(parts[1].split("?")[0]);
+            if (oldPath && oldPath !== filePath) {
+              await supabase.storage.from(STORAGE_BUCKETS.AVATARS).remove([oldPath]);
+            }
+          }
+        } catch {
+          // Non-blocking cleanup
+        }
+      }
 
       return {
         success: true,
         url: publicUrl,
       };
-    } catch (err: any) {
-      console.warn("Storage: Avatar upload exception:", err?.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Storage service communication error.";
+      console.warn("Storage: Avatar upload exception:", msg);
       return {
         success: false,
-        error: err?.message || "Storage service communication error.",
+        error: msg,
       };
     }
   }
@@ -105,8 +135,9 @@ export class ImageStorageService {
         .getPublicUrl(data.path);
 
       return { success: true, url: publicData.publicUrl };
-    } catch (err: any) {
-      return { success: false, error: err?.message };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to upload proof";
+      return { success: false, error: msg };
     }
   }
 
@@ -140,12 +171,11 @@ export class ImageStorageService {
         .getPublicUrl(data.path);
 
       return { success: true, url: publicData.publicUrl };
-    } catch (err: any) {
-      return { success: false, error: err?.message };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to upload review photo";
+      return { success: false, error: msg };
     }
   }
-
-
 
   /**
    * Deletes an uploaded asset from a specified bucket

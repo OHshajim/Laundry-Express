@@ -13,10 +13,11 @@ import { compressImage } from "@/lib/image-compressor";
  * Customer profile management (name, email, phone number, profile picture).
  */
 export function SettingsProfile() {
-  const { user, updateAvatar } = useAuth();
+  const { user, updateAvatar, updateUserProfile } = useAuth();
   const [fullName, setFullName] = React.useState(user?.full_name || user?.name || "");
   const [phoneNumber, setPhoneNumber] = React.useState(user?.phone || "");
   const [isUploading, setIsUploading] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
   const [feedback, setFeedback] = React.useState<{ type: "success" | "error"; msg: string } | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -82,12 +83,31 @@ export function SettingsProfile() {
     }
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFeedback({
-      type: "success",
-      msg: "Profile details updated successfully.",
-    });
+    setIsSaving(true);
+    setFeedback(null);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, phone: phoneNumber }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to update profile in database.");
+      }
+      updateUserProfile({ full_name: fullName, phone: phoneNumber });
+      setFeedback({
+        type: "success",
+        msg: "Profile details updated and saved to database successfully.",
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update profile.";
+      setFeedback({ type: "error", msg });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -200,8 +220,13 @@ export function SettingsProfile() {
         </div>
 
         <div className="pt-2 flex justify-end">
-          <Button type="submit" size="sm" className="bg-primary hover:bg-primary-dark text-white text-xs h-9 px-5 cursor-pointer">
-            Save Changes
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isSaving}
+            className="bg-primary hover:bg-primary-dark text-white text-xs h-9 px-5 cursor-pointer disabled:opacity-50"
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

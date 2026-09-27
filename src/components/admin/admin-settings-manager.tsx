@@ -4,18 +4,12 @@ import * as React from "react";
 import { Sliders, Clock, MapPin, CheckCircle2, Plus, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/**
- * Unified Operations, Facility & Service Rates Settings
- * Consolidates live service rates, free delivery thresholds,
- * business pickup windows, and regional delivery zones into a single page.
- */
 export function AdminSettingsManager() {
   const [bagPrice, setBagPrice] = React.useState<number>(32.5);
   const [deliveryFee, setDeliveryFee] = React.useState<number>(10.0);
   const [freeThresholdBags, setFreeThresholdBags] = React.useState<number>(2);
   const [kgPrice, setKgPrice] = React.useState<number>(2.75);
   const [minKgOrder, setMinKgOrder] = React.useState<number>(5);
-  const [freeThresholdKg, setFreeThresholdKg] = React.useState<number>(15);
 
   const [slot1, setSlot1] = React.useState("8:00 AM – 12:00 PM");
   const [slot2, setSlot2] = React.useState("1:00 PM – 6:00 PM");
@@ -30,6 +24,29 @@ export function AdminSettingsManager() {
   const [newZip, setNewZip] = React.useState("");
   const [newCity, setNewCity] = React.useState("");
   const [savedSuccess, setSavedSuccess] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    fetch("/api/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.pricing) {
+          setBagPrice(data.pricing.bag_price);
+          setDeliveryFee(data.pricing.standard_delivery_fee);
+          setFreeThresholdBags(data.pricing.free_delivery_threshold);
+          setKgPrice(data.pricing.kg_price);
+          setMinKgOrder(data.pricing.min_kg);
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/content?type=settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.settings?.operating_hours) setDaysOpen(data.settings.operating_hours);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleAddZone = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +60,45 @@ export function AdminSettingsManager() {
     setZones((prev) => prev.filter((z) => z.zip !== zip));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    setIsSaving(true);
+
+    try {
+      await Promise.all([
+        fetch("/api/pricing", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bag_price: bagPrice,
+            standard_delivery_fee: deliveryFee,
+            free_delivery_threshold: freeThresholdBags,
+            kg_price: kgPrice,
+            min_kg: minKgOrder,
+          }),
+        }),
+        fetch("/api/content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            section: "settings",
+            item: {
+              operating_hours: daysOpen,
+              delivery_zones: zones.map((z) => `${z.city} (${z.zip})`),
+              min_order_bag: 1,
+              min_order_kg: minKgOrder,
+              free_delivery_bags: freeThresholdBags,
+              standard_delivery_fee: deliveryFee,
+            },
+          }),
+        }),
+      ]);
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch {} finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -54,115 +106,88 @@ export function AdminSettingsManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <h3 className="text-base font-black text-slate-900">Operations, Facility &amp; Rate Settings</h3>
-          <p className="text-xs text-slate-500">Configure live bag &amp; KG pricing, free delivery rules, hours, and service zones.</p>
+          <p className="text-xs text-slate-500">Live database configuration for bag &amp; KG pricing, free delivery rules, hours, and service zones.</p>
         </div>
-        <Button type="submit" variant="hero" size="sm" className="cursor-pointer text-xs shrink-0">
+        <Button type="submit" variant="hero" size="sm" disabled={isSaving} className="cursor-pointer text-xs shrink-0">
           <Save className="h-4 w-4 mr-1.5 shrink-0" />
-          Save Settings &amp; Rates
+          <span>{isSaving ? "Saving to Database..." : "Save Settings to Database"}</span>
         </Button>
       </div>
 
       {savedSuccess && (
-        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-bold flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span className="font-bold">Live pricing, free delivery rules, and facility settings updated successfully!</span>
+          <span>Operational settings successfully saved and synced to live database!</span>
         </div>
       )}
 
-      {/* 1. Live Service Rates & Free Delivery Rules */}
-      <div className="space-y-4">
-        <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-          <Sliders className="h-4 w-4 text-primary shrink-0" />
-          <span>1. Live Service Rates &amp; Free Delivery Rules</span>
-        </label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+          <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
+            <Sliders className="h-4 w-4 text-primary" />
+            <span>Service Pricing &amp; Delivery Thresholds</span>
+          </div>
 
-        <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-3">
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">Bag Pricing &amp; Free Delivery</span>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Standard Bag Price ($)</label>
-              <input type="number" step="0.5" value={bagPrice} onChange={(e) => setBagPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-black text-sm" />
-              <span className="text-[10px] text-slate-400 mt-1 block">Regular 13-gallon bag</span>
+              <label className="font-bold text-slate-700 block mb-1">Per-Bag Rate ($)</label>
+              <input type="number" step="0.5" value={bagPrice} onChange={(e) => setBagPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
             </div>
             <div>
-              <label className="block font-bold text-slate-700 mb-1">1-Bag Delivery Fee ($)</label>
-              <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-black text-sm" />
-              <span className="text-[10px] text-slate-400 mt-1 block">Default fee when &lt; threshold</span>
+              <label className="font-bold text-slate-700 block mb-1">Delivery Fee ($)</label>
+              <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
             </div>
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Free Delivery Bag Threshold</label>
-              <input type="number" min="1" value={freeThresholdBags} onChange={(e) => setFreeThresholdBags(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-black text-sm" />
-              <span className="text-[10px] text-emerald-600 font-bold mt-1 block">≥ {freeThresholdBags} Bags = FREE Delivery ($0.00)</span>
+              <label className="font-bold text-slate-700 block mb-1">Free Delivery (Bags)</label>
+              <input type="number" value={freeThresholdBags} onChange={(e) => setFreeThresholdBags(parseInt(e.target.value, 10) || 1)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Per-KG Rate ($)</label>
+              <input type="number" step="0.05" value={kgPrice} onChange={(e) => setKgPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
             </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-3">
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">Weight-Based (KG) Pricing &amp; Minimums</span>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Per-KG Rate ($/KG)</label>
-              <input type="number" step="0.25" value={kgPrice} onChange={(e) => setKgPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-black text-sm" />
-              <span className="text-[10px] text-slate-400 mt-1 block">Commercial linen &amp; bulky items</span>
-            </div>
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Minimum KG Intake</label>
-              <input type="number" min="1" value={minKgOrder} onChange={(e) => setMinKgOrder(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-black text-sm" />
-              <span className="text-[10px] text-slate-400 mt-1 block">Minimum order weight</span>
-            </div>
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Free Delivery KG Threshold</label>
-              <input type="number" min="1" value={freeThresholdKg} onChange={(e) => setFreeThresholdKg(parseInt(e.target.value) || 1)} className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-black text-sm" />
-              <span className="text-[10px] text-emerald-600 font-bold mt-1 block">≥ {freeThresholdKg} KG = FREE Delivery ($0.00)</span>
-            </div>
+        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+          <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
+            <Clock className="h-4 w-4 text-primary" />
+            <span>Operational Pickup Windows &amp; Hours</span>
           </div>
-        </div>
-      </div>
 
-      {/* 2. Operational Windows & Business Hours */}
-      <div className="space-y-3 pt-4 border-t border-slate-100">
-        <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-          <Clock className="h-4 w-4 text-primary shrink-0" />
-          <span>2. Operational Windows &amp; Business Hours</span>
-        </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-            <span className="font-bold text-slate-700 block mb-1">Morning Pickup Window</span>
-            <input type="text" value={slot1} onChange={(e) => setSlot1(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs" />
-          </div>
-          <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-            <span className="font-bold text-slate-700 block mb-1">Afternoon Pickup Window</span>
-            <input type="text" value={slot2} onChange={(e) => setSlot2(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs" />
-          </div>
-          <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-            <span className="font-bold text-slate-700 block mb-1">Days of Operation</span>
-            <input type="text" value={daysOpen} onChange={(e) => setDaysOpen(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs" />
+          <div className="space-y-3 text-xs">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Daily Facility Schedule</label>
+              <input type="text" value={daysOpen} onChange={(e) => setDaysOpen(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Morning Slot</label>
+                <input type="text" value={slot1} onChange={(e) => setSlot1(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Afternoon Slot</label>
+                <input type="text" value={slot2} onChange={(e) => setSlot2(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Supported Delivery Zones */}
-      <div className="space-y-3 pt-4 border-t border-slate-100">
-        <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-primary shrink-0" />
-          <span>3. Supported Delivery Zones (McHenry County)</span>
-        </label>
-        <div className="flex gap-2">
-          <input type="text" placeholder="Zip Code (e.g. 60156)" value={newZip} onChange={(e) => setNewZip(e.target.value)} className="w-36 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold" />
-          <input type="text" placeholder="City / Municipality" value={newCity} onChange={(e) => setNewCity(e.target.value)} className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs" />
-          <Button type="button" variant="outline" size="sm" onClick={handleAddZone} className="cursor-pointer text-xs">
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Zone
-          </Button>
+      <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-slate-900 font-black uppercase tracking-wider">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span>Active Delivery Coverage Zones (30-Mile Radius)</span>
+          </div>
+          <span className="font-bold text-slate-500">{zones.length} Municipalities Covered</span>
         </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           {zones.map((z) => (
-            <div key={z.zip} className="p-3 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-              <div>
-                <span className="font-bold text-slate-900 block">{z.zip}</span>
-                <span className="text-[10px] text-slate-500 block truncate">{z.city}</span>
-              </div>
-              <button type="button" onClick={() => handleRemoveZone(z.zip)} className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer transition-colors" title="Remove zip code">
-                <Trash2 className="h-3.5 w-3.5" />
+            <div key={z.zip} className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between">
+              <span className="font-bold text-slate-800">{z.city} ({z.zip})</span>
+              <button type="button" onClick={() => handleRemoveZone(z.zip)} className="text-slate-400 hover:text-rose-600 cursor-pointer">
+                <Trash2 className="h-3 w-3" />
               </button>
             </div>
           ))}

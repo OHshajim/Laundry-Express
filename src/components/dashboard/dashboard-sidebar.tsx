@@ -97,7 +97,7 @@ export function DashboardSidebar({
   const navItems = role === "admin" ? ADMIN_NAV : CUSTOMER_NAV;
 
   return (
-    <>
+    <div className="h-full">
       {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
         <div
@@ -108,7 +108,7 @@ export function DashboardSidebar({
 
       {/* Main Sidebar Element */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 h-screen bg-white border-r border-slate-200/80 flex flex-col justify-between transition-transform duration-200 shrink-0 shadow-2xs lg:sticky lg:top-0 lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`sticky inset-y-0 left-0 z-50 w-64 h-screen bg-white border-r border-slate-200/80 flex flex-col justify-between transition-transform duration-200 shrink-0 shadow-2xs lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         {/* Scrollable Navigation Body */}
@@ -193,6 +193,6 @@ export function DashboardSidebar({
           </Link>
         </div>
       </aside>
-    </>
+    </div>
   );
 }

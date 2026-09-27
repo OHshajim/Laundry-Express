@@ -51,7 +51,7 @@ export function DashboardShell({
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-slate-50/60 w-full overflow-x-clip">
+    <div className="h-screen flex flex-col lg:flex-row bg-slate-50/60 w-full">
       {/* Unified Role-Aware Sidebar */}
       <DashboardSidebar
         role={role}
@@ -66,7 +66,7 @@ export function DashboardShell({
       />
 
       {/* Main Workspace Area */}
-      <main className="flex-1 flex flex-col min-w-0 w-full max-w-full">
+      <main className="flex-1 flex flex-col w-full max-w-full h-screen overflow-y-auto">
         {/* Unified Light Header */}
         <DashboardHeader
           title={title}
@@ -81,7 +81,7 @@ export function DashboardShell({
         />
 
         {/* Dynamic Nested Content */}
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 min-w-0">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
           {children}
         </div>
       </main>

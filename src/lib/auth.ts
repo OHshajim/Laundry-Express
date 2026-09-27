@@ -1,16 +1,14 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { CustomUserStore } from "@/lib/services/custom-user-store";
 import { UserDbService } from "@/lib/services/user-db-service";
 
 /**
  * NextAuth Configuration & Authentication Options
- *
  * Primary enterprise authentication architecture for Laundry Express:
- * - NextAuth.js custom credentials verification via CustomUserStore
- * - Seamless Google OAuth authentication integration
- * - Automatic database persistence into Supabase PostgreSQL (public.users)
+ * - Dynamic credentials verification against Supabase public.users
+ * - Google OAuth authentication with database role synchronization
+ * - Dynamic role retrieval (admin can be any email configured in database)
  * - JWT session strategy with role extraction ('admin' | 'customer')
  * - Strictly complies with the 100-250 lines architectural rule
  */
@@ -53,7 +51,7 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   providers: [
-    // Custom Credentials Provider for Laundry Express
+    // Credentials Provider verified against database
     CredentialsProvider({
       id: "credentials",
       name: "Laundry Express Credentials",
@@ -66,26 +64,13 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const verifiedUser = CustomUserStore.verifyCredentials(
+        const verifiedUser = await UserDbService.verifyCredentials(
           credentials.email,
           credentials.password
         );
 
         if (!verifiedUser) {
           return null;
-        }
-
-        // Synchronize authenticated user to database asynchronously
-        try {
-          await UserDbService.syncUser({
-            id: verifiedUser.id,
-            email: verifiedUser.email,
-            name: verifiedUser.full_name,
-            role: verifiedUser.role,
-            phone: verifiedUser.phone,
-          });
-        } catch {
-          // Fallback to memory user
         }
 
         return {
@@ -98,14 +83,17 @@ export const authOptions: NextAuthOptions = {
       },
     }),
 
-    // Google OAuth Provider
+    // Google OAuth Provider with dynamic role synchronization
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "google-oauth-client-id-placeholder",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "google-oauth-client-secret-placeholder",
       allowDangerousEmailAccountLinking: true,
       async profile(profile) {
         const normalizedEmail = profile.email?.trim().toLowerCase() || "";
-        const role = normalizedEmail.includes("admin") ? "admin" : "customer";
+
+        // Dynamically query user from database to preserve admin privileges
+        const existing = await UserDbService.getUserByEmail(normalizedEmail);
+        const role = existing?.role || "customer";
 
         // Persist Google authenticated user into Supabase database
         const dbUser = await UserDbService.syncUser({
@@ -128,7 +116,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       if (user?.email) {
         try {
           await UserDbService.syncUser({
@@ -147,16 +135,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role || (user.email?.includes("admin") ? "admin" : "customer");
+        token.role = user.role || "customer";
         token.phone = user.phone;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        session.user.id = token.id;
         session.user.role = (token.role as "admin" | "customer") || "customer";
-        session.user.phone = token.phone as string | undefined;
+        session.user.phone = token.phone;
       }
       return session;
     },
