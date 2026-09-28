@@ -18,6 +18,7 @@ export interface CheckoutPayload {
   address: string;
   addressDetails?: AddressDetails;
   isOutOfHome: boolean;
+  isAwayForDropoff: boolean;
   bagConfirmed: boolean;
   notes: string;
   priceResult: { subtotal: number; delivery_fee: number; discount_amount: number; total_amount: number };
@@ -56,6 +57,7 @@ export function useBookingCheckout() {
           state: p.addressDetails?.state || "IL",
           zip_code: p.addressDetails?.zip || "60156",
           is_out_of_home: p.isOutOfHome,
+          is_away_for_dropoff: p.isAwayForDropoff,
           bag_outside_door_confirmed: p.bagConfirmed,
           special_instructions: p.notes,
           subtotal: p.priceResult.subtotal,
@@ -69,14 +71,19 @@ export function useBookingCheckout() {
       const data = await res.json();
       const orderId = data?.order?.order_number || `LX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+      const slotLabel = p.selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM";
+
       setInvoice({
         orderId,
         orderDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         pickupDate: p.selectedDate,
-        pickupSlot: p.selectedSlot === "8am-12pm" ? "8am – 12pm" : "1pm – 6pm",
+        pickupSlot: slotLabel,
         deliveryDate: delivery,
         paymentMethod: p.paymentMethod,
         totalAmount: p.priceResult.total_amount,
+        subtotal: p.priceResult.subtotal,
+        deliveryFee: p.priceResult.delivery_fee,
+        discountAmount: p.priceResult.discount_amount,
         customerName: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
         customerEmail: p.currentUser?.email || "",
         address: p.address,
@@ -84,8 +91,8 @@ export function useBookingCheckout() {
           planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : p.pricingMode === "package" ? "Saver Package" : "By The Pound (lb)",
           quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${weightAmount} lbs`,
           detergent: p.selectedDetergentId,
-          temperature: p.selectedTemp,
-          specialRequest: p.isOutOfHome ? "Away (Contactless Doorstep)" : "Home (Ring Bell)",
+          temperature: "cold",
+          specialRequest: p.isOutOfHome ? "Away (Contactless Pickup)" : "Home (Ring Bell)",
         },
       });
     } catch {} finally {

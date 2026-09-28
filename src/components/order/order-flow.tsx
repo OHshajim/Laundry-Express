@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { useAuth } from "@/context/auth-context";
 import type { PricingMode, PricingConfig } from "@/types";
-import { ShieldCheck, Lock, Clock, Truck, Check } from "lucide-react";
+import { ShieldCheck, Lock, Clock, Truck } from "lucide-react";
+
 
 export interface OrderFlowProps {
   initialPricing?: PricingConfig;
@@ -14,7 +15,6 @@ export interface OrderFlowProps {
 export function OrderFlow({ initialPricing }: OrderFlowProps) {
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [currentStep, setCurrentStep] = React.useState<number>(1);
 
   const packageParam = searchParams.get("package");
   const modeParam = searchParams.get("mode") as PricingMode | null;
@@ -35,13 +35,6 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
 
   const initialPackageId = packageParam || "pkg-saver-5";
 
-  const steps = [
-    { num: 1, label: "Plan & Bags" },
-    { num: 2, label: "Detergent & Wash" },
-    { num: 3, label: "Schedule & Address" },
-    { num: 4, label: "Review & Pay" },
-  ];
-
   if (isLoading || !isAuthenticated || !user) {
     return (
       <div className="space-y-6 animate-pulse py-8">
@@ -59,50 +52,6 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
 
   return (
     <div className="space-y-8">
-      {/* Interactive Step-by-Step Navigation Bar */}
-      <div className="bg-white p-3 sm:p-5 rounded-3xl border border-slate-200 shadow-2xs">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
-          {steps.map((st) => {
-            const isActive = currentStep === st.num;
-            const isCompleted = currentStep > st.num;
-
-            return (
-              <button
-                key={st.num}
-                type="button"
-                onClick={() => {
-                  if (isCompleted || isActive) {
-                    setCurrentStep(st.num);
-                  }
-                }}
-                disabled={!isCompleted && !isActive}
-                className={`flex items-center gap-2 p-2.5 rounded-2xl transition-all text-left ${
-                  isActive
-                    ? "bg-sky-600 text-white font-extrabold shadow-md ring-2 ring-sky-500/20"
-                    : isCompleted
-                    ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 cursor-pointer hover:bg-emerald-100"
-                    : "bg-slate-50 text-slate-400 font-medium cursor-not-allowed"
-                }`}
-              >
-                <span
-                  className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] shrink-0 font-extrabold ${
-                    isActive
-                      ? "bg-white text-sky-700"
-                      : isCompleted
-                      ? "bg-emerald-600 text-white"
-                      : "bg-slate-200 text-slate-600"
-                  }`}
-                >
-                  {isCompleted ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : st.num}
-                </span>
-                <span className="truncate">{st.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Progressive 4-Step Booking Wizard */}
       <BookingWizard
         initialMode={initialMode}
         initialBagCount={initialBagCount}
@@ -110,8 +59,6 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
         initialPackageId={initialPackageId}
         initialPricing={initialPricing}
         currentUser={user}
-        currentStep={currentStep}
-        onStepChange={setCurrentStep}
       />
 
       {/* Operational Trust & Security Badges */}
@@ -135,7 +82,7 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
           <div>
             <h4 className="text-xs font-bold text-slate-900">Strict Operating Windows</h4>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Pickup &amp; delivery strictly between 8am–12pm or 1pm–6pm daily.
+              Pickup & delivery within admin-configured windows. Same-day slots close at window start.
             </p>
           </div>
         </div>

@@ -100,11 +100,18 @@ export class ContentService {
     cachedFaqs = cachedFaqs.filter((f) => f.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      if (isUuid(id)) {
-        await supabase.from("faqs_and_terms").delete().eq("id", id);
-      } else {
-        await supabase.from("faqs_and_terms").delete().eq("title", id);
-      }
+      if (isUuid(id)) await supabase.from("faqs_and_terms").delete().eq("id", id);
+      else await supabase.from("faqs_and_terms").delete().eq("title", id);
+    } catch {}
+    return true;
+  }
+
+  static async deleteTerm(id: string): Promise<boolean> {
+    cachedTerms = cachedTerms.filter((t) => t.id !== id);
+    try {
+      const supabase = createAdminSupabaseClient();
+      if (isUuid(id)) await supabase.from("faqs_and_terms").delete().eq("id", id);
+      else await supabase.from("faqs_and_terms").delete().eq("title", id);
     } catch {}
     return true;
   }
