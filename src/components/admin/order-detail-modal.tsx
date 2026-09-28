@@ -139,7 +139,7 @@ export function OrderDetailModal({
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Service Plan:</span>
                 <span className="font-bold text-slate-900 uppercase">
-                  {order.pricing_mode === "per_bag" ? "By Bag" : order.pricing_mode === "per_lb" || (order.pricing_mode as string) === "per_kg" ? "By Weight (lbs)" : "Package"}
+                  {order.pricing_mode === "per_bag" ? "By Bag" : order.pricing_mode === "per_lb" ? "By Weight (lbs)" : "Package"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -147,9 +147,9 @@ export function OrderDetailModal({
                 <span className="font-extrabold text-slate-900">
                   {order.pricing_mode === "per_bag"
                     ? `${order.bag_count} Bags`
-                    : (order.final_weight_lbs || (order as any).final_weight_kg)
-                    ? `${order.final_weight_lbs || (order as any).final_weight_kg} lbs (Scale Final)`
-                    : `${order.estimated_weight_lbs || (order as any).estimated_weight_kg || 15} lbs (Est.)`}
+                    : order.final_weight_lbs
+                    ? `${order.final_weight_lbs} lbs (Scale Final)`
+                    : `${order.estimated_weight_lbs || 15} lbs (Est.)`}
                 </span>
               </div>
               <div className="flex justify-between items-start gap-2">

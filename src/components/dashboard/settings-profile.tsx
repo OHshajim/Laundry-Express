@@ -144,6 +144,8 @@ export function SettingsProfile() {
                   src={avatarSrc}
                   alt={user?.full_name || user?.name || "Customer Avatar"}
                   fill
+                  loading="lazy"
+                  sizes="96px"
                   unoptimized={avatarSrc.startsWith("data:")}
                   className="object-cover"
                 />

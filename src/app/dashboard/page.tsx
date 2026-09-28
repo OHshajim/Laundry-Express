@@ -50,30 +50,6 @@ const CUSTOMER_HEADER_CONFIG: Record<string, { title: string; subtitle: string }
   account_settings: { title: "Account & Security Settings", subtitle: "Manage profile, saved addresses, and change password via email" },
 };
 
-function extractCustomers(list: Order[]): CustomerAccount[] {
-  const map = new Map<string, CustomerAccount>();
-  for (const o of list) {
-    const k = o.customer_email || o.user_id || o.id;
-    const e = map.get(k);
-    if (e) {
-      e.orders.push(o);
-    } else {
-      map.set(k, {
-        id: o.user_id || `cust-${o.id}`,
-        full_name: o.customer_name || o.user?.full_name || "Customer",
-        email: o.customer_email || o.user?.email || "—",
-        phone: o.customer_phone || o.user?.phone || "—",
-        address: o.pickup_address || "—",
-        joined_date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Recently",
-        orders: [o],
-        reviews: [],
-        payments: [],
-      });
-    }
-  }
-  return Array.from(map.values());
-}
-
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -82,7 +58,7 @@ function DashboardContent() {
   const tabParam = searchParams.get("tab");
   const customerAllowedTabs = React.useMemo(() => new Set(["overview", "orders", "transactions", "ratings", "account_settings"]), []);
   const activeTab = isAdmin
-    ? (tabParam || "orders")
+    ? (tabParam || "overview")
     : (tabParam && customerAllowedTabs.has(tabParam) ? tabParam : "overview");
 
   const [orders, setOrders] = React.useState<Order[]>([]);
@@ -93,19 +69,23 @@ function DashboardContent() {
     fetch("/api/orders")
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data.orders)) {
-          setOrders(data.orders);
-          setCustomers(extractCustomers(data.orders));
-        }
+        if (Array.isArray(data.orders)) setOrders(data.orders);
       })
-      .catch(() => {});
+      .catch(() => { });
+
+    fetch("/api/customers")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.customers)) setCustomers(data.customers);
+      })
+      .catch(() => { });
 
     fetch("/api/reviews")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.reviews)) setReviews(data.reviews);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user, isAdmin]);
 
   const handleSelectTab = (tabId: string) => {
@@ -114,7 +94,7 @@ function DashboardContent() {
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus, updated_at: new Date().toISOString() } : o)));
-    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, status: newStatus }) }); } catch {}
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, status: newStatus }) }); } catch { }
   };
 
   const handleUpdateFinalWeight = async (orderId: string, finalWeight: number) => {
@@ -125,7 +105,7 @@ function DashboardContent() {
       const deliveryFee = finalWeight >= 30 ? 0 : (o.delivery_fee ?? 10);
       return { ...o, final_weight_lbs: finalWeight, subtotal, delivery_fee: deliveryFee, total_amount: subtotal + deliveryFee };
     }));
-    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, finalWeight, finalWeightLbs: finalWeight }) }); } catch {}
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, finalWeight, finalWeightLbs: finalWeight }) }); } catch { }
   };
 
   const handleUploadProof = async (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
@@ -141,20 +121,20 @@ function DashboardContent() {
         proofs: [...(o.proofs || []), { id: `prf-${Date.now()}`, order_id: orderId, proof_type: proofType, image_url: imageUrl, notes, uploaded_by: "operations-admin", created_at: new Date().toISOString() }],
       };
     }));
-    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, proofType, imageUrl, notes }) }); } catch {}
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, proofType, imageUrl, notes }) }); } catch { }
   };
 
   const handleApproveReview = async (id: string) => {
     setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "approved" as const } : r)));
-    try { await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "approved" }) }); } catch {}
+    try { await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "approved" }) }); } catch { }
   };
   const handleRejectReview = async (id: string) => {
     setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "rejected" as const } : r)));
-    try { await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "rejected" }) }); } catch {}
+    try { await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "rejected" }) }); } catch { }
   };
   const handleDeleteReview = async (id: string) => {
     setReviews((p) => p.filter((r) => r.id !== id));
-    try { await fetch(`/api/reviews?id=${encodeURIComponent(id)}`, { method: "DELETE" }); } catch {}
+    try { await fetch(`/api/reviews?id=${encodeURIComponent(id)}`, { method: "DELETE" }); } catch { }
   };
   const handleChangeReviewStatus = (id: string, s: "pending" | "approved" | "rejected") => {
     if (s === "approved") handleApproveReview(id);
@@ -201,7 +181,7 @@ function DashboardContent() {
           <>
             {activeTab === "overview" && <AdminOverview orders={orders} customers={customers} onNavigate={handleSelectTab} />}
             {activeTab === "orders" && <OrderPipeline orders={orders} onUpdateStatus={handleUpdateStatus} onUpdateFinalWeight={handleUpdateFinalWeight} onUploadProof={handleUploadProof} />}
-            {activeTab === "customers" && <CustomersManager customers={customers} onViewOrder={() => handleSelectTab("orders")} />}
+            {activeTab === "customers" && <CustomersManager customers={customers} />}
             {activeTab === "transactions" && <TransactionsManager orders={orders} onViewOrder={() => handleSelectTab("orders")} />}
             {(activeTab === "settings" || activeTab === "rates") && <AdminSettingsManager />}
             {activeTab === "packages" && <PricingManager currentSection="packages" />}

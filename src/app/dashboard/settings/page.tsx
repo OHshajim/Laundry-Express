@@ -39,7 +39,7 @@ export default function CustomerSettingsPage() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Manage your personal profile, avatar hosting, delivery addresses, and notification preferences.
+            Manage your personal profile, avatar hosting, delivery addresses, and security credentials.
           </p>
         </div>
 

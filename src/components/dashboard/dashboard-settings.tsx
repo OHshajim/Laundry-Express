@@ -1,22 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { User as UserIcon, MapPin, KeyRound, Bell } from "lucide-react";
+import { User as UserIcon, MapPin, KeyRound } from "lucide-react";
 import { SettingsProfile } from "./settings-profile";
 import { SettingsAddresses } from "./settings-addresses";
 import { SettingsPassword } from "./settings-password";
-import { SettingsNotifications } from "./settings-notifications";
 import { useAuth } from "@/context/auth-context";
 
-export type SettingsTab = "profile" | "address" | "password" | "notifications";
+export type SettingsTab = "profile" | "address" | "password";
 
 /**
  * DashboardSettings Component
- * Master settings controller fulfilling AGENTS.md 5.e:
+ * Master settings controller:
  * 1. user profile (name, email, phone number, profile picture)
  * 2. address (add, edit, delete)
  * 3. password (reset password by verify otp in email and phone number)
- * 4. notifications (push, email)
  */
 export function DashboardSettings() {
   const [activeTab, setActiveTab] = React.useState<SettingsTab>("profile");
@@ -26,7 +24,6 @@ export function DashboardSettings() {
     { id: "profile" as const, label: "Profile", icon: UserIcon },
     { id: "address" as const, label: "Addresses", icon: MapPin },
     { id: "password" as const, label: "Password & Security", icon: KeyRound },
-    { id: "notifications" as const, label: "Notifications", icon: Bell },
   ];
 
   return (
@@ -63,7 +60,6 @@ export function DashboardSettings() {
           userPhone={user?.phone || "815-575-9536"}
         />
       )}
-      {activeTab === "notifications" && <SettingsNotifications />}
     </div>
   );
 }

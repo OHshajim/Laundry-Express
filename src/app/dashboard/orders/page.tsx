@@ -184,6 +184,7 @@ export default function CustomerOrdersPage({ orders: initialOrders }: CustomerOr
                           src={prf.image_url}
                           alt="Custody proof photo"
                           fill
+                          sizes="(max-width: 640px) 50vw, 200px"
                           className="object-cover"
                         />
                       </div>

@@ -53,7 +53,7 @@ export function PackagesSection() {
             Save Up to 25% with Superhero Packages
           </h2>
           <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-            Eliminate laundry day stress. Pre-pay for laundry bags or monthly bulk kilograms at discounted rates with guaranteed zero delivery fees.
+            Eliminate laundry day stress. Pre-pay for laundry bags or monthly bulk pounds at discounted rates with guaranteed zero delivery fees.
           </p>
         </div>
 

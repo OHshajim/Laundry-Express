@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
 
 /**
- * Enterprise Next.js Security Middleware
+ * Enterprise Next.js Security Proxy
  *
  * Enforces route-level authentication & role authorization:
  * 1. /order/:path* -> Strictly requires authentication. Unauthenticated users redirected to /login.
@@ -13,9 +13,9 @@ const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-
  * 3. /admin/:path* -> Strictly requires admin role; non-admins redirected to /dashboard.
  * 4. Auth pages (/login, /register, etc.) -> Authenticated users redirected to /dashboard.
  *
- * Adheres strictly to the < 250 lines rule and Next.js App Router conventions.
+ * Adheres strictly to the < 250 lines rule and Next.js 16 proxy conventions.
  */
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname, search, searchParams } = req.nextUrl;
 
   const token = await getToken({
@@ -34,7 +34,6 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
     if (!isAdmin) {
-      // Customer trying to access admin route is safely redirected to customer dashboard
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -85,6 +84,8 @@ export async function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
+
+export default proxy;
 
 export const config = {
   matcher: [

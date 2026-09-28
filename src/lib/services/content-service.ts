@@ -25,6 +25,9 @@ export interface BusinessSettings {
   standard_delivery_fee: number;
 }
 
+const isUuid = (val?: string): boolean =>
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
 let cachedFaqs: FaqItem[] = [];
 let cachedTerms: TermItem[] = [];
 let cachedSettings: BusinessSettings = {
@@ -57,28 +60,39 @@ export class ContentService {
   }
 
   static async saveFaq(faq: Partial<FaqItem>): Promise<FaqItem> {
-    const id = faq.id || `faq-${Date.now()}`;
-    const full: FaqItem = {
-      id,
-      question: faq.question || "New Question?",
-      answer: faq.answer || "Answer details.",
-      display_order: faq.display_order ?? (cachedFaqs.length + 1),
+    const question = (faq.question || "New Question?").trim();
+    const answer = (faq.answer || "Answer details.").trim();
+    const display_order = faq.display_order ?? (cachedFaqs.length + 1);
+    let finalId = isUuid(faq.id) ? faq.id! : "";
+
+    const dbPayload: Record<string, unknown> = {
+      category: "faq",
+      title: question,
+      description: answer,
+      sort_order: display_order,
+      is_active: true,
     };
-    const idx = cachedFaqs.findIndex((f) => f.id === id);
-    if (idx >= 0) cachedFaqs[idx] = full;
-    else cachedFaqs.push(full);
+    if (finalId) dbPayload.id = finalId;
 
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("faqs_and_terms").upsert({
-        id,
-        category: "faq",
-        title: full.question,
-        description: full.answer,
-        sort_order: full.display_order,
-        is_active: true,
-      });
+      const { data, error } = await supabase.from("faqs_and_terms").upsert(dbPayload).select().single();
+      if (!error && data?.id) {
+        finalId = data.id;
+      }
     } catch {}
+
+    const full: FaqItem = {
+      id: finalId || faq.id || `faq-${Date.now()}`,
+      question,
+      answer,
+      display_order,
+    };
+
+    const idx = cachedFaqs.findIndex((f) => (finalId && f.id === finalId) || f.question === question);
+    if (idx >= 0) cachedFaqs[idx] = full;
+    else cachedFaqs.push(full);
+
     return full;
   }
 
@@ -86,7 +100,11 @@ export class ContentService {
     cachedFaqs = cachedFaqs.filter((f) => f.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("faqs_and_terms").delete().eq("id", id);
+      if (isUuid(id)) {
+        await supabase.from("faqs_and_terms").delete().eq("id", id);
+      } else {
+        await supabase.from("faqs_and_terms").delete().eq("title", id);
+      }
     } catch {}
     return true;
   }
@@ -110,28 +128,39 @@ export class ContentService {
   }
 
   static async saveTerm(term: Partial<TermItem>): Promise<TermItem> {
-    const id = term.id || `term-${Date.now()}`;
-    const full: TermItem = {
-      id,
-      title: term.title || "Policy Title",
-      subtitle: term.subtitle || "Service Guarantee",
-      description: term.description || "",
+    const title = (term.title || "Policy Title").trim();
+    const subtitle = (term.subtitle || "Service Guarantee").trim();
+    const description = (term.description || "").trim();
+    let finalId = isUuid(term.id) ? term.id! : "";
+
+    const dbPayload: Record<string, unknown> = {
+      category: "term",
+      title,
+      subtitle,
+      description,
+      is_active: true,
     };
-    const idx = cachedTerms.findIndex((t) => t.id === id);
-    if (idx >= 0) cachedTerms[idx] = full;
-    else cachedTerms.push(full);
+    if (finalId) dbPayload.id = finalId;
 
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("faqs_and_terms").upsert({
-        id,
-        category: "term",
-        title: full.title,
-        subtitle: full.subtitle,
-        description: full.description,
-        is_active: true,
-      });
+      const { data, error } = await supabase.from("faqs_and_terms").upsert(dbPayload).select().single();
+      if (!error && data?.id) {
+        finalId = data.id;
+      }
     } catch {}
+
+    const full: TermItem = {
+      id: finalId || term.id || `term-${Date.now()}`,
+      title,
+      subtitle,
+      description,
+    };
+
+    const idx = cachedTerms.findIndex((t) => (finalId && t.id === finalId) || t.title === title);
+    if (idx >= 0) cachedTerms[idx] = full;
+    else cachedTerms.push(full);
+
     return full;
   }
 

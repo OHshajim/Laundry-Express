@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CreditCard, ExternalLink, ShieldCheck, Download, Search, CheckCircle2 } from "lucide-react";
+import { CreditCard, ExternalLink, ShieldCheck, Download, Search, CheckCircle2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -119,22 +119,23 @@ export default function CustomerTransactionsPage() {
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            onClick={() => setStatusFilter("all")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-colors ${
-              statusFilter === "all" ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setStatusFilter("succeeded")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-colors ${
-              statusFilter === "succeeded" ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            Succeeded
-          </button>
+          <label htmlFor="customer-payment-filter" className="text-xs font-bold text-slate-500 whitespace-nowrap">
+            Filter Status:
+          </label>
+          <div className="relative">
+            <select
+              id="customer-payment-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-900 text-xs font-bold py-2 pl-3 pr-8 rounded-xl shadow-2xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            >
+              <option value="all">All Payments</option>
+              <option value="succeeded">Succeeded</option>
+              <option value="pending">Pending</option>
+              <option value="refunded">Refunded</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
         </div>
       </div>
 

@@ -68,10 +68,36 @@ export class PricingPlanService {
   }
 
   static async savePlan(plan: Partial<PackagePlan>): Promise<PackagePlan> {
-    const id = plan.id || `pkg-${Date.now()}`;
+    const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+    const name = (plan.name || "Custom Laundry Pass").trim();
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    let finalId = isUuid(plan.id) ? plan.id! : "";
+
+    const dbPayload: Record<string, unknown> = {
+      title: name,
+      slug,
+      description: plan.description || "",
+      package_type: plan.unit_type === "lb" ? "weight_tier" : "bag_bundle",
+      included_bags: plan.unit_type === "bag" ? (plan.capacity || 1) : 0,
+      included_kg: plan.unit_type === "lb" ? (plan.capacity || 1) : 0,
+      price: plan.discounted_price || plan.original_price || 0,
+      key_points: plan.key_points || [],
+      is_active: plan.is_active ?? true,
+      updated_at: new Date().toISOString(),
+    };
+    if (finalId) dbPayload.id = finalId;
+
+    try {
+      const supabase = createAdminSupabaseClient();
+      const { data, error } = await supabase.from("plans").upsert(dbPayload, { onConflict: "slug" }).select().single();
+      if (!error && data?.id) {
+        finalId = data.id;
+      }
+    } catch {}
+
     const fullPlan: PackagePlan = {
-      id,
-      name: plan.name || "Custom Laundry Pass",
+      id: finalId || plan.id || `pkg-${Date.now()}`,
+      name,
       description: plan.description || "",
       unit_type: plan.unit_type || "bag",
       capacity: plan.capacity || 1,
@@ -81,35 +107,23 @@ export class PricingPlanService {
       is_active: plan.is_active ?? true,
     };
 
-    const idx = cachedPlans.findIndex((p) => p.id === id);
+    const idx = cachedPlans.findIndex((p) => (finalId && p.id === finalId) || p.name === name);
     if (idx >= 0) cachedPlans[idx] = fullPlan;
     else cachedPlans.push(fullPlan);
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("plans").upsert({
-        id,
-        title: fullPlan.name,
-        slug: fullPlan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        description: fullPlan.description,
-        package_type: fullPlan.unit_type === "lb" ? "weight_tier" : "bag_bundle",
-        included_bags: fullPlan.unit_type === "bag" ? fullPlan.capacity : 0,
-        included_lbs: fullPlan.unit_type === "lb" ? fullPlan.capacity : 0,
-        price: fullPlan.discounted_price || fullPlan.original_price,
-        key_points: fullPlan.key_points,
-        is_active: fullPlan.is_active,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {}
 
     return fullPlan;
   }
 
   static async deletePlan(id: string): Promise<boolean> {
+    const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
     cachedPlans = cachedPlans.filter((p) => p.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("plans").delete().eq("id", id);
+      if (isUuid(id)) {
+        await supabase.from("plans").delete().eq("id", id);
+      } else {
+        await supabase.from("plans").delete().eq("slug", id.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+      }
     } catch {}
     return true;
   }
@@ -120,7 +134,7 @@ export class PricingPlanService {
       const { data, error } = await supabase.from("pricing_configs").select("*");
       if (!error && data && data.length > 0) {
         const bagRow = data.find((r) => r.pricing_type === "per_bag");
-        const lbRow = data.find((r) => r.pricing_type === "per_lb" || r.pricing_type === "per_kg");
+        const lbRow = data.find((r) => r.pricing_type === "per_lb");
         const bPrice = Number(bagRow?.unit_price ?? 32.5);
         const pPrice = Number(lbRow?.unit_price ?? 1.99);
         const dFee = Number(bagRow?.standard_delivery_fee ?? 10);

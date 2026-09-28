@@ -27,15 +27,17 @@ const LOCAL_STORAGE_USER_KEY = "lx_auth_session_user";
 
 function AuthStateBridge({ children }: { children: React.ReactNode }) {
   const { data: session, status, update: updateSession } = useSession();
-  const [localUser, setLocalUser] = React.useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [localUser, setLocalUser] = React.useState<User | null>(null);
+
+  // Restore cached session on mount without causing hydration mismatch
+  React.useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+      if (stored) {
+        setLocalUser(JSON.parse(stored));
+      }
+    } catch {}
+  }, []);
 
   // Dynamically sync complete profile from database (source of truth)
   React.useEffect(() => {

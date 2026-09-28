@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sliders, Clock, MapPin, CheckCircle2, Plus, Trash2, Save } from "lucide-react";
+import { Sliders, Clock, MapPin, CheckCircle2, Plus, Trash2, Save, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AdminSettingsManager() {
@@ -13,9 +13,19 @@ export function AdminSettingsManager() {
   const [maxLbsOrder, setMaxLbsOrder] = React.useState<number>(100);
   const [freeThresholdLbs, setFreeThresholdLbs] = React.useState<number>(30);
 
-  const [slot1, setSlot1] = React.useState("8:00 AM – 12:00 PM");
-  const [slot2, setSlot2] = React.useState("1:00 PM – 6:00 PM");
+  // Time pickers (clocks)
+  const [slot1Start, setSlot1Start] = React.useState("08:00");
+  const [slot1End, setSlot1End] = React.useState("12:00");
+  const [slot2Start, setSlot2Start] = React.useState("13:00");
+  const [slot2End, setSlot2End] = React.useState("18:00");
   const [daysOpen, setDaysOpen] = React.useState("Monday – Sunday (7 Days / Week)");
+
+  // Facility Address
+  const [facilityName, setFacilityName] = React.useState("Laundry Express Main Hub");
+  const [facilityStreet, setFacilityStreet] = React.useState("100 Industrial Pkwy");
+  const [facilityCity, setFacilityCity] = React.useState("Lake in the Hills");
+  const [facilityState, setFacilityState] = React.useState("IL");
+  const [facilityZip, setFacilityZip] = React.useState("60156");
 
   const [zones, setZones] = React.useState([
     { zip: "60156", city: "Lake in the Hills" },
@@ -47,7 +57,29 @@ export function AdminSettingsManager() {
     fetch("/api/content?type=settings")
       .then((res) => res.json())
       .then((data) => {
-        if (data.settings?.operating_hours) setDaysOpen(data.settings.operating_hours);
+        if (data.settings) {
+          const s = data.settings;
+          if (s.operating_hours) setDaysOpen(s.operating_hours);
+          if (s.slot1_start) setSlot1Start(s.slot1_start);
+          if (s.slot1_end) setSlot1End(s.slot1_end);
+          if (s.slot2_start) setSlot2Start(s.slot2_start);
+          if (s.slot2_end) setSlot2End(s.slot2_end);
+          if (s.facility_address) {
+            setFacilityName(s.facility_address.facility_name || "Laundry Express Main Hub");
+            setFacilityStreet(s.facility_address.street || "");
+            setFacilityCity(s.facility_address.city || "Lake in the Hills");
+            setFacilityState(s.facility_address.state || "IL");
+            setFacilityZip(s.facility_address.zip || "60156");
+          }
+          if (Array.isArray(s.delivery_zones) && s.delivery_zones.length > 0) {
+            setZones(
+              s.delivery_zones.map((item: string) => {
+                const match = item.match(/^(.+?)\s*\(([0-9]{5})\)$/);
+                return match ? { city: match[1], zip: match[2] } : { city: item, zip: "60156" };
+              })
+            );
+          }
+        }
       })
       .catch(() => {});
   }, []);
@@ -60,14 +92,9 @@ export function AdminSettingsManager() {
     setNewCity("");
   };
 
-  const handleRemoveZone = (zip: string) => {
-    setZones((prev) => prev.filter((z) => z.zip !== zip));
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-
     try {
       await Promise.all([
         fetch("/api/pricing", {
@@ -90,6 +117,17 @@ export function AdminSettingsManager() {
             section: "settings",
             item: {
               operating_hours: daysOpen,
+              slot1_start: slot1Start,
+              slot1_end: slot1End,
+              slot2_start: slot2Start,
+              slot2_end: slot2End,
+              facility_address: {
+                facility_name: facilityName,
+                street: facilityStreet,
+                city: facilityCity,
+                state: facilityState,
+                zip: facilityZip,
+              },
               delivery_zones: zones.map((z) => `${z.city} (${z.zip})`),
               min_order_bag: 1,
               min_order_lbs: minLbsOrder,
@@ -100,7 +138,6 @@ export function AdminSettingsManager() {
           }),
         }),
       ]);
-
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch {} finally {
@@ -113,103 +150,134 @@ export function AdminSettingsManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <h3 className="text-base font-black text-slate-900">Operations, Facility &amp; Rate Settings</h3>
-          <p className="text-xs text-slate-500">Live database configuration for bag &amp; pound pricing, free delivery rules, hours, and service zones.</p>
+          <p className="text-xs text-slate-500">Configure facility location, time pickers, bag &amp; pound rates, and coverage zones.</p>
         </div>
         <Button type="submit" variant="hero" size="sm" disabled={isSaving} className="cursor-pointer text-xs shrink-0">
           <Save className="h-4 w-4 mr-1.5 shrink-0" />
-          <span>{isSaving ? "Saving to Database..." : "Save Settings to Database"}</span>
+          <span>{isSaving ? "Saving..." : "Save Settings to Database"}</span>
         </Button>
       </div>
 
       {savedSuccess && (
         <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-bold flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>Operational settings successfully saved and synced to live database!</span>
+          <span>Operational settings successfully saved and synced!</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+        {/* Facility Address */}
+        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
           <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
-            <Sliders className="h-4 w-4 text-primary" />
-            <span>Service Pricing &amp; Delivery Thresholds</span>
+            <Building className="h-4 w-4 text-primary" />
+            <span>Facility Physical Address</span>
           </div>
-
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="space-y-2 text-xs">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Per-Bag Rate ($)</label>
-              <input type="number" step="0.5" value={bagPrice} onChange={(e) => setBagPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+              <label className="font-bold text-slate-700 block mb-0.5">Facility / Depot Name</label>
+              <input type="text" value={facilityName} onChange={(e) => setFacilityName(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-medium" />
             </div>
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Free Delivery (Bags)</label>
-              <input type="number" value={freeThresholdBags} onChange={(e) => setFreeThresholdBags(parseInt(e.target.value, 10) || 1)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+              <label className="font-bold text-slate-700 block mb-0.5">Street Address</label>
+              <input type="text" value={facilityStreet} onChange={(e) => setFacilityStreet(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-medium" />
             </div>
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Delivery Fee ($)</label>
-              <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
-            </div>
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Per-Pound Rate ($/lb)</label>
-              <input type="number" step="0.05" value={poundPrice} onChange={(e) => setPoundPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
-            </div>
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Min Pounds (lbs)</label>
-              <input type="number" step="1" value={minLbsOrder} onChange={(e) => setMinLbsOrder(parseInt(e.target.value, 10) || 1)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
-            </div>
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Max Pounds (lbs)</label>
-              <input type="number" step="1" value={maxLbsOrder} onChange={(e) => setMaxLbsOrder(parseInt(e.target.value, 10) || 10)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
-            </div>
-            <div className="col-span-2">
-              <label className="font-bold text-slate-700 block mb-1">Free Delivery Threshold (Pounds / lbs)</label>
-              <input type="number" step="1" value={freeThresholdLbs} onChange={(e) => setFreeThresholdLbs(parseInt(e.target.value, 10) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="font-bold text-slate-700 block mb-0.5">City</label>
+                <input type="text" value={facilityCity} onChange={(e) => setFacilityCity(e.target.value)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium" />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700 block mb-0.5">State</label>
+                <input type="text" value={facilityState} onChange={(e) => setFacilityState(e.target.value)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium" />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700 block mb-0.5">ZIP</label>
+                <input type="text" value={facilityZip} onChange={(e) => setFacilityZip(e.target.value)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium" />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+        {/* Operating Hours with Native Clock Inputs */}
+        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
           <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
             <Clock className="h-4 w-4 text-primary" />
-            <span>Operational Pickup Windows &amp; Hours</span>
+            <span>Operational Schedule &amp; Clock Windows</span>
           </div>
-
-          <div className="space-y-3 text-xs">
+          <div className="space-y-2 text-xs">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Daily Facility Schedule</label>
-              <input type="text" value={daysOpen} onChange={(e) => setDaysOpen(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+              <label className="font-bold text-slate-700 block mb-0.5">Operating Days</label>
+              <input type="text" value={daysOpen} onChange={(e) => setDaysOpen(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-medium" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Morning Slot</label>
-                <input type="text" value={slot1} onChange={(e) => setSlot1(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            <div>
+              <label className="font-bold text-slate-700 block mb-0.5">Morning Pickup Window (Clock)</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="time" value={slot1Start} onChange={(e) => setSlot1Start(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
+                <input type="time" value={slot1End} onChange={(e) => setSlot1End(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
               </div>
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Afternoon Slot</label>
-                <input type="text" value={slot2} onChange={(e) => setSlot2(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-0.5">Afternoon Pickup Window (Clock)</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="time" value={slot2Start} onChange={(e) => setSlot2Start(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
+                <input type="time" value={slot2End} onChange={(e) => setSlot2End(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
-        <div className="flex items-center justify-between text-xs">
+      {/* Pricing Rules */}
+      <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 text-xs">
+        <div className="flex items-center gap-2 text-slate-900 font-black uppercase tracking-wider">
+          <Sliders className="h-4 w-4 text-primary" />
+          <span>Pricing &amp; Threshold Rules</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label className="font-bold text-slate-700 block mb-0.5">Per-Bag ($)</label>
+            <input type="number" step="0.5" value={bagPrice} onChange={(e) => setBagPrice(parseFloat(e.target.value) || 0)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
+          </div>
+          <div>
+            <label className="font-bold text-slate-700 block mb-0.5">Free Bags Threshold</label>
+            <input type="number" value={freeThresholdBags} onChange={(e) => setFreeThresholdBags(parseInt(e.target.value, 10) || 1)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
+          </div>
+          <div>
+            <label className="font-bold text-slate-700 block mb-0.5">Per-Pound ($/lb)</label>
+            <input type="number" step="0.05" value={poundPrice} onChange={(e) => setPoundPrice(parseFloat(e.target.value) || 0)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
+          </div>
+          <div>
+            <label className="font-bold text-slate-700 block mb-0.5">Free Lbs Threshold</label>
+            <input type="number" value={freeThresholdLbs} onChange={(e) => setFreeThresholdLbs(parseInt(e.target.value, 10) || 0)} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-bold" />
+          </div>
+        </div>
+      </div>
+
+      {/* Coverage Zones */}
+      <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 text-xs">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-900 font-black uppercase tracking-wider">
             <MapPin className="h-4 w-4 text-primary" />
-            <span>Active Delivery Coverage Zones (30-Mile Radius)</span>
+            <span>Active Coverage Zones (Users Pick from These Areas)</span>
           </div>
-          <span className="font-bold text-slate-500">{zones.length} Municipalities Covered</span>
+          <span className="font-bold text-slate-500">{zones.length} Municipalities</span>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {zones.map((z) => (
-            <div key={z.zip} className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between">
+            <div key={z.zip} className="p-2 rounded-xl bg-white border border-slate-200 flex items-center justify-between">
               <span className="font-bold text-slate-800">{z.city} ({z.zip})</span>
-              <button type="button" onClick={() => handleRemoveZone(z.zip)} className="text-slate-400 hover:text-rose-600 cursor-pointer">
+              <button type="button" onClick={() => setZones((p) => p.filter((x) => x.zip !== z.zip))} className="text-slate-400 hover:text-rose-600 cursor-pointer">
                 <Trash2 className="h-3 w-3" />
               </button>
             </div>
           ))}
+        </div>
+        <div className="flex gap-2 pt-1">
+          <input type="text" placeholder="City / Area Name" value={newCity} onChange={(e) => setNewCity(e.target.value)} className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs" />
+          <input type="text" placeholder="ZIP Code" value={newZip} onChange={(e) => setNewZip(e.target.value)} className="w-28 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs" />
+          <Button type="button" size="sm" variant="outline" onClick={handleAddZone} className="cursor-pointer text-xs">
+            <Plus className="h-3.5 w-3.5 mr-1" /> Add Area
+          </Button>
         </div>
       </div>
     </form>

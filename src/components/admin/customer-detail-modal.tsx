@@ -23,7 +23,6 @@ interface CustomerDetailModalProps {
   customer: CustomerAccount | null;
   isOpen: boolean;
   onClose: () => void;
-  onViewOrder?: (order: Order) => void;
 }
 
 type TabKey = "orders" | "payments" | "reviews";
@@ -32,7 +31,6 @@ export function CustomerDetailModal({
   customer,
   isOpen,
   onClose,
-  onViewOrder,
 }: CustomerDetailModalProps) {
   const [activeTab, setActiveTab] = React.useState<TabKey>("orders");
   if (!customer) return null;
@@ -100,11 +98,10 @@ export function CustomerDetailModal({
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`pb-2 px-3 text-xs font-bold border-b-2 transition-colors cursor-pointer capitalize ${
-                activeTab === tab
-                  ? "border-primary text-primary"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
-              }`}
+              className={`pb-2 px-3 text-xs font-bold border-b-2 transition-colors cursor-pointer capitalize ${activeTab === tab
+                ? "border-primary text-primary"
+                : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
             >
               {tab === "orders" ? `Orders (${customer.orders.length})` : tab === "payments" ? `Payments (${customer.payments.length})` : `Reviews (${customer.reviews.length})`}
             </button>
@@ -127,7 +124,6 @@ export function CustomerDetailModal({
                         <th className="p-2.5">Mode</th>
                         <th className="p-2.5">Total</th>
                         <th className="p-2.5">Status</th>
-                        <th className="p-2.5 text-right">Inspect</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -141,13 +137,6 @@ export function CustomerDetailModal({
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
                               {ord.order_status.replace("_", " ")}
                             </span>
-                          </td>
-                          <td className="p-2.5 text-right">
-                            {onViewOrder && (
-                              <Button variant="outline" size="xs" onClick={() => { onClose(); onViewOrder(ord); }}>
-                                Details
-                              </Button>
-                            )}
                           </td>
                         </tr>
                       ))}
@@ -166,11 +155,6 @@ export function CustomerDetailModal({
                         <span>{formatDate(ord.created_at)}</span>
                         <span className="capitalize px-1.5 py-0.5 rounded bg-slate-100 font-semibold">{ord.order_status.replace("_", " ")}</span>
                       </div>
-                      {onViewOrder && (
-                        <Button variant="outline" size="xs" className="w-full mt-1" onClick={() => { onClose(); onViewOrder(ord); }}>
-                          Inspect Order
-                        </Button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -185,7 +169,7 @@ export function CustomerDetailModal({
             {customer.payments.length === 0 ? (
               <p className="text-slate-400 py-4 text-center italic">No Stripe transactions recorded.</p>
             ) : (
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+              <div className="divide-yrounded-xl border border-slate-200 bg-white">
                 {customer.payments.map((pmt) => (
                   <div key={pmt.id} className="p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">

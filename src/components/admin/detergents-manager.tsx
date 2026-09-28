@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Plus, Trash2, ThermometerSnowflake } from "lucide-react";
+import { Sparkles, Plus, Trash2, Droplets } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -16,221 +16,213 @@ export interface DetergentConfig {
   in_stock: boolean;
 }
 
-export interface TemperatureConfig {
-  id: string;
-  name: string;
-  type: "cold" | "warm" | "hot";
-  price: number;
-  description: string;
-}
-
 export function DetergentsManager() {
-  const [activeCatalog, setActiveCatalog] = React.useState<"detergents" | "temperatures">("detergents");
   const [detergents, setDetergents] = React.useState<DetergentConfig[]>([]);
-  const [temperatures, setTemperatures] = React.useState<TemperatureConfig[]>([]);
-
   const [name, setName] = React.useState("");
   const [brand, setBrand] = React.useState("");
   const [detType, setDetType] = React.useState<"liquid" | "powder" | "pods">("liquid");
-  const [tempType, setTempType] = React.useState<"cold" | "warm" | "hot">("cold");
-  const [price, setPrice] = React.useState<number>(0);
+  const [price, setPrice] = React.useState<string>("");
   const [description, setDescription] = React.useState("");
 
   React.useEffect(() => {
-    fetch("/api/catalog").then((res) => res.json()).then((data) => {
-      if (data.detergents?.length > 0) setDetergents(data.detergents);
-      if (data.temperatures?.length > 0) setTemperatures(data.temperatures);
-    }).catch(() => {});
+    fetch("/api/catalog")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.detergents) && data.detergents.length > 0) {
+          setDetergents(data.detergents);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    if (activeCatalog === "detergents") {
-      const newD: DetergentConfig = {
-        id: `det-${Date.now()}`,
-        name: name.trim(),
-        brand: brand.trim() || "Standard",
-        type: detType,
-        price,
-        description: description.trim() || "Laundry wash formulation.",
-        in_stock: true,
-      };
-      setDetergents((prev) => [...prev, newD]);
-      try {
-        await fetch("/api/catalog", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newD) });
-      } catch {}
-    } else {
-      const newT: TemperatureConfig = {
-        id: `temp-${Date.now()}`,
-        name: name.trim(),
-        type: tempType,
-        price,
-        description: description.trim() || "Water temperature wash cycle.",
-      };
-      setTemperatures((prev) => [...prev, newT]);
-      try {
-        await fetch("/api/catalog", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...newT, catalogType: "temperature" }) });
-      } catch {}
-    }
+    const numPrice = parseFloat(price) || 0;
+    const newD: DetergentConfig = {
+      id: `det-${Date.now()}`,
+      name: name.trim(),
+      brand: brand.trim() || "Standard",
+      type: detType,
+      price: numPrice,
+      description: description.trim() || "Laundry wash formulation.",
+      in_stock: true,
+    };
 
+    setDetergents((prev) => [...prev, newD]);
     setName("");
     setBrand("");
     setDescription("");
-    setPrice(0);
+    setPrice("");
+
+    try {
+      await fetch("/api/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newD),
+      });
+    } catch {}
+  };
+
+  const handleToggleStock = async (id: string) => {
+    const existing = detergents.find((d) => d.id === id);
+    if (!existing) return;
+    const updated = { ...existing, in_stock: !existing.in_stock };
+    setDetergents((prev) => prev.map((d) => (d.id === id ? updated : d)));
+    try {
+      await fetch("/api/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+    } catch {}
   };
 
   const handleDelete = async (id: string) => {
-    if (activeCatalog === "detergents") {
-      setDetergents((prev) => prev.filter((d) => d.id !== id));
-      try { await fetch(`/api/catalog?id=${encodeURIComponent(id)}`, { method: "DELETE" }); } catch {}
-    } else {
-      setTemperatures((prev) => prev.filter((t) => t.id !== id));
-    }
+    setDetergents((prev) => prev.filter((d) => d.id !== id));
+    try {
+      await fetch(`/api/catalog?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch {}
   };
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
-          <h3 className="text-base font-black text-slate-900">Detergent &amp; Temperature Catalog</h3>
-          <p className="text-xs text-slate-500">Live database options for wash detergents and temperatures.</p>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h3 className="text-base font-black text-slate-900">Detergent Catalog Manager</h3>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Manage live laundry detergent options. All loads are automatically washed with cold water for optimal fabric preservation and eco-safety.
+          </p>
         </div>
-
-        <div className="inline-flex p-1 rounded-xl bg-slate-100 text-xs font-bold">
-          <button
-            type="button"
-            onClick={() => setActiveCatalog("detergents")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-              activeCatalog === "detergents" ? "bg-white text-primary shadow-xs" : "text-slate-600"
-            }`}
-          >
-            Detergents ({detergents.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveCatalog("temperatures")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-              activeCatalog === "temperatures" ? "bg-white text-primary shadow-xs" : "text-slate-600"
-            }`}
-          >
-            Temperatures ({temperatures.length})
-          </button>
-        </div>
+        <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+          {detergents.length} Formulas Active
+        </span>
       </div>
 
-      <form onSubmit={handleAdd} className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3">
-        <span className="font-bold text-slate-800 uppercase block">
-          Add New {activeCatalog === "detergents" ? "Detergent Formula" : "Temperature Option"}
-        </span>
+      {/* Add Detergent Form */}
+      <form onSubmit={handleAdd} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+        <span className="font-black text-slate-800 uppercase tracking-wider block">Add New Detergent Option</span>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <input
-            type="text"
-            required
-            placeholder="Option Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 bg-white"
-          />
-          {activeCatalog === "detergents" && (
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Detergent Name</label>
             <input
               type="text"
-              placeholder="Brand (e.g. Tide)"
+              required
+              placeholder="e.g. Tide Pods Clean Breeze"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Brand Name</label>
+            <input
+              type="text"
+              placeholder="e.g. Tide, Persil, Free & Clear"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-slate-200 bg-white"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
-          )}
-          {activeCatalog === "detergents" ? (
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Detergent Format</label>
             <select
               value={detType}
-              onChange={(e) => setDetType(e.target.value as any)}
-              className="px-3 py-2 rounded-xl border border-slate-200 bg-white"
+              onChange={(e) => setDetType(e.target.value as "liquid" | "powder" | "pods")}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
-              <option value="liquid">Liquid</option>
-              <option value="powder">Powder</option>
-              <option value="pods">Pods</option>
+              <option value="liquid">Liquid Detergent</option>
+              <option value="pods">Convenient Pods</option>
+              <option value="powder">Heavy Powder</option>
             </select>
-          ) : (
-            <select
-              value={tempType}
-              onChange={(e) => setTempType(e.target.value as any)}
-              className="px-3 py-2 rounded-xl border border-slate-200 bg-white"
-            >
-              <option value="cold">Cold</option>
-              <option value="warm">Warm</option>
-              <option value="hot">Hot</option>
-            </select>
-          )}
-          <input
-            type="number"
-            min={0}
-            step="0.5"
-            placeholder="Extra Price ($)"
-            value={price}
-            onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-            className="px-3 py-2 rounded-xl border border-slate-200 bg-white"
-          />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Extra Fee ($)</label>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              placeholder="0.00 (Free)"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="Description / Key Benefits"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
-        />
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Formula Notes / Fragrance Description</label>
+          <input
+            type="text"
+            placeholder="e.g. Hypoallergenic formula, gentle on sensitive skin"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
 
         <div className="flex justify-end pt-1">
           <Button type="submit" variant="hero" size="sm" className="cursor-pointer">
             <Plus className="h-3.5 w-3.5 mr-1" />
-            <span>Save to Database</span>
+            <span>Save Formula to Database</span>
           </Button>
         </div>
       </form>
 
-      <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
-        {activeCatalog === "detergents" ? (
-          detergents.map((d) => (
-            <div key={d.id} className="p-4 flex items-center justify-between gap-4 bg-white hover:bg-slate-50/50 text-xs">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-900">{d.name}</span>
-                  <Badge variant="secondary">{d.brand}</Badge>
-                  <span className="text-[11px] text-slate-400 capitalize">• {d.type}</span>
-                </div>
-                <p className="text-slate-500 mt-0.5">{d.description}</p>
-                <span className="text-[11px] font-bold text-sky-700 mt-1 block">
-                  {d.price > 0 ? `+${formatCurrency(d.price)}` : "Free / Included"}
-                </span>
+      {/* Detergents List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {detergents.map((d) => (
+          <div key={d.id} className="p-4 rounded-xl border border-slate-200 bg-white flex flex-col justify-between gap-3 shadow-2xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-slate-900 text-sm">{d.name}</span>
+                <Badge variant={d.in_stock ? "success" : "neutral"} className="text-[10px]">
+                  {d.in_stock ? "In Stock" : "Unavailable"}
+                </Badge>
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(d.id)} className="cursor-pointer text-rose-600 hover:bg-rose-50 h-8">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <p className="text-xs text-slate-500">{d.brand} • <span className="capitalize">{d.type}</span></p>
+              <p className="text-xs text-slate-600 line-clamp-2">{d.description}</p>
             </div>
-          ))
-        ) : (
-          temperatures.map((t) => (
-            <div key={t.id} className="p-4 flex items-center justify-between gap-4 bg-white hover:bg-slate-50/50 text-xs">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-900">{t.name}</span>
-                  <Badge variant="secondary" className="capitalize">{t.type}</Badge>
-                </div>
-                <p className="text-slate-500 mt-0.5">{t.description}</p>
-                <span className="text-[11px] font-bold text-sky-700 mt-1 block">
-                  {t.price > 0 ? `+${formatCurrency(t.price)}` : "Free / Standard"}
-                </span>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+              <span className="font-black text-slate-900">
+                {d.price > 0 ? `+${formatCurrency(d.price)}` : "Included Free"}
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleToggleStock(d.id)}
+                  className={`px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                    d.in_stock ? "text-slate-600 hover:bg-slate-100" : "text-emerald-700 bg-emerald-50"
+                  }`}
+                >
+                  {d.in_stock ? "Mark Out" : "Enable"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(d.id)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                  title="Delete detergent"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)} className="cursor-pointer text-rose-600 hover:bg-rose-50 h-8">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
+
+export default DetergentsManager;

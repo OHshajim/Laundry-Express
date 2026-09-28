@@ -87,6 +87,7 @@ export default function CustomerRatingsPage() {
                       src={p.photo_url}
                       alt="Review attachment"
                       fill
+                      sizes="64px"
                       className="object-cover"
                     />
                   </div>

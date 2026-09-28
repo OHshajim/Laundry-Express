@@ -212,4 +212,11 @@ export class CustomUserStore {
     USER_REGISTRY.set(normalized, newUser);
     return newUser;
   }
+
+  /**
+   * Retrieves all users currently registered in memory
+   */
+  static getAllUsers(): StoredUser[] {
+    return Array.from(USER_REGISTRY.values());
+  }
 }

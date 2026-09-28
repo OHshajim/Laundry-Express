@@ -24,15 +24,19 @@ export class OrderService {
       }
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
-        return data.map((item) => ({
-          ...item,
-          pricing_mode: item.plan_type || item.pricing_mode || "per_bag",
-          bag_count: item.bag_count ?? 1,
-          estimated_weight_lbs: Number(item.weight_lbs ?? item.estimated_weight_lbs ?? 0),
-          pickup_slot: item.pickup_window || item.pickup_slot || "8am-12pm",
-          total_amount: Number(item.total_amount ?? 0),
-          order_status: (item.order_status || item.delivery_status || "pending") as OrderStatus,
-        })) as Order[];
+        return data.map((item) => {
+          const rawMode = item.plan_type || item.pricing_mode || "per_bag";
+          const pricingMode = rawMode === "per_kg" || rawMode === "per_lb" ? "per_lb" : rawMode;
+          return {
+            ...item,
+            pricing_mode: pricingMode,
+            bag_count: item.bag_count ?? 1,
+            estimated_weight_lbs: Number(item.weight_lbs ?? item.weight_kg ?? item.estimated_weight_lbs ?? 0),
+            pickup_slot: item.pickup_window || item.pickup_slot || "8am-12pm",
+            total_amount: Number(item.total_amount ?? 0),
+            order_status: (item.order_status || item.delivery_status || "pending") as OrderStatus,
+          };
+        }) as Order[];
       }
     } catch {
       // Fall through to memory store
@@ -100,7 +104,7 @@ export class OrderService {
         customer_phone: newOrder.customer_phone,
         plan_type: newOrder.pricing_mode,
         bag_count: newOrder.bag_count,
-        weight_lbs: newOrder.estimated_weight_lbs,
+        weight_kg: newOrder.estimated_weight_lbs,
         detergent_id: newOrder.detergent_id,
         wash_temperature: newOrder.wash_temperature,
         pickup_date: newOrder.pickup_date,
@@ -139,11 +143,10 @@ export class OrderService {
     }
 
     try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
       const supabase = createAdminSupabaseClient();
-      const { error } = await supabase
-        .from("orders")
-        .update({ order_status: status, updated_at: new Date().toISOString() })
-        .eq("id", orderId);
+      const query = supabase.from("orders").update({ order_status: status, updated_at: new Date().toISOString() });
+      const { error } = isUuid ? await query.eq("id", orderId) : await query.eq("order_number", orderId);
       return !error;
     } catch {
       return true;
@@ -171,17 +174,18 @@ export class OrderService {
     }
 
     try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
       const supabase = createAdminSupabaseClient();
-      await supabase
-        .from("orders")
-        .update({
-          weight_lbs: weightLbs,
-          subtotal,
-          delivery_fee: deliveryFee,
-          total_amount: total,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", orderId);
+      const payload = {
+        weight_kg: weightLbs,
+        subtotal,
+        delivery_fee: deliveryFee,
+        total_amount: total,
+        updated_at: new Date().toISOString(),
+      };
+      const query = supabase.from("orders").update(payload);
+      if (isUuid) await query.eq("id", orderId);
+      else await query.eq("order_number", orderId);
       return true;
     } catch {
       return true;
@@ -216,6 +220,16 @@ export class OrderService {
         },
       ];
     }
+
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+      if (isUuid) {
+        const supabase = createAdminSupabaseClient();
+        const pt = proofType === "pickup" ? "pickup_doorstep" : proofType === "dropoff" ? "delivery_doorstep" : "processing_wash";
+        await supabase.from("order_proofs").insert({ order_id: orderId, proof_type: pt, photo_url: imageUrl, notes });
+      }
+    } catch {}
+
     return true;
   }
 }
