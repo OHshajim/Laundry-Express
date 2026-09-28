@@ -55,7 +55,6 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Brand Logo & Name */}
           <Link href="/" className="flex items-center gap-1 group">
             <div className="relative h-14 w-14 transition-transform group-hover:scale-95 duration-200 shrink-0">
               <Image src="/brand/hero.jpg" alt="Laundry Express" width={80} height={80} priority />
@@ -67,7 +66,6 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-7 text-sm font-semibold">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
@@ -87,7 +85,6 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Right Action Controls & User Avatar Menu */}
           <div className="hidden sm:flex items-center gap-3">
             {!mounted || !isAuthenticated ? (
               <Link href="/login">
@@ -106,9 +103,7 @@ export function Navbar() {
                   type="button"
                   onClick={() => setUserDropdownOpen((p) => !p)}
                   className={`flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs ${
-                    scrolled
-                      ? "bg-white/20 text-white hover:bg-white/30 border border-white/20"
-                      : "bg-white text-slate-800 hover:bg-slate-50 border border-slate-200/80"
+                    scrolled ? "bg-white/20 text-white hover:bg-white/30 border border-white/20" : "bg-white text-slate-800 hover:bg-slate-50 border border-slate-200/80"
                   }`}
                 >
                   {userAvatarUrl ? (
@@ -124,7 +119,6 @@ export function Navbar() {
                   <ChevronDown className={`h-3 w-3 transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                {/* Interactive Dropdown Menu */}
                 {userDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white shadow-xl border border-slate-200/90 py-2 z-50 text-xs animate-in fade-in-50 zoom-in-95">
                     <div className="px-4 py-2 border-b border-slate-100">
@@ -165,10 +159,7 @@ export function Navbar() {
                     <div className="pt-1 border-t border-slate-100 p-1">
                       <button
                         type="button"
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          logout();
-                        }}
+                        onClick={() => { setUserDropdownOpen(false); logout(); }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors font-semibold cursor-pointer"
                       >
                         <LogOut className="h-4 w-4" />
@@ -180,7 +171,6 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Primary Order Action Button */}
             <Link href="/order">
               <Button
                 variant="hero"
@@ -192,7 +182,6 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Toggle Button */}
           <div className="flex sm:hidden items-center gap-2">
             <Link href="/order">
               <Button variant="hero" size="sm" className={scrolled ? "bg-white text-primary text-xs" : "text-xs"}>
@@ -210,7 +199,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className={`sm:hidden px-5 pt-3 pb-6 space-y-3 ${scrolled ? "bg-primary text-white" : "bg-white text-slate-800 shadow-xl"}`}>
           <div className="flex flex-col gap-2.5 font-semibold text-sm">

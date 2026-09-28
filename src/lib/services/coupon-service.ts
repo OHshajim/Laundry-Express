@@ -8,6 +8,7 @@ export interface CouponItem {
   discount_value: number;
   min_order_amount: number;
   max_uses?: number;
+  used_count?: number;
   expires_at?: string;
   is_active: boolean;
 }

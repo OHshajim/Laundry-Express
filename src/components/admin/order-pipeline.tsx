@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Camera, AlertTriangle, Check, Bell } from "lucide-react";
+import { Camera, AlertTriangle, Check, Bell, Filter } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,6 @@ interface OrderPipelineProps {
   onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => void;
 }
 
-/**
- * OrderPipeline Component
- *
- * Implements the full operational workflow:
- * - Executive KPIs
- * - Step-by-step order actions (Accept, Pickup Proof, Wash Damage Report, Drop-off Delivery Proof)
- * - Customer notification alerts on order acceptance and garment damage
- */
 export function OrderPipeline({
   orders,
   onUpdateStatus,
@@ -38,11 +30,14 @@ export function OrderPipeline({
   const [damageNotes, setDamageNotes] = React.useState<string>("");
   const [proofModalOpen, setProofModalOpen] = React.useState<boolean>(false);
   const [systemAlert, setSystemAlert] = React.useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
-  const detailOrder = React.useMemo(
-    () => orders.find((o) => o.id === detailOrderId) || null,
-    [orders, detailOrderId]
-  );
+  const detailOrder = React.useMemo(() => orders.find((o) => o.id === detailOrderId) || null, [orders, detailOrderId]);
+
+  const filteredOrders = React.useMemo(() => {
+    if (statusFilter === "all") return orders;
+    return orders.filter((o) => o.order_status === statusFilter);
+  }, [orders, statusFilter]);
 
   const triggerAlert = (msg: string) => {
     setSystemAlert(msg);
@@ -53,9 +48,9 @@ export function OrderPipeline({
     onUpdateStatus(orderId, newStatus);
     const ord = orders.find((o) => o.id === orderId);
     if (newStatus === "driver_assigned") {
-      triggerAlert(`Order ${ord?.order_number || ""} accepted! Automated pickup window email dispatched to customer.`);
+      triggerAlert(`Order ${ord?.order_number || ""} accepted! Automated pickup window email dispatched.`);
     } else if (newStatus === "out_for_delivery") {
-      triggerAlert(`Order ${ord?.order_number || ""} marked Out for Delivery. Driver en route.`);
+      triggerAlert(`Order ${ord?.order_number || ""} marked Out for Delivery.`);
     }
   };
 
@@ -69,17 +64,15 @@ export function OrderPipeline({
   const handleSaveProof = () => {
     if (!selectedOrder) return;
     onUploadProof(selectedOrder.id, proofType, "/brand/logo-badge.jpg", damageNotes);
-
     if (proofType === "pickup") {
       onUpdateStatus(selectedOrder.id, "in_wash");
-      triggerAlert(`Pickup proof saved for ${selectedOrder.order_number}! Order moved to Wash & Dry cycle.`);
+      triggerAlert(`Pickup proof saved for ${selectedOrder.order_number}! Moved to Wash & Dry cycle.`);
     } else if (proofType === "dropoff") {
       onUpdateStatus(selectedOrder.id, "completed");
-      triggerAlert(`Delivery photo verified for ${selectedOrder.order_number}! Order completed and customer notified.`);
+      triggerAlert(`Delivery photo verified for ${selectedOrder.order_number}! Completed.`);
     } else if (proofType === "damage") {
-      triggerAlert(`Pre-existing garment flaw photo logged! Customer ${selectedOrder.user?.email || ""} alerted.`);
+      triggerAlert(`Pre-existing flaw logged! Customer alerted.`);
     }
-
     setProofModalOpen(false);
   };
 
@@ -90,9 +83,8 @@ export function OrderPipeline({
 
   return (
     <div className="space-y-6">
-      {/* Real-time System Notification Toast */}
       {systemAlert && (
-        <div className="p-4 rounded-2xl bg-slate-900 text-white border border-slate-700 shadow-xl flex items-center justify-between animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-slate-900 text-white border border-slate-700 shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-xs font-semibold">
             <Bell className="h-4 w-4 text-hero-amber shrink-0 animate-bounce" />
             <span>{systemAlert}</span>
@@ -101,7 +93,7 @@ export function OrderPipeline({
         </div>
       )}
 
-      {/* Executive KPI Stats Bar */}
+      {/* KPI Stats Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Today's Pipeline</span>
@@ -125,6 +117,32 @@ export function OrderPipeline({
         </div>
       </div>
 
+      {/* Filter by Status Dropdown Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs text-xs">
+        <div className="font-bold text-slate-700">
+          Showing <span className="text-primary font-black">{filteredOrders.length}</span> of {orders.length} orders
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="h-3.5 w-3.5 text-slate-400" />
+          <label htmlFor="admin-order-status-filter" className="font-bold text-slate-500">Status Filter:</label>
+          <select
+            id="admin-order-status-filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="font-bold px-3 py-1.5 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer text-xs"
+          >
+            <option value="all">All Statuses ({orders.length})</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="driver_assigned">Driver Assigned</option>
+            <option value="picked_up">Picked Up</option>
+            <option value="in_wash">In Wash</option>
+            <option value="out_for_delivery">Out for Delivery</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
       {/* Desktop Orders Table */}
       <div className="hidden lg:block rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
         <table className="w-full text-left text-xs">
@@ -140,7 +158,7 @@ export function OrderPipeline({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
-            {orders.map((ord) => (
+            {filteredOrders.map((ord) => (
               <OrderTableRow
                 key={ord.id}
                 order={ord}
@@ -154,9 +172,9 @@ export function OrderPipeline({
         </table>
       </div>
 
-      {/* Mobile & Tablet Card View (No Horizontal Scrolling) */}
+      {/* Mobile Card View */}
       <div className="lg:hidden space-y-3">
-        {orders.map((ord) => (
+        {filteredOrders.map((ord) => (
           <OrderCard
             key={ord.id}
             order={ord}
@@ -168,63 +186,30 @@ export function OrderPipeline({
         ))}
       </div>
 
-      {/* Photo Proof & Damage Reporting Modal */}
       {proofModalOpen && selectedOrder && (
         <Dialog
           open={proofModalOpen}
           onOpenChange={() => setProofModalOpen(false)}
-          title={
-            proofType === "damage"
-              ? `Report Pre-Existing Fabric Flaw: ${selectedOrder.order_number}`
-              : proofType === "dropoff"
-              ? `Upload Delivery Drop-Off Proof: ${selectedOrder.order_number}`
-              : `Upload Pickup Proof: ${selectedOrder.order_number}`
-          }
-          description={
-            proofType === "damage"
-              ? "Document existing cloth damage/tear before wash cycle. Sends automated notification to customer."
-              : "High-resolution photo proof viewable immediately by customer and operations."
-          }
+          title={proofType === "damage" ? `Report Flaw: ${selectedOrder.order_number}` : proofType === "dropoff" ? `Upload Delivery Proof: ${selectedOrder.order_number}` : `Upload Pickup Proof: ${selectedOrder.order_number}`}
+          description={proofType === "damage" ? "Document existing damage before wash." : "Photo proof viewable by customer."}
         >
           <div className="space-y-4 text-xs">
             {proofType === "damage" && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Damage Description / Flaw Location
-                </label>
-                <input
-                  type="text"
-                  value={damageNotes}
-                  onChange={(e) => setDamageNotes(e.target.value)}
-                  placeholder="e.g. Small tear near collar on blue collared shirt"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 font-medium"
-                />
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Damage Description</label>
+                <input type="text" value={damageNotes} onChange={(e) => setDamageNotes(e.target.value)} placeholder="e.g. Small tear near collar" className="w-full px-3 py-2 rounded-xl border border-slate-300 font-medium" />
               </div>
             )}
-
             <div className="p-6 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-2">
               <Camera className="h-8 w-8 text-primary mx-auto shrink-0" />
-              <p className="font-bold text-slate-800">
-                {proofType === "damage" ? "Capture Damaged Garment Photo" : `Simulate Camera Snapshot (${proofType})`}
-              </p>
-              <p className="text-slate-400 text-[11px]">Strict 5MB cap • Raster JPEG/PNG/WebP</p>
-              <Button variant="hero" size="sm" onClick={handleSaveProof}>
-                {proofType === "dropoff" ? "Complete Delivery With Photo" : "Upload & Save Proof"}
-              </Button>
+              <p className="font-bold text-slate-800">{proofType === "damage" ? "Capture Damaged Photo" : `Simulate Snapshot (${proofType})`}</p>
+              <Button variant="hero" size="sm" onClick={handleSaveProof}>{proofType === "dropoff" ? "Complete Delivery With Photo" : "Upload & Save Proof"}</Button>
             </div>
           </div>
         </Dialog>
       )}
 
-      {/* Full Order Detail Inspection Modal */}
-      <OrderDetailModal
-        order={detailOrder}
-        isOpen={!!detailOrder}
-        onClose={() => setDetailOrderId(null)}
-        onUpdateStatus={handleStatusChangeWithNotification}
-        onOpenProofModal={handleOpenProofModal}
-        allOrders={orders}
-      />
+      <OrderDetailModal order={detailOrder} isOpen={!!detailOrder} onClose={() => setDetailOrderId(null)} onUpdateStatus={handleStatusChangeWithNotification} onOpenProofModal={handleOpenProofModal} allOrders={orders} />
     </div>
   );
 }

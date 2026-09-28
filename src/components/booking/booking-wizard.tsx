@@ -182,7 +182,7 @@ export function BookingWizard({
             <div className="space-y-6 animate-in fade-in duration-200">
               <StepDetergent
                 selectedDetergentId={selectedDetergentId} onSelectDetergent={setSelectedDetergentId}
-                selectedTemp={selectedTemp} onSelectTemp={setSelectedTemp}
+                selectedTemp={selectedTemp} onSelectTemp={(t: string) => setSelectedTemp(t as any)}
               />
               <div className="flex items-center justify-between pt-2">
                 <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /><span>Back to Plan</span></Button>

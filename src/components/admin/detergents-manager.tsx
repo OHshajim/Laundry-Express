@@ -185,7 +185,7 @@ export function DetergentsManager() {
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-black text-slate-900 text-sm">{d.name}</span>
-                <Badge variant={d.in_stock ? "success" : "neutral"} className="text-[10px]">
+                <Badge variant={d.in_stock ? "success" : "secondary"} className="text-[10px]">
                   {d.in_stock ? "In Stock" : "Unavailable"}
                 </Badge>
               </div>
