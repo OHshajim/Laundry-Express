@@ -122,7 +122,7 @@ export function PricingSection() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>Perfect for bedding, duvets, towels, and bulk</span>
+                  <span>Perfect for bulk laundry, towels, and family loads</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0" />

@@ -33,7 +33,7 @@ export function PackagesSection() {
       features: [
         "60 lbs monthly laundry allowance",
         "Precision scale weight verification",
-        "Bedding, towels, and clothing included",
+        "Everyday wash, towels, and clothing included",
         "Flexible 8am-12pm or 1pm-6pm scheduling",
         "Unused lbs roll over for 30 days",
       ],

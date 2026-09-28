@@ -101,6 +101,19 @@ export function DashboardHeader({
         </div>
       </div>
 
+      {/* Mobile Page Title & Subtitle Bar (< lg screens) */}
+      <div className="lg:hidden px-4 py-2.5 bg-slate-50/90 border-b border-slate-100">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-sm font-black text-slate-900 tracking-tight">{title}</h1>
+          {badgeText && (
+            <span className={`inline-flex items-center text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${BADGE_CLASSES[badgeVariant]}`}>
+              {badgeText}
+            </span>
+          )}
+        </div>
+        {subtitle && <p className="text-[11px] text-slate-500 font-medium mt-0.5 line-clamp-2">{subtitle}</p>}
+      </div>
+
       {/* Desktop Bar (>= lg screens) */}
       <div className="hidden lg:flex items-center justify-between px-6 py-3.5 max-w-full">
         <div className="min-w-0 pr-4">

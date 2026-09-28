@@ -60,9 +60,9 @@ export function HowItWorksStep({
       transition={{ delay: index * 0.08, ...springTransition }}
     >
       <div
-        className={`relative rounded-3xl p-5 sm:p-6 transition-all duration-300 border flex flex-col justify-between h-full min-h-[300px] overflow-hidden whitespace-normal break-words ${
+        className={`relative rounded-3xl p-5 sm:p-6 transition-all duration-300 border flex flex-col justify-between h-full min-h-0 w-full whitespace-normal break-words ${
           isActive
-            ? "bg-white border-primary shadow-[0_0_24px_rgba(236,72,153,0.22)] ring-2 ring-primary/30 scale-[1.02]"
+            ? "bg-white border-primary shadow-[0_0_24px_rgba(236,72,153,0.22)] ring-2 ring-primary/30 scale-[1.01]"
             : isCompleted
             ? "bg-sky-50/40 border-sky-200/80 hover:bg-sky-50/70"
             : "bg-white/90 border-slate-200/80 hover:border-pink-300 hover:bg-white"
@@ -70,9 +70,9 @@ export function HowItWorksStep({
       >
         {/* Top Indicator Row */}
         <div>
-          <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
             <span
-              className={`text-xs font-black px-2.5 py-1 rounded-full border transition-colors ${
+              className={`text-xs font-black px-2.5 py-1 rounded-full border transition-colors shrink-0 ${
                 isActive
                   ? "bg-primary text-white border-primary shadow-xs"
                   : isCompleted
@@ -85,7 +85,7 @@ export function HowItWorksStep({
 
             <Badge
               variant={isActive ? "hero" : "secondary"}
-              className="text-[10px] uppercase tracking-wider font-extrabold max-w-[140px] truncate"
+              className="text-[10px] uppercase tracking-wider font-extrabold shrink-0"
             >
               {step.badge}
             </Badge>

@@ -35,7 +35,7 @@ export function useBookingCheckout() {
     const weightAmount = p.weightLbs ?? 15;
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,8 +69,14 @@ export function useBookingCheckout() {
       });
 
       const data = await res.json();
-      const orderId = data?.order?.order_number || `LX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+      // If Stripe returned a checkout session URL, redirect immediately
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
+      const orderId = data?.order?.order_number || `LX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const slotLabel = p.selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM";
 
       setInvoice({

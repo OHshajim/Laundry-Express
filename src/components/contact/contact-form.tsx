@@ -147,7 +147,7 @@ export function ContactForm() {
             >
               <option>Pickup &amp; Delivery Inquiry</option>
               <option>Pricing &amp; Bag Inquiries</option>
-              <option>Bedding / Delicates Wash Question</option>
+              <option>Wash &amp; Detergent Options</option>
               <option>Commercial / Airbnb Bulk Laundry</option>
               <option>Other Feedback</option>
             </select>

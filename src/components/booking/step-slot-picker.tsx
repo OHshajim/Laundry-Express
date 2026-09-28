@@ -110,7 +110,7 @@ export function StepSlotPicker({
             className="w-full sm:w-auto text-xs px-3 py-1.5 rounded-xl border border-slate-300 font-bold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 min-[420px]:grid-cols-4 sm:grid-cols-7 gap-2">
           {availableDates.map((item) => {
             const isSelected = selectedDate === item.isoDate;
             return (
@@ -119,14 +119,14 @@ export function StepSlotPicker({
                 type="button"
                 onClick={() => onSelectDate(item.isoDate)}
                 className={cn(
-                  "p-2.5 rounded-xl border text-center transition-all cursor-pointer",
+                  "p-2 rounded-xl border text-center transition-all cursor-pointer min-w-0",
                   isSelected
                     ? "border-primary bg-primary text-white shadow-xs font-bold"
                     : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                 )}
               >
-                <span className="block text-xs">{item.dayName}</span>
-                <span className={cn("block text-[11px] mt-0.5", isSelected ? "text-pink-100" : "text-slate-500")}>
+                <span className="block text-xs truncate">{item.dayName}</span>
+                <span className={cn("block text-[11px] mt-0.5 truncate", isSelected ? "text-pink-100" : "text-slate-500")}>
                   {item.monthDay}
                 </span>
               </button>

@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import type { PricingMode, User, PricingConfig } from "@/types";
 import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
+import { WizardStepper } from "./wizard-stepper";
 import { StepPricingMode } from "./step-pricing-mode";
 import { StepBagCounter } from "./step-bag-counter";
 import { StepSlotPicker } from "./step-slot-picker";
@@ -15,7 +16,6 @@ import { OrderSummaryCard } from "./order-summary-card";
 import { OrderInvoiceModal } from "./order-invoice-modal";
 import { Button } from "@/components/ui/button";
 import { useBookingCheckout } from "./use-booking-checkout";
-import { cn } from "@/lib/utils";
 
 export interface BookingWizardProps {
   initialMode?: PricingMode;
@@ -145,62 +145,8 @@ export function BookingWizard({
   };
 
   return (
-    <div id="book-now" className="scroll-mt-24 py-4">
-      {/* Step Progress Bar — responsive, no horizontal scroll */}
-      <div className="mb-8 w-full">
-        {/* Dots + connectors row */}
-        <div className="flex items-center w-full">
-          {STEPS.map((label, i) => {
-            const num = i + 1;
-            const done = step > num;
-            const active = step === num;
-            return (
-              <React.Fragment key={label}>
-                <button
-                  type="button"
-                  onClick={() => num < step && setStep(num)}
-                  title={label}
-                  className={cn(
-                    "flex flex-col items-center gap-1 shrink-0 transition-all",
-                    num < step ? "cursor-pointer" : "cursor-default"
-                  )}
-                >
-                  <div className={cn(
-                    "h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 flex items-center justify-center text-[11px] sm:text-xs font-black transition-all",
-                    done
-                      ? "border-primary bg-primary text-white"
-                      : active
-                      ? "border-primary bg-white text-primary shadow-sm ring-4 ring-primary/10"
-                      : "border-slate-200 bg-slate-50 text-slate-400"
-                  )}>
-                    {done ? <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : num}
-                  </div>
-                  {/* Label: always visible on md+; only active on mobile */}
-                  <span className={cn(
-                    "text-[9px] sm:text-[10px] font-bold text-center leading-tight max-w-[48px] sm:max-w-none",
-                    "hidden sm:block",
-                    active ? "text-primary" : done ? "text-slate-600" : "text-slate-400"
-                  )}>
-                    {label}
-                  </span>
-                </button>
-                {i < STEPS.length - 1 && (
-                  <div className={cn(
-                    "flex-1 h-0.5 transition-all mx-1",
-                    step > i + 1 ? "bg-primary" : "bg-slate-200"
-                  )} />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-        {/* Active step label for mobile */}
-        <div className="sm:hidden mt-2 text-center">
-          <span className="text-xs font-bold text-primary">
-            Step {step} of {STEPS.length}: {STEPS[step - 1]}
-          </span>
-        </div>
-      </div>
+    <div id="book-now" className="scroll-mt-24 py-4 w-full max-w-full">
+      <WizardStepper steps={STEPS} currentStep={step} onStepClick={setStep} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
