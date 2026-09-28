@@ -10,27 +10,25 @@ import { formatCurrency } from "@/lib/utils";
 interface PlanBagCardProps {
   bagCount: number;
   onBagCountChange: (count: number) => void;
+  initialRates?: { bag_price?: number; standard_delivery_fee?: number; free_delivery_threshold?: number };
 }
 
-/**
- * PlanBagCard Component
- *
- * Dedicated plan card for standard 13-gallon laundry bags.
- * Highlights the core business rule:
- * - 1 Bag = $10.00 delivery fee
- * - 2+ Bags = FREE ($0.00) delivery fee
- */
-export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
-  const [rates, setRates] = React.useState({ baseBagPrice: 32.50, deliveryFee: 10.0 });
+export function PlanBagCard({ bagCount, onBagCountChange, initialRates }: PlanBagCardProps) {
+  const [rates, setRates] = React.useState({
+    baseBagPrice: Number(initialRates?.bag_price ?? 32.50),
+    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 10.0),
+    freeDeliveryThreshold: Number(initialRates?.free_delivery_threshold ?? 2),
+  });
 
   React.useEffect(() => {
     fetch("/api/pricing")
       .then((r) => r.json())
       .then((d) => {
-        if (d.pricing) {
+        if (d?.pricing) {
           setRates({
             baseBagPrice: Number(d.pricing.bag_price ?? d.pricing.base_bag_price ?? 32.50),
             deliveryFee: Number(d.pricing.standard_delivery_fee ?? d.pricing.one_bag_delivery_fee ?? 10.0),
+            freeDeliveryThreshold: Number(d.pricing.free_delivery_threshold ?? 2),
           });
         }
       })
@@ -38,7 +36,8 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
   }, []);
 
   const bagSubtotal = bagCount * rates.baseBagPrice;
-  const bagDeliveryFee = bagCount === 1 ? rates.deliveryFee : 0.0;
+  const isFreeDelivery = bagCount >= rates.freeDeliveryThreshold;
+  const bagDeliveryFee = isFreeDelivery ? 0.0 : rates.deliveryFee;
   const bagTotal = bagSubtotal + bagDeliveryFee;
 
   return (
@@ -93,7 +92,7 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
         {/* Delivery Fee Status Callout */}
         <div
           className={`p-3.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${
-            bagCount >= 2
+            isFreeDelivery
               ? "bg-emerald-50 border-emerald-200 text-emerald-900"
               : "bg-amber-50 border-amber-200 text-amber-900"
           }`}
@@ -101,17 +100,17 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
             <span>
-              {bagCount >= 2 ? (
-                <strong>Awesome! 2+ Bags qualify for 100% FREE delivery.</strong>
+              {isFreeDelivery ? (
+                <strong>Awesome! {rates.freeDeliveryThreshold}+ Bags qualify for 100% FREE delivery.</strong>
               ) : (
                 <span>
-                  Add 1 more bag to get <strong>FREE delivery</strong> (save $10.00)!
+                  Add {rates.freeDeliveryThreshold - bagCount} more bag to get <strong>FREE delivery</strong> (save {formatCurrency(rates.deliveryFee)})!
                 </span>
               )}
             </span>
           </div>
-          <Badge variant={bagCount >= 2 ? "success" : "warning"}>
-            {bagCount >= 2 ? "FREE ($0.00)" : "$10.00 Fee"}
+          <Badge variant={isFreeDelivery ? "success" : "warning"}>
+            {isFreeDelivery ? "FREE ($0.00)" : `${formatCurrency(rates.deliveryFee)} Fee`}
           </Badge>
         </div>
       </div>
@@ -119,13 +118,13 @@ export function PlanBagCard({ bagCount, onBagCountChange }: PlanBagCardProps) {
       {/* Pricing Calculation Summary */}
       <div className="space-y-2 pt-2 text-sm text-slate-600">
         <div className="flex justify-between">
-          <span>{bagCount} Bag{bagCount > 1 ? "s" : ""} Wash &amp; Fold ($32.50/bag):</span>
+          <span>{bagCount} Bag{bagCount > 1 ? "s" : ""} Wash &amp; Fold (${rates.baseBagPrice.toFixed(2)}/bag):</span>
           <span className="font-semibold text-slate-900">{formatCurrency(bagSubtotal)}</span>
         </div>
         <div className="flex justify-between items-center">
           <span>Doorstep Pickup &amp; Delivery:</span>
-          <span className={`font-bold ${bagCount >= 2 ? "text-emerald-600" : "text-slate-900"}`}>
-            {bagCount >= 2 ? "FREE ($0.00)" : "$10.00"}
+          <span className={`font-bold ${isFreeDelivery ? "text-emerald-600" : "text-slate-900"}`}>
+            {isFreeDelivery ? "FREE ($0.00)" : formatCurrency(rates.deliveryFee)}
           </span>
         </div>
         <div className="flex justify-between pt-3 border-t border-slate-200 text-base font-black text-slate-900">

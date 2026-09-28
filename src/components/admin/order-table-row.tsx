@@ -70,16 +70,16 @@ export function OrderTableRow({
         <span className="font-bold text-sky-800 uppercase text-[10px] block">
           {order.pricing_mode === "per_bag"
             ? "By Bag"
-            : order.pricing_mode === "per_kg"
-            ? "By Weight (KG)"
+            : order.pricing_mode === "per_lb"
+            ? "By Weight (lbs)"
             : "Package"}
         </span>
         <span className="text-slate-600 font-semibold">
           {order.pricing_mode === "per_bag"
             ? `${order.bag_count} Bag(s)`
-            : order.final_weight_kg
-            ? `${order.final_weight_kg} KG (Final)`
-            : `${order.estimated_weight_kg || 5} KG (Est.)`}
+            : order.final_weight_lbs
+            ? `${order.final_weight_lbs} lbs (Final)`
+            : `${order.estimated_weight_lbs || 15} lbs (Est.)`}
         </span>
       </td>
 
@@ -104,8 +104,8 @@ export function OrderTableRow({
       </td>
 
       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-        {/* Optional Weigh scale for KG mode */}
-        {order.pricing_mode === "per_kg" && order.order_status !== "completed" && (
+        {/* Optional Weigh scale for Pound/weight mode */}
+        {order.pricing_mode === "per_lb" && order.order_status !== "completed" && (
           <Button
             variant="outline"
             size="sm"

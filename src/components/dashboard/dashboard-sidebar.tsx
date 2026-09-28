@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -26,9 +29,6 @@ export interface DashboardSidebarProps {
   userName?: string;
   activeSection?: string;
   onSelectSection?: (section: string) => void;
-  // Compatibility aliases
-  activeAdminSection?: string;
-  onSelectAdminSection?: (section: any) => void;
   ordersCount?: number;
   customersCount?: number;
   pendingReviewsCount?: number;
@@ -36,53 +36,49 @@ export interface DashboardSidebarProps {
   onCloseMobile: () => void;
 }
 
-const CUSTOMER_NAV = [
-  { id: "overview", label: "Dashboard Overview", icon: LayoutDashboard },
-  { id: "orders", label: "My Orders & Tracking", icon: ShoppingBag },
-  { id: "transactions", label: "Payment History", icon: CreditCard },
-  { id: "ratings", label: "Ratings & Reviews", icon: Star },
-  { id: "account_settings", label: "Account Settings", icon: Settings },
+interface NavItem {
+  id: string;
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badgeKey?: string;
+}
+
+const CUSTOMER_NAV: NavItem[] = [
+  { id: "overview", href: "/dashboard", label: "Dashboard Overview", icon: LayoutDashboard },
+  { id: "orders", href: "/dashboard/orders", label: "My Orders & Tracking", icon: ShoppingBag },
+  { id: "transactions", href: "/dashboard/transactions", label: "Payment History", icon: CreditCard },
+  { id: "ratings", href: "/dashboard/ratings", label: "Ratings & Reviews", icon: Star },
+  { id: "account_settings", href: "/dashboard/account", label: "Account Settings", icon: Settings },
 ];
 
-const ADMIN_NAV = [
-  { id: "overview", label: "Overview", icon: Sliders },
-  { id: "orders", label: "Orders", icon: ListOrdered, badgeKey: "orders" },
-  { id: "customers", label: "Customers", icon: Users, badgeKey: "customers" },
-  { id: "transactions", label: "Transactions", icon: CreditCard },
-  { id: "packages", label: "Packages & Bundles", icon: Package },
-  { id: "detergents", label: "Detergent & Temp Catalog", icon: Sparkles },
-  { id: "coupons", label: "Promo Coupons", icon: Tag },
-  { id: "reviews", label: "Review Moderation", icon: MessageSquare, badgeKey: "reviews" },
-  { id: "faqs", label: "FAQs & Terms Guarantees", icon: HelpCircle },
-  { id: "settings", label: "Operations & Facility Settings", icon: Settings },
-  { id: "account_settings", label: "Account Settings", icon: UserIcon },
+const ADMIN_NAV: NavItem[] = [
+  { id: "overview", href: "/dashboard", label: "Overview", icon: Sliders },
+  { id: "orders", href: "/dashboard/orders", label: "Orders", icon: ListOrdered, badgeKey: "orders" },
+  { id: "customers", href: "/dashboard/customers", label: "Customers", icon: Users, badgeKey: "customers" },
+  { id: "transactions", href: "/dashboard/transactions", label: "Transactions", icon: CreditCard },
+  { id: "packages", href: "/dashboard/packages", label: "Packages & Bundles", icon: Package },
+  { id: "detergents", href: "/dashboard/detergents", label: "Detergent Catalog", icon: Sparkles },
+  { id: "coupons", href: "/dashboard/coupons", label: "Promo Coupons", icon: Tag },
+  { id: "reviews", href: "/dashboard/reviews", label: "Review Moderation", icon: MessageSquare, badgeKey: "reviews" },
+  { id: "faqs", href: "/dashboard/faqs", label: "FAQs & Terms Guarantees", icon: HelpCircle },
+  { id: "settings", href: "/dashboard/settings", label: "Operations & Facility", icon: Settings },
+  { id: "account_settings", href: "/dashboard/account", label: "Account Settings", icon: UserIcon },
 ];
 
-/**
- * Unified DashboardSidebar Component
- *
- * Light-themed, fixed-height (100vh) sidebar shared by Customer & Admin:
- * - Role-based navigation links provided cleanly from single component
- * - Admin has full operations catalog + Account Settings
- * - Fixed viewport height on desktop (lg:sticky lg:top-0 h-screen), never stretches dynamically
- * - Smooth animated drawer with backdrop blur on mobile devices
- * - Strict adherence to < 250 lines rule
- */
 export function DashboardSidebar({
   role,
   userName,
   activeSection,
   onSelectSection,
-  activeAdminSection,
-  onSelectAdminSection,
   ordersCount = 0,
   customersCount = 0,
   pendingReviewsCount = 0,
   mobileOpen,
   onCloseMobile,
 }: DashboardSidebarProps) {
-  const currentActive = activeSection || activeAdminSection || (role === "admin" ? "orders" : "overview");
-  const handleSelect = onSelectSection || onSelectAdminSection;
+  const pathname = usePathname();
+  const navItems = role === "admin" ? ADMIN_NAV : CUSTOMER_NAV;
 
   const getAdminBadge = (badgeKey?: string) => {
     if (badgeKey === "orders" && ordersCount > 0) return ordersCount;
@@ -91,26 +87,18 @@ export function DashboardSidebar({
     return undefined;
   };
 
-  const navItems = role === "admin" ? ADMIN_NAV : CUSTOMER_NAV;
-
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden"
-          onClick={onCloseMobile}
-        />
+        <div className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden" onClick={onCloseMobile} />
       )}
 
-      {/* Main Sidebar Element - Fixed drawer on mobile, sticky on desktop */}
       <aside
-        className={`fixed lg:sticky top-0 inset-y-0 left-0 z-50 w-64 h-screen bg-white border-r border-slate-200/80 flex flex-col justify-between transition-transform duration-200 shrink-0 shadow-2xs lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed lg:sticky top-0 inset-y-0 left-0 z-50 w-64 h-screen bg-white border-r border-slate-200/80 flex flex-col justify-between transition-transform duration-200 shrink-0 shadow-2xs lg:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        {/* Scrollable Navigation Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Brand & Role Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5 min-w-0">
               <MascotBadge size="xs" />
@@ -123,8 +111,6 @@ export function DashboardSidebar({
                 </span>
               </div>
             </div>
-
-            {/* Mobile Close Button */}
             <button
               type="button"
               onClick={onCloseMobile}
@@ -135,30 +121,27 @@ export function DashboardSidebar({
             </button>
           </div>
 
-          {/* Section Category Label */}
           <div className="px-2 pt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
             {role === "admin" ? "Operations & Admin" : "Customer Navigation"}
           </div>
 
-          {/* Navigation Links */}
           <nav className="space-y-1" aria-label="Dashboard Navigation">
             {navItems.map((item) => {
-              const active = currentActive === item.id;
+              const active = pathname === item.href || (activeSection && activeSection === item.id);
               const Icon = item.icon;
-              const badge = "badgeKey" in item ? getAdminBadge((item as any).badgeKey) : undefined;
+              const badge = item.badgeKey ? getAdminBadge(item.badgeKey) : undefined;
 
               return (
-                <button
+                <Link
                   key={item.id}
-                  type="button"
+                  href={item.href}
                   onClick={() => {
-                    handleSelect?.(item.id);
+                    onSelectSection?.(item.id);
                     onCloseMobile();
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 text-left cursor-pointer ${active
-                    ? "bg-primary text-white shadow-xs shadow-primary/25"
-                    : "text-slate-600 hover:bg-pink-50/70 hover:text-primary"
-                    }`}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 text-left ${
+                    active ? "bg-primary text-white shadow-xs shadow-primary/25" : "text-slate-600 hover:bg-pink-50/70 hover:text-primary"
+                  }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Icon className={`h-4 w-4 shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
@@ -167,19 +150,19 @@ export function DashboardSidebar({
 
                   {badge !== undefined && (
                     <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ${active ? "bg-white text-primary" : "bg-primary text-white"
-                        }`}
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
+                        active ? "bg-white text-primary" : "bg-primary text-white"
+                      }`}
                     >
                       {badge}
                     </span>
                   )}
-                </button>
+                </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Pinned Bottom Footer Bar */}
         <div className="p-3.5 border-t border-slate-100 space-y-2 shrink-0">
           <Link
             href="/"

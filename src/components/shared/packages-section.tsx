@@ -24,18 +24,18 @@ export function PackagesSection() {
     },
     {
       id: "pkg-2",
-      title: "Monthly Family 25KG Plan",
+      title: "Monthly Family 60 lbs Plan",
       tagline: "Heavy-duty monthly household solution",
       price: 55.0,
       originalPrice: 70.0,
       bags: 0,
       delivery: "FREE Delivery on all monthly batches",
       features: [
-        "25KG monthly laundry allowance",
+        "60 lbs monthly laundry allowance",
         "Precision scale weight verification",
-        "Bedding, towels, and clothing included",
+        "Everyday wash, towels, and clothing included",
         "Flexible 8am-12pm or 1pm-6pm scheduling",
-        "Unused KG rolls over for 30 days",
+        "Unused lbs roll over for 30 days",
       ],
       isFeatured: false,
     },
@@ -53,7 +53,7 @@ export function PackagesSection() {
             Save Up to 25% with Superhero Packages
           </h2>
           <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-            Eliminate laundry day stress. Pre-pay for laundry bags or monthly bulk kilograms at discounted rates with guaranteed zero delivery fees.
+            Eliminate laundry day stress. Pre-pay for laundry bags or monthly bulk pounds at discounted rates with guaranteed zero delivery fees.
           </p>
         </div>
 

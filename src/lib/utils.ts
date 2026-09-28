@@ -66,13 +66,6 @@ export function generateOrderNumber(sequence: number): string {
 }
 
 /**
- * Converts kilograms to pounds for display helpers.
- */
-export function kgToLbs(kg: number): number {
-  return Math.round(kg * 2.20462 * 10) / 10;
-}
-
-/**
  * Formats phone numbers cleanly to (XXX) XXX-XXXX.
  */
 export function formatPhone(phone: string): string {

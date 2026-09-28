@@ -9,7 +9,7 @@ export interface CheckoutPayload {
   currentUser: User | null;
   pricingMode: PricingMode;
   bagCount: number;
-  weightKg: number;
+  weightLbs?: number;
   selectedDetergentId: string;
   selectedTemp: string;
   selectedDate: string;
@@ -18,6 +18,7 @@ export interface CheckoutPayload {
   address: string;
   addressDetails?: AddressDetails;
   isOutOfHome: boolean;
+  isAwayForDropoff: boolean;
   bagConfirmed: boolean;
   notes: string;
   priceResult: { subtotal: number; delivery_fee: number; discount_amount: number; total_amount: number };
@@ -31,19 +32,20 @@ export function useBookingCheckout() {
   const checkout = async (p: CheckoutPayload) => {
     setIsProcessing(true);
     const delivery = p.dropoffDate || new Date(Date.now() + 24 * 3600 * 1000).toISOString().split("T")[0];
+    const weightAmount = p.weightLbs ?? 15;
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: p.currentUser?.id,
-          customer_name: p.currentUser?.full_name || p.currentUser?.name || "Customer",
-          customer_email: p.currentUser?.email || "customer@laundryexpress.com",
-          customer_phone: p.currentUser?.phone || "815-575-9536",
+          customer_name: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
+          customer_email: p.currentUser?.email || "",
+          customer_phone: p.currentUser?.phone || "",
           pricing_mode: p.pricingMode,
           bag_count: p.bagCount,
-          estimated_weight_kg: p.weightKg,
+          estimated_weight_lbs: weightAmount,
           detergent_id: p.selectedDetergentId,
           wash_temperature: p.selectedTemp,
           pickup_date: p.selectedDate,
@@ -55,6 +57,7 @@ export function useBookingCheckout() {
           state: p.addressDetails?.state || "IL",
           zip_code: p.addressDetails?.zip || "60156",
           is_out_of_home: p.isOutOfHome,
+          is_away_for_dropoff: p.isAwayForDropoff,
           bag_outside_door_confirmed: p.bagConfirmed,
           special_instructions: p.notes,
           subtotal: p.priceResult.subtotal,
@@ -66,25 +69,36 @@ export function useBookingCheckout() {
       });
 
       const data = await res.json();
+
+      // If Stripe returned a checkout session URL, redirect immediately
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
       const orderId = data?.order?.order_number || `LX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const slotLabel = p.selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM";
 
       setInvoice({
         orderId,
         orderDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         pickupDate: p.selectedDate,
-        pickupSlot: p.selectedSlot === "8am-12pm" ? "8am – 12pm" : "1pm – 6pm",
+        pickupSlot: slotLabel,
         deliveryDate: delivery,
         paymentMethod: p.paymentMethod,
         totalAmount: p.priceResult.total_amount,
-        customerName: p.currentUser?.full_name || p.currentUser?.name || "Customer",
-        customerEmail: p.currentUser?.email || "customer@laundryexpress.com",
+        subtotal: p.priceResult.subtotal,
+        deliveryFee: p.priceResult.delivery_fee,
+        discountAmount: p.priceResult.discount_amount,
+        customerName: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
+        customerEmail: p.currentUser?.email || "",
         address: p.address,
         orderDetails: {
-          planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : "By The KG",
-          quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${p.weightKg} KG`,
+          planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : p.pricingMode === "package" ? "Saver Package" : "By The Pound (lb)",
+          quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${weightAmount} lbs`,
           detergent: p.selectedDetergentId,
-          temperature: p.selectedTemp,
-          specialRequest: p.isOutOfHome ? "Away (Contactless Doorstep)" : "Home (Ring Bell)",
+          temperature: "cold",
+          specialRequest: p.isOutOfHome ? "Away (Contactless Pickup)" : "Home (Ring Bell)",
         },
       });
     } catch {} finally {

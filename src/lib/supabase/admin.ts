@@ -70,7 +70,7 @@ export async function updateOrderStatusAdmin(
  * Updates dynamic pricing configurations in public.pricing_configs.
  */
 export async function updatePricingConfigAdmin(
-  config: Partial<PricingConfig> & { pricing_type: "per_bag" | "per_kg" }
+  config: Partial<PricingConfig> & { pricing_type: "per_bag" | "per_lb" }
 ): Promise<boolean> {
   try {
     const supabase = createAdminSupabaseClient();

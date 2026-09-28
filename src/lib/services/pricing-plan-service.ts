@@ -4,7 +4,7 @@ export interface PackagePlan {
   id: string;
   name: string;
   description: string;
-  unit_type: "bag" | "kg";
+  unit_type: "bag" | "lb";
   capacity: number;
   original_price: number;
   discounted_price: number;
@@ -16,13 +16,14 @@ export interface PricingConfig {
   bag_price: number;
   min_bags: number;
   max_bags: number;
-  kg_price: number;
-  min_kg: number;
-  max_kg: number;
+  pound_price: number;
+  min_lbs: number;
+  max_lbs: number;
+  free_delivery_lbs: number;
   free_delivery_threshold: number;
   standard_delivery_fee: number;
   base_bag_price: number;
-  base_kg_price: number;
+  base_pound_price: number;
   one_bag_delivery_fee: number;
 }
 
@@ -31,13 +32,14 @@ let cachedPricing: PricingConfig = {
   bag_price: 32.5,
   min_bags: 1,
   max_bags: 10,
-  kg_price: 2.75,
-  min_kg: 5,
-  max_kg: 50,
+  pound_price: 1.99,
+  min_lbs: 10,
+  max_lbs: 100,
+  free_delivery_lbs: 30,
   free_delivery_threshold: 2,
   standard_delivery_fee: 10,
   base_bag_price: 32.5,
-  base_kg_price: 2.75,
+  base_pound_price: 1.99,
   one_bag_delivery_fee: 10,
 };
 
@@ -51,8 +53,8 @@ export class PricingPlanService {
           id: d.id,
           name: d.title || d.name,
           description: d.description || "",
-          unit_type: (d.package_type === "weight_tier" ? "kg" : "bag") as "bag" | "kg",
-          capacity: Number(d.included_bags || d.included_kg || d.capacity || 1),
+          unit_type: (d.package_type === "weight_tier" ? "lb" : "bag") as "bag" | "lb",
+          capacity: Number(d.included_bags || d.included_lbs || d.capacity || 1),
           original_price: Number(d.original_price || d.price || 0),
           discounted_price: Number(d.price || d.discounted_price || 0),
           key_points: Array.isArray(d.key_points) ? d.key_points : [],
@@ -66,10 +68,36 @@ export class PricingPlanService {
   }
 
   static async savePlan(plan: Partial<PackagePlan>): Promise<PackagePlan> {
-    const id = plan.id || `pkg-${Date.now()}`;
+    const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+    const name = (plan.name || "Custom Laundry Pass").trim();
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    let finalId = isUuid(plan.id) ? plan.id! : "";
+
+    const dbPayload: Record<string, unknown> = {
+      title: name,
+      slug,
+      description: plan.description || "",
+      package_type: plan.unit_type === "lb" ? "weight_tier" : "bag_bundle",
+      included_bags: plan.unit_type === "bag" ? (plan.capacity || 1) : 0,
+      included_kg: plan.unit_type === "lb" ? (plan.capacity || 1) : 0,
+      price: plan.discounted_price || plan.original_price || 0,
+      key_points: plan.key_points || [],
+      is_active: plan.is_active ?? true,
+      updated_at: new Date().toISOString(),
+    };
+    if (finalId) dbPayload.id = finalId;
+
+    try {
+      const supabase = createAdminSupabaseClient();
+      const { data, error } = await supabase.from("plans").upsert(dbPayload, { onConflict: "slug" }).select().single();
+      if (!error && data?.id) {
+        finalId = data.id;
+      }
+    } catch {}
+
     const fullPlan: PackagePlan = {
-      id,
-      name: plan.name || "Custom Laundry Pass",
+      id: finalId || plan.id || `pkg-${Date.now()}`,
+      name,
       description: plan.description || "",
       unit_type: plan.unit_type || "bag",
       capacity: plan.capacity || 1,
@@ -79,35 +107,23 @@ export class PricingPlanService {
       is_active: plan.is_active ?? true,
     };
 
-    const idx = cachedPlans.findIndex((p) => p.id === id);
+    const idx = cachedPlans.findIndex((p) => (finalId && p.id === finalId) || p.name === name);
     if (idx >= 0) cachedPlans[idx] = fullPlan;
     else cachedPlans.push(fullPlan);
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("plans").upsert({
-        id,
-        title: fullPlan.name,
-        slug: fullPlan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        description: fullPlan.description,
-        package_type: fullPlan.unit_type === "kg" ? "weight_tier" : "bag_bundle",
-        included_bags: fullPlan.unit_type === "bag" ? fullPlan.capacity : 0,
-        included_kg: fullPlan.unit_type === "kg" ? fullPlan.capacity : 0,
-        price: fullPlan.discounted_price || fullPlan.original_price,
-        key_points: fullPlan.key_points,
-        is_active: fullPlan.is_active,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {}
 
     return fullPlan;
   }
 
   static async deletePlan(id: string): Promise<boolean> {
+    const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
     cachedPlans = cachedPlans.filter((p) => p.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("plans").delete().eq("id", id);
+      if (isUuid(id)) {
+        await supabase.from("plans").delete().eq("id", id);
+      } else {
+        await supabase.from("plans").delete().eq("slug", id.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+      }
     } catch {}
     return true;
   }
@@ -118,21 +134,27 @@ export class PricingPlanService {
       const { data, error } = await supabase.from("pricing_configs").select("*");
       if (!error && data && data.length > 0) {
         const bagRow = data.find((r) => r.pricing_type === "per_bag");
-        const kgRow = data.find((r) => r.pricing_type === "per_kg");
+        const lbRow = data.find((r) => r.pricing_type === "per_lb");
         const bPrice = Number(bagRow?.unit_price ?? 32.5);
-        const kPrice = Number(kgRow?.unit_price ?? 2.75);
+        const pPrice = Number(lbRow?.unit_price ?? 1.99);
         const dFee = Number(bagRow?.standard_delivery_fee ?? 10);
+        const minLbs = Number(lbRow?.min_order_quantity ?? 10);
+        const maxLbs = Number(lbRow?.max_orders_per_slot ?? 100);
+        const freeDeliveryLbs = Number(lbRow?.free_delivery_threshold ?? 30);
+        const freeDeliveryBags = Number(bagRow?.free_delivery_threshold ?? 2);
+
         cachedPricing = {
           bag_price: bPrice,
           min_bags: Number(bagRow?.min_order_quantity ?? 1),
-          max_bags: Number(bagRow?.max_orders_per_slot ?? 10),
-          kg_price: kPrice,
-          min_kg: Number(kgRow?.min_order_quantity ?? 5),
-          max_kg: 50,
-          free_delivery_threshold: Number(bagRow?.free_delivery_threshold ?? 2),
+          max_bags: Number(bagRow?.max_orders_per_slot ?? 15),
+          pound_price: pPrice,
+          min_lbs: minLbs,
+          max_lbs: maxLbs,
+          free_delivery_lbs: freeDeliveryLbs,
+          free_delivery_threshold: freeDeliveryBags,
           standard_delivery_fee: dFee,
           base_bag_price: bPrice,
-          base_kg_price: kPrice,
+          base_pound_price: pPrice,
           one_bag_delivery_fee: dFee,
         };
       }
@@ -142,23 +164,26 @@ export class PricingPlanService {
 
   static async updatePricing(updates: Partial<PricingConfig> & Record<string, any>): Promise<PricingConfig> {
     const bPrice = Number(updates.bag_price ?? updates.base_bag_price ?? cachedPricing.bag_price);
-    const kPrice = Number(updates.kg_price ?? updates.base_kg_price ?? cachedPricing.kg_price);
+    const pPrice = Number(updates.pound_price ?? updates.base_pound_price ?? cachedPricing.pound_price);
     const dFee = Number(updates.standard_delivery_fee ?? updates.one_bag_delivery_fee ?? cachedPricing.standard_delivery_fee);
-    const freeThresh = Number(updates.free_delivery_threshold ?? cachedPricing.free_delivery_threshold);
+    const freeDeliveryBags = Number(updates.free_delivery_threshold ?? cachedPricing.free_delivery_threshold);
+    const freeDeliveryLbs = Number(updates.free_delivery_lbs ?? cachedPricing.free_delivery_lbs);
     const minBags = Number(updates.min_bags ?? cachedPricing.min_bags);
-    const minKg = Number(updates.min_kg ?? cachedPricing.min_kg);
+    const minLbs = Number(updates.min_lbs ?? cachedPricing.min_lbs);
+    const maxLbs = Number(updates.max_lbs ?? cachedPricing.max_lbs);
 
     cachedPricing = {
       bag_price: bPrice,
       min_bags: minBags,
       max_bags: Number(updates.max_bags ?? cachedPricing.max_bags),
-      kg_price: kPrice,
-      min_kg: minKg,
-      max_kg: Number(updates.max_kg ?? cachedPricing.max_kg),
-      free_delivery_threshold: freeThresh,
+      pound_price: pPrice,
+      min_lbs: minLbs,
+      max_lbs: maxLbs,
+      free_delivery_lbs: freeDeliveryLbs,
+      free_delivery_threshold: freeDeliveryBags,
       standard_delivery_fee: dFee,
       base_bag_price: bPrice,
-      base_kg_price: kPrice,
+      base_pound_price: pPrice,
       one_bag_delivery_fee: dFee,
     };
 
@@ -169,16 +194,17 @@ export class PricingPlanService {
           pricing_type: "per_bag",
           unit_price: bPrice,
           min_order_quantity: minBags,
-          free_delivery_threshold: freeThresh,
+          free_delivery_threshold: freeDeliveryBags,
           standard_delivery_fee: dFee,
           is_active: true,
           updated_at: new Date().toISOString(),
         },
         {
-          pricing_type: "per_kg",
-          unit_price: kPrice,
-          min_order_quantity: minKg,
-          free_delivery_threshold: freeThresh,
+          pricing_type: "per_lb",
+          unit_price: pPrice,
+          min_order_quantity: minLbs,
+          free_delivery_threshold: freeDeliveryLbs,
+          max_orders_per_slot: maxLbs,
           standard_delivery_fee: dFee,
           is_active: true,
           updated_at: new Date().toISOString(),

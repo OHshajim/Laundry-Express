@@ -89,9 +89,9 @@ export function OrderCard({
           <span className="font-semibold text-slate-800 text-[11px]">
             {order.pricing_mode === "per_bag"
               ? `${order.bag_count} Bag(s)`
-              : order.final_weight_kg
-              ? `${order.final_weight_kg} KG (Final)`
-              : `${order.estimated_weight_kg || 5} KG (Est.)`}
+              : order.final_weight_lbs
+              ? `${order.final_weight_lbs} lbs (Final)`
+              : `${order.estimated_weight_lbs || 15} lbs (Est.)`}
           </span>
         </div>
 
@@ -109,7 +109,7 @@ export function OrderCard({
         className="flex flex-wrap items-center justify-end gap-1.5 pt-1"
         onClick={(e) => e.stopPropagation()}
       >
-        {order.pricing_mode === "per_kg" && order.order_status !== "completed" && (
+        {order.pricing_mode === "per_lb" && order.order_status !== "completed" && (
           <Button
             variant="outline"
             size="sm"

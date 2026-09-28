@@ -104,7 +104,8 @@
 
 html,
 body {
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
   background-color: #F8FAFC;
   color: var(--deep);
@@ -280,5 +281,25 @@ body {
 @media (max-width: 640px) {
   .bubble-container>div:nth-child(n+6) {
     display: none;
+  }
+}
+
+/* Professional Print Stylesheet for Tax Invoice */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  header, nav, footer, .print\:hidden, [data-radix-portal] > div:first-child {
+    display: none !important;
+  }
+  #official-invoice-print-area {
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }

@@ -10,71 +10,60 @@ export interface DetergentItem {
   is_active: boolean;
 }
 
-export interface TemperatureOption {
-  id: string;
-  name: string;
-  type: "cold" | "warm" | "hot";
-  price: number;
-  description: string;
-  is_active: boolean;
-}
+const isUuid = (val?: string): boolean =>
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
 let cachedDetergents: DetergentItem[] = [];
-let cachedTemps: TemperatureOption[] = [];
 
 export class CatalogService {
-  static async getCatalog(): Promise<{ detergents: DetergentItem[]; temperatures: TemperatureOption[] }> {
+  static async getCatalog(): Promise<{ detergents: DetergentItem[]; temperatures: [] }> {
     try {
       const supabase = createAdminSupabaseClient();
-      const { data: catData, error } = await supabase.from("catalog_items").select("*").order("created_at", { ascending: true });
-      if (!error && catData && catData.length > 0) {
-        cachedDetergents = catData
-          .filter((c) => c.category === "detergent")
+      const { data, error } = await supabase
+        .from("catalog_items")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        cachedDetergents = data
+          .filter((d) => d.category === "detergent")
           .map((d) => ({
             id: d.id,
             name: d.name,
-            type: (d.item_type || d.type || "liquid") as "liquid" | "powder" | "pods",
+            type: d.item_type || "liquid",
             brand: d.brand || "Standard",
             price: Number(d.price ?? 0),
             description: d.description || "",
             is_active: d.is_active ?? true,
           }));
-
-        cachedTemps = catData
-          .filter((c) => c.category === "temperature")
-          .map((t) => ({
-            id: t.id,
-            name: t.name,
-            type: (t.item_type || t.type || "cold") as "cold" | "warm" | "hot",
-            price: Number(t.price ?? 0),
-            description: t.description || "",
-            is_active: t.is_active ?? true,
-          }));
       }
     } catch {}
-    return { detergents: cachedDetergents, temperatures: cachedTemps };
+    return { detergents: cachedDetergents, temperatures: [] };
   }
 
   static async saveDetergent(item: Partial<DetergentItem>): Promise<DetergentItem> {
-    const id = item.id || `det-${Date.now()}`;
+    const rawId = item.id || `det-${Date.now()}`;
+    const id = isUuid(rawId) ? rawId : crypto.randomUUID();
+
     const full: DetergentItem = {
       id,
-      name: item.name || "Custom Detergent",
+      name: item.name || "Eco Detergent",
       type: item.type || "liquid",
       brand: item.brand || "Standard",
-      price: item.price ?? 0,
-      description: item.description || "",
+      price: Number(item.price ?? 0),
+      description: item.description || "Wash formula",
       is_active: item.is_active ?? true,
     };
 
-    const idx = cachedDetergents.findIndex((d) => d.id === id);
+    const idx = cachedDetergents.findIndex((d) => d.id === full.id);
     if (idx >= 0) cachedDetergents[idx] = full;
     else cachedDetergents.push(full);
 
     try {
       const supabase = createAdminSupabaseClient();
       await supabase.from("catalog_items").upsert({
-        id,
+        id: full.id,
         category: "detergent",
         name: full.name,
         brand: full.brand,
@@ -82,51 +71,21 @@ export class CatalogService {
         price: full.price,
         description: full.description,
         is_active: full.is_active,
-        in_stock: true,
+        in_stock: full.is_active,
       });
     } catch {}
 
     return full;
   }
 
-  static async deleteDetergent(id: string): Promise<boolean> {
+  static async deleteItem(id: string): Promise<boolean> {
     cachedDetergents = cachedDetergents.filter((d) => d.id !== id);
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("catalog_items").delete().eq("id", id);
+      if (isUuid(id)) {
+        await supabase.from("catalog_items").delete().eq("id", id);
+      }
     } catch {}
     return true;
-  }
-
-  static async saveTemperature(item: Partial<TemperatureOption>): Promise<TemperatureOption> {
-    const id = item.id || `temp-${Date.now()}`;
-    const full: TemperatureOption = {
-      id,
-      name: item.name || "Custom Temp",
-      type: item.type || "cold",
-      price: item.price ?? 0,
-      description: item.description || "",
-      is_active: item.is_active ?? true,
-    };
-
-    const idx = cachedTemps.findIndex((t) => t.id === id);
-    if (idx >= 0) cachedTemps[idx] = full;
-    else cachedTemps.push(full);
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("catalog_items").upsert({
-        id,
-        category: "temperature",
-        name: full.name,
-        item_type: full.type,
-        price: full.price,
-        description: full.description,
-        is_active: full.is_active,
-        in_stock: true,
-      });
-    } catch {}
-
-    return full;
   }
 }

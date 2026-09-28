@@ -11,13 +11,13 @@ import { Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 export const metadata: Metadata = {
   title: "Plans & Pricing — Transparent Laundry Rates",
   description:
-    "Honest doorstep laundry pricing. 1 Bag = $10.00 delivery fee; 2+ Bags = FREE ($0.00) delivery fee! Weighed laundry by the KG and discounted saver passes available.",
+    "Honest doorstep laundry pricing. 1 Bag = $10.00 delivery fee; 2+ Bags = FREE ($0.00) delivery fee! Weighed laundry by the pound and discounted saver passes available.",
   keywords: [
     "laundry pricing",
     "wash and fold cost",
     "free laundry delivery",
     "per bag laundry pricing",
-    "commercial laundry price per kg",
+    "commercial laundry price per pound",
     "laundry packages",
   ],
   alternates: {
@@ -38,13 +38,18 @@ export const metadata: Metadata = {
  * PricingPage Component
  *
  * Dedicated plans and pricing breakdown page.
- * Displays standard 13-gallon bag options, weighed bulk laundry by the KG,
+ * Displays standard 13-gallon bag options, weighed bulk laundry by the pound,
  * prepaid saver packages, and detailed plan comparison matrix.
  * Includes instant calculator and side-by-side plan comparisons.
  * Main navigation stays static as users scroll.
  * Strict adherence to the 100-250 lines rule.
  */
-export default function PricingPage() {
+import { PricingPlanService } from "@/lib/services/pricing-plan-service";
+import { formatCurrency } from "@/lib/utils";
+
+export default async function PricingPage() {
+  const pricing = await PricingPlanService.getPricing();
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-clip pt-8 md:pt-10">
       {/* Sticky Global Navigation Navbar */}
@@ -66,14 +71,14 @@ export default function PricingPage() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-              No hidden service surcharges or surprise fees. Choose between standard bags, weighed bulk by the KG, or pre-paid discount saver packages.
+              No hidden service surcharges or surprise fees. Choose between standard bags, weighed bulk by the pound, or pre-paid discount saver packages.
             </p>
 
             {/* Quick Guarantees Pill Strip */}
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-600">
               <span className="inline-flex items-center gap-1.5 font-bold">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                $32.50 Flat 13-Gal Bag Rate
+                {formatCurrency(pricing.bag_price)} Flat 13-Gal Bag Rate
               </span>
               <span>•</span>
               <span className="inline-flex items-center gap-1.5 font-bold">
@@ -88,11 +93,11 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Interactive Plan Selector: Bags vs KG vs Packages */}
-          <PlanSelector />
+          {/* Interactive Plan Selector: Bags vs Pounds vs Packages */}
+          <PlanSelector initialRates={pricing} />
 
           {/* Side-by-Side Comparison Matrix */}
-          <PlanComparison />
+          <PlanComparison initialRates={pricing} />
 
           {/* Common Pricing Questions */}
           <FaqSection />

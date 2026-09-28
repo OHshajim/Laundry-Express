@@ -201,7 +201,7 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
           <div className="flex flex-wrap items-center gap-3">
             {photos.map((url, idx) => (
               <div key={idx} className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xs">
-                <Image src={url} alt={`Review photo ${idx + 1}`} fill className="object-cover" />
+                <Image src={url} alt={`Review photo ${idx + 1}`} fill sizes="80px" className="object-cover" />
                 <button
                   type="button"
                   onClick={() => setPhotos((p) => p.filter((_, i) => i !== idx))}

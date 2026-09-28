@@ -12,7 +12,7 @@
 2. Home page where a hero section , order lifecycle, work process , review ,faq, cta banner
 3. plan page 
   a. By bag - per bag weight will be 13 gallon 
-  b. by the kg 
+  b. by the pound (lbs) 
   c. packges made by admin
 4. Order creation page step by step 
   a. select plan 
@@ -49,7 +49,7 @@ e. take speacial request (optional)
     3. key points 
     4. price 
   e. Pricing management (add, edit, delete) 
-    1. price for per kg (minimum and maximum)
+    1. price for per pound (lbs) (minimum and maximum)
     3. price for per bag (with minimum and maximum)
   f. Detergent Catalog , Temperature Catalog (add, edit, delete) 
     1. name 

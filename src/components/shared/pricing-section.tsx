@@ -85,7 +85,7 @@ export function PricingSection() {
             </div>
           </div>
 
-          {/* KG Pricing Card */}
+          {/* Pound Pricing Card */}
           <div className="rounded-3xl p-8 bg-white border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-colors">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -93,24 +93,24 @@ export function PricingSection() {
                   <Scale className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900">By Weight (Per KG)</h3>
+                  <h3 className="text-xl font-bold text-slate-900">By Weight (Per Pound / lb)</h3>
                   <p className="text-xs text-slate-500">Commercial &amp; bulk laundry</p>
                 </div>
               </div>
 
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-slate-900">$2.75</span>
-                <span className="text-xs text-slate-500 font-semibold">/ KG (5KG min)</span>
+                <span className="text-4xl font-black text-slate-900">$1.99</span>
+                <span className="text-xs text-slate-500 font-semibold">/ lb (10 lbs min)</span>
               </div>
 
               {/* Delivery Fee highlight */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2 text-xs">
                 <div className="flex justify-between items-center text-slate-700 font-semibold">
-                  <span>Orders under $40:</span>
+                  <span>Orders under 30 lbs:</span>
                   <span className="text-slate-900 font-bold">$10.00 delivery fee</span>
                 </div>
                 <div className="flex justify-between items-center text-emerald-800 font-bold bg-emerald-100/80 p-2 rounded-xl">
-                  <span>Orders $40 and over:</span>
+                  <span>Orders 30 lbs and over:</span>
                   <span className="uppercase text-emerald-700">FREE ($0.00) Delivery</span>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export function PricingSection() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>Perfect for bedding, duvets, towels, and bulk</span>
+                  <span>Perfect for bulk laundry, towels, and family loads</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -136,9 +136,9 @@ export function PricingSection() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-100">
-              <Link href="#book-now" className="block w-full">
+              <Link href="/order?mode=per_lb" className="block w-full">
                 <Button variant="outline" size="lg" className="w-full">
-                  Book Laundry by KG
+                  Book Laundry by Pound
                 </Button>
               </Link>
             </div>

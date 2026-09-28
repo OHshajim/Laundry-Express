@@ -4,12 +4,15 @@ import type { PricingMode } from "@/types";
 export interface CalculatePriceInput {
   pricing_mode: PricingMode;
   bag_count?: number;
-  estimated_weight_kg?: number;
+  estimated_weight_lbs?: number;
   detergent_id?: string;
   detergent_fee?: number;
   promo_code?: string;
   base_bag_price?: number;
-  base_kg_price?: number;
+  base_pound_price?: number;
+  min_lbs?: number;
+  max_lbs?: number;
+  free_delivery_lbs?: number;
   one_bag_delivery_fee?: number;
   free_delivery_threshold?: number;
 }
@@ -41,9 +44,11 @@ export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPrice
   let unitName = "bags";
 
   const bagPrice = input.base_bag_price ?? APP_CONFIG.pricing.baseBagPrice;
-  const kgPrice = input.base_kg_price ?? APP_CONFIG.pricing.baseKgPrice;
+  const poundPrice = input.base_pound_price ?? APP_CONFIG.pricing.basePoundPrice;
   const stdDeliveryFee = input.one_bag_delivery_fee ?? APP_CONFIG.pricing.oneBagDeliveryFee;
-  const freeThreshold = input.free_delivery_threshold ?? 2;
+  const freeBagThreshold = input.free_delivery_threshold ?? APP_CONFIG.pricing.freeDeliveryThresholdBags;
+  const freePoundThreshold = input.free_delivery_lbs ?? APP_CONFIG.pricing.freePoundDeliveryThreshold;
+  const minLbs = input.min_lbs ?? APP_CONFIG.pricing.minPoundOrder;
 
   let unitRate: number = bagPrice;
 
@@ -52,20 +57,19 @@ export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPrice
     unitCount = Math.max(1, Math.floor(input.bag_count || 1));
     unitName = "bags";
     unitRate = bagPrice;
-    subtotal = unitCount * unitRate;
-
-    // Delivery Fee rule: >= freeThreshold = FREE ($0.00), otherwise stdDeliveryFee
-    deliveryFee = unitCount >= freeThreshold ? 0 : stdDeliveryFee;
-  } else if (input.pricing_mode === "per_kg") {
-    unitCount = Math.max(APP_CONFIG.pricing.minKgOrder, Number(input.estimated_weight_kg || APP_CONFIG.pricing.minKgOrder));
-    unitName = "kg";
-    unitRate = kgPrice;
+    subtotal = Math.round(unitCount * unitRate * 100) / 100;
+    // Free delivery rule for bags
+    deliveryFee = unitCount >= freeBagThreshold ? 0 : stdDeliveryFee;
+  } else if (input.pricing_mode === "per_lb") {
+    const rawWeight = Number(input.estimated_weight_lbs ?? minLbs);
+    unitCount = Math.max(minLbs, rawWeight);
+    unitName = "lbs";
+    unitRate = poundPrice;
     subtotal = Math.round(unitCount * unitRate * 100) / 100;
 
-    // Free delivery if order >= $40, otherwise standard delivery fee
-    deliveryFee = subtotal >= 40 ? 0 : stdDeliveryFee;
+    // Free delivery rule: weight >= freePoundThreshold = FREE ($0.00), otherwise stdDeliveryFee
+    deliveryFee = unitCount >= freePoundThreshold ? 0 : stdDeliveryFee;
   } else if (input.pricing_mode === "package") {
-    // Covered by pre-paid package credit
     unitCount = 1;
     unitName = "package credit";
     unitRate = 0;

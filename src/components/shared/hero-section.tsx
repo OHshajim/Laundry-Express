@@ -17,8 +17,12 @@ import { OrderTrackingSummary } from "@/components/home/order-tracking-summary";
  * - High-conversion value propositions, bag pricing, and delivery thresholds
  * - Strict adherence to CSS variables and the 100-250 lines rule
  */
-export function HeroSection() {
-  const [bagPrice, setBagPrice] = React.useState<number>(32.50);
+interface HeroSectionProps {
+  initialBagPrice?: number;
+}
+
+export function HeroSection({ initialBagPrice }: HeroSectionProps) {
+  const [bagPrice, setBagPrice] = React.useState<number>(() => Number(initialBagPrice ?? 32.50));
 
   React.useEffect(() => {
     fetch("/api/pricing")

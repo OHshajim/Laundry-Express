@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Search, UserCheck, CreditCard, ShoppingBag, Eye, Phone, Mail, MapPin } from "lucide-react";
-import type { Order } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CustomerCard } from "./customer-card";
@@ -10,10 +9,9 @@ import { CustomerDetailModal, CustomerAccount } from "./customer-detail-modal";
 
 interface CustomersManagerProps {
   customers: CustomerAccount[];
-  onViewOrder?: (order: Order) => void;
 }
 
-export function CustomersManager({ customers, onViewOrder }: CustomersManagerProps) {
+export function CustomersManager({ customers }: CustomersManagerProps) {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedCustomer, setSelectedCustomer] = React.useState<CustomerAccount | null>(null);
 
@@ -137,7 +135,7 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
                     <td className="p-3.5 space-y-1">
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <Mail className="h-3 w-3 text-slate-400 shrink-0" />
-                        <a href={`mailto:${cust.email}`} className="hover:text-primary truncate max-w-[180px]">
+                        <a href={`mailto:${cust.email}`} className="hover:text-primary truncate max-w-45">
                           {cust.email}
                         </a>
                       </div>
@@ -207,7 +205,6 @@ export function CustomersManager({ customers, onViewOrder }: CustomersManagerPro
         customer={selectedCustomer}
         isOpen={!!selectedCustomer}
         onClose={() => setSelectedCustomer(null)}
-        onViewOrder={onViewOrder}
       />
     </div>
   );

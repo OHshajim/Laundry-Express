@@ -27,7 +27,7 @@ export function HowItWorksSection() {
 
   const currentService = SERVICES_DATA[activeService];
 
-  const [rates, setRates] = React.useState({ bagPrice: 32.50, kgPrice: 2.75 });
+  const [rates, setRates] = React.useState({ bagPrice: 32.50, poundPrice: 1.99 });
 
   React.useEffect(() => {
     fetch("/api/pricing")
@@ -36,7 +36,7 @@ export function HowItWorksSection() {
         if (data?.pricing) {
           setRates({
             bagPrice: Number(data.pricing.bag_price ?? data.pricing.base_bag_price ?? 32.50),
-            kgPrice: Number(data.pricing.kg_price ?? data.pricing.base_kg_price ?? 2.75),
+            poundPrice: Number(data.pricing.pound_price ?? 1.99),
           });
         }
       })
@@ -45,8 +45,8 @@ export function HowItWorksSection() {
 
   const displayPrice = activeService === "bag"
     ? `$${rates.bagPrice.toFixed(2)} / bag (about 2 loads)`
-    : activeService === "kg"
-      ? `$${rates.kgPrice.toFixed(2)} / KG (weighed intake)`
+    : activeService === "pound"
+      ? `$${rates.poundPrice.toFixed(2)} / lb (weighed intake)`
       : currentService.price;
 
   // Auto-cycle through the 4 steps along the delivery route on desktop/idle
@@ -61,30 +61,30 @@ export function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className="py-16 sm:py-20 bg-gradient-to-b from-white via-primary-pale/20 to-white border-b border-slate-100 overflow-hidden"
+      className="py-12 sm:py-20 bg-gradient-to-b from-white via-pink-50/20 to-white border-b border-slate-100 w-full max-w-full"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10 w-full">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <div className="text-center max-w-3xl mx-auto space-y-2.5">
           <Badge variant="outline" className="text-primary bg-primary/10 border-primary/20">
             Simple 4-Step Express Journey
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
             How Laundry Express Works
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 font-normal">
+          <p className="text-sm sm:text-base text-slate-600 font-normal">
             From your doorstep to crisp fresh clothes in 24 hours. Effortless, reliable, and photo-verified.
           </p>
         </div>
 
-        {/* Unified Service Filters / Tabs */}
-        <div className="flex flex-col items-center gap-3">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-            See this process for:
+        {/* Service Selector Tabs */}
+        <div className="flex flex-col items-center gap-2.5 w-full">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+            Process for Service:
           </span>
-          <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 max-w-full">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 w-full max-w-lg mx-auto">
             {(Object.keys(SERVICES_DATA) as ServiceKey[]).map((key) => {
               const svc = SERVICES_DATA[key];
               const Icon = svc.icon;
@@ -98,12 +98,13 @@ export function HowItWorksSection() {
                     setActiveService(key);
                     setActiveStepIndex(0);
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${isSelected
-                    ? "bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                    }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                   <span>{svc.label}</span>
                 </button>
               );
@@ -111,7 +112,7 @@ export function HowItWorksSection() {
           </div>
 
           {/* Active Service Inline Price & Delivery Perk */}
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 pt-0.5">
+          <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-700 pt-0.5 text-center flex-wrap">
             <span className="text-slate-900 font-black">{displayPrice}</span>
             <span className="text-slate-300">•</span>
             <span className="text-primary">{currentService.badge}</span>
@@ -175,7 +176,7 @@ export function HowItWorksSection() {
         </div>
 
         {/* 4 Interactive Step Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch w-full max-w-full">
           {currentService.steps.map((step, idx) => (
             <HowItWorksStep
               key={step.id}

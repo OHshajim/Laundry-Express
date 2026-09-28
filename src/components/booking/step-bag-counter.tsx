@@ -7,21 +7,32 @@ interface StepBagCounterProps {
   pricingMode: PricingMode;
   bagCount: number;
   onBagCountChange: (count: number) => void;
-  weightKg: number;
-  onWeightKgChange: (kg: number) => void;
+  weightLbs?: number;
+  onWeightLbsChange?: (lbs: number) => void;
   bagPrice?: number;
   freeDeliveryBags?: number;
+  minLbs?: number;
+  maxLbs?: number;
+  freeDeliveryLbs?: number;
 }
 
 export function StepBagCounter({
   pricingMode,
   bagCount,
   onBagCountChange,
-  weightKg,
-  onWeightKgChange,
+  weightLbs,
+  onWeightLbsChange,
   bagPrice = 32.50,
   freeDeliveryBags = 2,
+  minLbs = 10,
+  maxLbs = 100,
+  freeDeliveryLbs = 30,
 }: StepBagCounterProps) {
+  const currentLbs = weightLbs ?? minLbs;
+  const handleLbsChange = (val: number) => {
+    onWeightLbsChange?.(val);
+  };
+
   if (pricingMode === "package") {
     return (
       <div className="p-5 rounded-2xl bg-sky-50 border border-sky-100 flex items-center gap-3">
@@ -36,34 +47,47 @@ export function StepBagCounter({
     );
   }
 
-  if (pricingMode === "per_kg") {
+  if (pricingMode === "per_lb") {
+    const isFreePoundDelivery = currentLbs >= freeDeliveryLbs;
+
     return (
       <div className="space-y-4 p-5 rounded-2xl bg-white border border-slate-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-sky-600" />
-            <h5 className="font-bold text-sm text-slate-900">Estimated Laundry Weight (KG)</h5>
+            <h5 className="font-bold text-sm text-slate-900">Estimated Laundry Weight (lbs)</h5>
           </div>
-          <span className="text-xs font-semibold text-slate-500">Min 5.0 KG</span>
+          <span className="text-xs font-semibold text-slate-500">Min {minLbs} lbs • Max {maxLbs} lbs</span>
         </div>
 
         <div className="flex items-center gap-4">
           <input
             type="range"
-            min="5"
-            max="40"
-            step="0.5"
-            value={weightKg}
-            onChange={(e) => onWeightKgChange(parseFloat(e.target.value))}
+            min={minLbs}
+            max={maxLbs}
+            step="1"
+            value={currentLbs}
+            onChange={(e) => handleLbsChange(parseFloat(e.target.value) || minLbs)}
             className="w-full accent-sky-600 cursor-pointer h-2 bg-slate-100 rounded-lg"
           />
           <div className="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 font-extrabold text-sky-800 text-sm whitespace-nowrap">
-            {weightKg.toFixed(1)} KG
+            {currentLbs.toFixed(0)} lbs
           </div>
         </div>
 
+        <div className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-between ${
+          isFreePoundDelivery ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-slate-50 border-slate-200 text-slate-600"
+        }`}>
+          <span>
+            {isFreePoundDelivery
+              ? `🎉 Awesome! Orders ${freeDeliveryLbs}+ lbs qualify for 100% FREE delivery.`
+              : `Add ${freeDeliveryLbs - currentLbs} more lbs to unlock FREE delivery!`}
+          </span>
+          <span className="font-black">{isFreePoundDelivery ? "FREE ($0.00)" : "Std Fee"}</span>
+        </div>
+
         <p className="text-xs text-slate-500">
-          ℹ️ Our driver will weigh your laundry on a calibrated portable scale at pickup to verify final weight.
+          ℹ️ Our driver will weigh your laundry on a calibrated digital scale at pickup to verify final intake weight.
         </p>
       </div>
     );

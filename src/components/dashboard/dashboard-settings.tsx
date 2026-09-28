@@ -1,23 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { User as UserIcon, MapPin, KeyRound, Bell } from "lucide-react";
+import { User as UserIcon, MapPin, KeyRound } from "lucide-react";
 import { SettingsProfile } from "./settings-profile";
 import { SettingsAddresses } from "./settings-addresses";
 import { SettingsPassword } from "./settings-password";
-import { SettingsNotifications } from "./settings-notifications";
 import { useAuth } from "@/context/auth-context";
 
-export type SettingsTab = "profile" | "address" | "password" | "notifications";
+export type SettingsTab = "profile" | "address" | "password";
 
-/**
- * DashboardSettings Component
- * Master settings controller fulfilling AGENTS.md 5.e:
- * 1. user profile (name, email, phone number, profile picture)
- * 2. address (add, edit, delete)
- * 3. password (reset password by verify otp in email and phone number)
- * 4. notifications (push, email)
- */
 export function DashboardSettings() {
   const [activeTab, setActiveTab] = React.useState<SettingsTab>("profile");
   const { user } = useAuth();
@@ -26,13 +17,11 @@ export function DashboardSettings() {
     { id: "profile" as const, label: "Profile", icon: UserIcon },
     { id: "address" as const, label: "Addresses", icon: MapPin },
     { id: "password" as const, label: "Password & Security", icon: KeyRound },
-    { id: "notifications" as const, label: "Notifications", icon: Bell },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Settings Segmented Tab Navigation */}
-      <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar gap-1">
+      <div className="flex flex-wrap border-b border-slate-200 gap-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
@@ -53,17 +42,14 @@ export function DashboardSettings() {
           );
         })}
       </div>
-
-      {/* Tab Panels */}
       {activeTab === "profile" && <SettingsProfile />}
       {activeTab === "address" && <SettingsAddresses />}
       {activeTab === "password" && (
         <SettingsPassword
-          userEmail={user?.email || "customer@laundryexpress.com"}
-          userPhone={user?.phone || "815-575-9536"}
+          userEmail={user?.email || ""}
+          userPhone={user?.phone || ""}
         />
       )}
-      {activeTab === "notifications" && <SettingsNotifications />}
     </div>
   );
 }
