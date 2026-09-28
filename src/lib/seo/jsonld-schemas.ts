@@ -73,9 +73,9 @@ export function getLocalBusinessSchema() {
       },
       {
         "@type": "Offer",
-        name: "Per-Kilogram Commercial & Bulk Laundry",
-        description: "Flexible weight-based laundry wash priced per KG with 5KG minimum.",
-        price: APP_CONFIG.pricing.baseKgPrice,
+        name: "Per-Pound Commercial & Bulk Laundry",
+        description: "Flexible weight-based laundry wash priced per pound with 10 lbs minimum.",
+        price: APP_CONFIG.pricing.basePoundPrice,
         priceCurrency: "USD",
       },
     ],

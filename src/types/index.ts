@@ -14,20 +14,23 @@ export interface UserProfile {
   updated_at: string;
 }
 
-export type User = UserProfile;
-
-export type PricingMode = "per_bag" | "per_kg" | "package";
+export type PricingMode = "per_bag" | "per_lb" | "package";
 
 export interface PricingConfig {
-  id: string;
-  pricing_type: "per_bag" | "per_kg";
-  unit_price: number;
-  min_order_quantity: number;
+  id?: string;
+  pricing_type?: "per_bag" | "per_lb";
+  bag_price: number;
+  min_bags: number;
+  max_bags: number;
+  pound_price: number;
+  min_lbs: number;
+  max_lbs: number;
+  free_delivery_lbs: number;
   free_delivery_threshold: number;
   standard_delivery_fee: number;
-  max_orders_per_slot: number;
-  is_active: boolean;
-  updated_at: string;
+  base_bag_price: number;
+  base_pound_price: number;
+  one_bag_delivery_fee?: number;
 }
 
 export interface LaundryPackage {
@@ -37,7 +40,7 @@ export interface LaundryPackage {
   description: string;
   package_type: "bag_bundle" | "weight_tier" | "subscription";
   included_bags?: number;
-  included_kg?: number;
+  included_lbs?: number;
   price: number;
   validity_days: number;
   is_featured: boolean;
@@ -50,7 +53,7 @@ export interface UserPackage {
   user_id: string;
   package_id: string;
   remaining_bags: number;
-  remaining_kg: number;
+  remaining_lbs: number;
   expires_at: string;
   is_active: boolean;
   created_at: string;
@@ -84,15 +87,9 @@ export interface Detergent {
   created_at?: string;
 }
 
-export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "driver_assigned"
-  | "picked_up"
-  | "in_wash"
-  | "out_for_delivery"
-  | "completed"
-  | "cancelled";
+export type User = UserProfile;
+
+export type OrderStatus = "pending" | "confirmed" | "driver_assigned" | "picked_up" | "in_wash" | "out_for_delivery" | "completed" | "cancelled";
 
 export interface Order {
   id: string;
@@ -103,8 +100,8 @@ export interface Order {
   detergent_id: string;
   wash_temperature?: string;
   bag_count: number;
-  estimated_weight_kg?: number | null;
-  final_weight_kg?: number | null;
+  estimated_weight_lbs?: number | null;
+  final_weight_lbs?: number | null;
   pickup_date: string;
   pickup_slot: "8am-12pm" | "1pm-6pm";
   delivery_date?: string | null;

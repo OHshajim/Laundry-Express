@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { StepData } from "@/components/home/how-it-works-step";
 
-export type ServiceKey = "bag" | "kg" | "bedding" | "express";
+export type ServiceKey = "bag" | "pound" | "bedding" | "express";
 
 export interface ServiceConfig {
   id: ServiceKey;
@@ -72,11 +72,11 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
       },
     ],
   },
-  kg: {
-    id: "kg",
-    label: "By-the-KG",
-    badge: "$2.75 / KG",
-    price: "$2.75 / kg",
+  pound: {
+    id: "pound",
+    label: "By-the-Pound (lb)",
+    badge: "$1.99 / lb",
+    price: "$1.99 / lb",
     icon: Scale,
     steps: [
       {
@@ -87,7 +87,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         icon: CalendarClock,
         actionText: "Select bulk pickup slot",
         detail: "Pick convenient morning (8am–12pm) or afternoon window.",
-        helperNote: "5 KG minimum per load.",
+        helperNote: "10 lbs minimum per load.",
       },
       {
         id: 2,
@@ -107,7 +107,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         icon: Camera,
         actionText: "Precision digital scale photo logged",
         detail: "Accurate weight verified upon facility intake.",
-        helperNote: "Pay exact verified weight.",
+        helperNote: "Pay exact verified weight in pounds.",
       },
       {
         id: 4,

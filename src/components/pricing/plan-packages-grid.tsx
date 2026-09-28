@@ -40,7 +40,7 @@ export function PlanPackagesGrid() {
         </p>
         <Link href="/order" className="inline-block">
           <Button size="sm" className="bg-primary hover:bg-primary-dark text-white font-bold text-xs">
-            Book By Bag / KG
+            Book By Bag / Pound
           </Button>
         </Link>
       </div>

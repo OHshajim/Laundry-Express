@@ -43,9 +43,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+import { PricingPlanService } from "@/lib/services/pricing-plan-service";
+
+export default async function HomePage() {
   const localBusinessJsonLd = getLocalBusinessSchema();
   const faqJsonLd = getFaqSchema();
+  const pricing = await PricingPlanService.getPricing();
 
   /**
    * HomePage Shell
@@ -71,7 +74,7 @@ export default function HomePage() {
       {/* Main Content Sections — Streamlined & Useful */}
       <main className="flex-1">
         {/* Superhero Mascot & Core Proposition Hero */}
-        <HeroSection />
+        <HeroSection initialBagPrice={pricing.bag_price} />
 
         {/* Unified Interactive Services & Process Journey */}
         <div id="services">

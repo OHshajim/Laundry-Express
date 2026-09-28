@@ -41,10 +41,10 @@ CREATE TABLE IF NOT EXISTS public.auth_otps (
 
 CREATE INDEX IF NOT EXISTS idx_auth_otps_email_purpose ON public.auth_otps(email, purpose);
 
--- 4. PRICING CONFIGS (By Bag & By KG pricing managed by Admin)
+-- 4. PRICING CONFIGS (By Bag & By Pound pricing managed by Admin)
 CREATE TABLE IF NOT EXISTS public.pricing_configs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pricing_type TEXT UNIQUE NOT NULL CHECK (pricing_type IN ('per_bag', 'per_kg')),
+    pricing_type TEXT UNIQUE NOT NULL CHECK (pricing_type IN ('per_bag', 'per_lb')),
     unit_price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     min_order_quantity NUMERIC(10,2) NOT NULL DEFAULT 1.00,
     free_delivery_threshold NUMERIC(10,2) DEFAULT 0.00,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.plans (
     description TEXT,
     package_type TEXT NOT NULL DEFAULT 'bag_bundle' CHECK (package_type IN ('bag_bundle', 'weight_tier', 'subscription')),
     included_bags INT DEFAULT 0,
-    included_kg NUMERIC(10,2) DEFAULT 0,
+    included_lbs NUMERIC(10,2) DEFAULT 0,
     price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     validity_days INT DEFAULT 30,
     key_points JSONB DEFAULT '[]'::jsonb,
@@ -108,9 +108,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number TEXT UNIQUE NOT NULL,
     user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
-    plan_type TEXT NOT NULL DEFAULT 'per_bag' CHECK (plan_type IN ('per_bag', 'per_kg', 'package')),
+    plan_type TEXT NOT NULL DEFAULT 'per_bag' CHECK (plan_type IN ('per_bag', 'per_lb', 'package')),
     bag_count INT DEFAULT 0,
-    weight_kg NUMERIC(10,2) DEFAULT 0,
+    weight_lbs NUMERIC(10,2) DEFAULT 0,
     detergent_id UUID,
     detergent_name TEXT,
     wash_temperature TEXT,
@@ -229,12 +229,7 @@ BEGIN
 END $$;
 
 -- 14. SUPABASE STORAGE BUCKETS
-INSERT INTO storage.buckets (id, name, public)
-VALUES 
-    ('avatars', 'avatars', true),
-    ('order-proofs', 'order-proofs', true),
-    ('review-photos', 'review-photos', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true), ('order-proofs', 'order-proofs', true), ('review-photos', 'review-photos', true) ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- Storage object policies for CDN reads and uploads
 DROP POLICY IF EXISTS "Public Storage Read" ON storage.objects;

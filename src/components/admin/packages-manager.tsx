@@ -10,7 +10,7 @@ export interface PackageConfig {
   id: string;
   name: string;
   description: string;
-  unit_type: "bag" | "kg";
+  unit_type: "bag" | "lb";
   capacity: number;
   original_price: number;
   discounted_price: number;
@@ -29,7 +29,7 @@ export function PackagesManager() {
   const [newDesc, setNewDesc] = React.useState("");
   const [newPrice, setNewPrice] = React.useState<number>(50);
   const [newCapacity, setNewCapacity] = React.useState<number>(4);
-  const [newUnit, setNewUnit] = React.useState<"bag" | "kg">("bag");
+  const [newUnit, setNewUnit] = React.useState<"bag" | "lb">("bag");
 
   React.useEffect(() => {
     fetch("/api/plans")
@@ -148,11 +148,11 @@ export function PackagesManager() {
             />
             <select
               value={newUnit}
-              onChange={(e) => setNewUnit(e.target.value as "bag" | "kg")}
+              onChange={(e) => setNewUnit(e.target.value as "bag" | "lb")}
               className="w-1/2 px-2 py-2 rounded-xl border border-slate-200 bg-white"
             >
               <option value="bag">Bags</option>
-              <option value="kg">KGs</option>
+              <option value="lb">Pounds (lbs)</option>
             </select>
           </div>
           <input
@@ -213,7 +213,7 @@ export function PackagesManager() {
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">{pkg.description}</p>
                 <div className="text-xs font-bold text-sky-700 mt-1">
-                  {formatCurrency(pkg.discounted_price)} • {pkg.capacity} {pkg.unit_type === "bag" ? "Bags" : "KG"}
+                  {formatCurrency(pkg.discounted_price)} • {pkg.capacity} {pkg.unit_type === "bag" ? "Bags" : "lbs"}
                 </div>
               </div>
             )}

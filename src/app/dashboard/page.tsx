@@ -53,7 +53,7 @@ const CUSTOMER_HEADER_CONFIG: Record<string, { title: string; subtitle: string }
 function extractCustomers(list: Order[]): CustomerAccount[] {
   const map = new Map<string, CustomerAccount>();
   for (const o of list) {
-    const k = o.customer_email || o.user_id || "guest";
+    const k = o.customer_email || o.user_id || o.id;
     const e = map.get(k);
     if (e) {
       e.orders.push(o);
@@ -61,9 +61,9 @@ function extractCustomers(list: Order[]): CustomerAccount[] {
       map.set(k, {
         id: o.user_id || `cust-${o.id}`,
         full_name: o.customer_name || o.user?.full_name || "Customer",
-        email: o.customer_email || "customer@example.com",
-        phone: o.customer_phone || "(847) 555-0100",
-        address: o.pickup_address || "Lake in the Hills, IL",
+        email: o.customer_email || o.user?.email || "—",
+        phone: o.customer_phone || o.user?.phone || "—",
+        address: o.pickup_address || "—",
         joined_date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Recently",
         orders: [o],
         reviews: [],
@@ -120,11 +120,12 @@ function DashboardContent() {
   const handleUpdateFinalWeight = async (orderId: string, finalWeight: number) => {
     setOrders((prev) => prev.map((o) => {
       if (o.id !== orderId) return o;
-      const subtotal = Math.round(finalWeight * 2.75 * 100) / 100;
-      const deliveryFee = subtotal >= 40 ? 0 : 10;
-      return { ...o, final_weight_kg: finalWeight, subtotal, delivery_fee: deliveryFee, total_amount: subtotal + deliveryFee };
+      const rate = o.pricing_mode === "per_lb" ? (o.subtotal && o.estimated_weight_lbs ? o.subtotal / o.estimated_weight_lbs : 1.99) : 1.99;
+      const subtotal = Math.round(finalWeight * rate * 100) / 100;
+      const deliveryFee = finalWeight >= 30 ? 0 : (o.delivery_fee ?? 10);
+      return { ...o, final_weight_lbs: finalWeight, subtotal, delivery_fee: deliveryFee, total_amount: subtotal + deliveryFee };
     }));
-    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, finalWeight }) }); } catch {}
+    try { await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, finalWeight, finalWeightLbs: finalWeight }) }); } catch {}
   };
 
   const handleUploadProof = async (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {

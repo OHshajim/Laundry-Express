@@ -11,7 +11,7 @@ interface OrderSummaryCardProps {
   priceResult: CalculatedPriceResult;
   pricingMode?: PricingMode;
   bagCount?: number;
-  weightKg?: number;
+  weightLbs?: number;
   selectedPaymentMethod?: "card" | "apple_pay" | "cash_on_delivery";
   onSelectPaymentMethod?: (method: "card" | "apple_pay" | "cash_on_delivery") => void;
   promoCode: string;
@@ -27,7 +27,7 @@ export function OrderSummaryCard({
   priceResult,
   pricingMode = "per_bag",
   bagCount = 2,
-  weightKg = 8.0,
+  weightLbs = 15,
   selectedPaymentMethod = "card",
   onSelectPaymentMethod,
   promoCode,
@@ -49,13 +49,13 @@ export function OrderSummaryCard({
 
   const weightDisplay = React.useMemo(() => {
     if (pricingMode === "per_bag") {
-      return `${bagCount} Bag(s) • ${bagCount * 13} Gal (~${(bagCount * 6).toFixed(1)} kg)`;
+      return `${bagCount} Bag(s) • ${bagCount * 13} Gal (~${(bagCount * 15).toFixed(0)} lbs)`;
     }
-    if (pricingMode === "per_kg") {
-      return `${weightKg.toFixed(1)} KG (~${(weightKg * 2.2).toFixed(1)} lbs)`;
+    if (pricingMode === "per_lb") {
+      return `${weightLbs.toFixed(0)} lbs Weighed Laundry`;
     }
     return "Prepaid Bundle Credit";
-  }, [pricingMode, bagCount, weightKg]);
+  }, [pricingMode, bagCount, weightLbs]);
 
   return (
     <div className="bg-white rounded-2xl border-2 border-pink-100 shadow-md p-6 space-y-4 sticky top-24">

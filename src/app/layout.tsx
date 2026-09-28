@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "wash and fold pickup",
     "free laundry delivery",
     "same day laundry",
-    "commercial laundry by kg",
+    "commercial laundry by pound",
   ],
   applicationName: "Laundry Express",
   authors: [{ name: "Laundry Express Team" }],

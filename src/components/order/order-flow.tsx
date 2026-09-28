@@ -4,19 +4,14 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { useAuth } from "@/context/auth-context";
-import type { PricingMode } from "@/types";
+import type { PricingMode, PricingConfig } from "@/types";
 import { ShieldCheck, Lock, Clock, Truck, Check } from "lucide-react";
 
-/**
- * OrderFlow Component
- *
- * Dedicated order checkout manager enforcing:
- * 1. Synchronized customer authentication via global useAuth()
- * 2. URL search parameters pre-filling (e.g. from /pricing plan selections)
- * 3. Interactive 4-step navigation wizard synced with progress header
- * 4. Strictly between 100-250 lines per architectural rules
- */
-export function OrderFlow() {
+export interface OrderFlowProps {
+  initialPricing?: PricingConfig;
+}
+
+export function OrderFlow({ initialPricing }: OrderFlowProps) {
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = React.useState<number>(1);
@@ -25,15 +20,18 @@ export function OrderFlow() {
   const modeParam = searchParams.get("mode") as PricingMode | null;
   const initialMode: PricingMode = packageParam
     ? "package"
-    : modeParam === "per_kg" || modeParam === "package"
-    ? modeParam
+    : modeParam === "per_lb"
+    ? "per_lb"
+    : modeParam === "package"
+    ? "package"
     : "per_bag";
 
   const bagsParam = searchParams.get("bags");
   const initialBagCount = bagsParam ? Math.max(1, parseInt(bagsParam, 10) || 2) : 2;
 
-  const weightParam = searchParams.get("weight");
-  const initialWeightKg = weightParam ? Math.max(5, parseFloat(weightParam) || 8) : 8.0;
+  const minLbs = initialPricing?.min_lbs ?? 10;
+  const weightParam = searchParams.get("lbs") || searchParams.get("weight");
+  const initialWeightLbs = weightParam ? Math.max(minLbs, parseFloat(weightParam) || minLbs) : Math.max(minLbs, 15);
 
   const initialPackageId = packageParam || "pkg-saver-5";
 
@@ -108,8 +106,9 @@ export function OrderFlow() {
       <BookingWizard
         initialMode={initialMode}
         initialBagCount={initialBagCount}
-        initialWeightKg={initialWeightKg}
+        initialWeightLbs={initialWeightLbs}
         initialPackageId={initialPackageId}
+        initialPricing={initialPricing}
         currentUser={user}
         currentStep={currentStep}
         onStepChange={setCurrentStep}
@@ -146,9 +145,11 @@ export function OrderFlow() {
             <Truck className="h-4 w-4" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-slate-900">100% Free Delivery on 2+ Bags</h4>
+            <h4 className="text-xs font-bold text-slate-900">
+              Free Delivery on {initialPricing?.free_delivery_threshold ?? 2}+ Bags or {initialPricing?.free_delivery_lbs ?? 30}+ lbs
+            </h4>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              1 Bag = $10.00 fee. 2 or more bags = $0.00 delivery fee automatically applied.
+              Orders meeting the bag or weight threshold receive free standard delivery automatically.
             </p>
           </div>
         </div>

@@ -49,13 +49,13 @@ export const APP_CONFIG = {
     },
   },
   pricing: {
-    // CONFIRM WITH CLIENT: $32.50/bag matches flyer but differs from earlier contract draft ($10–15/bag) — verify before launch.
-    baseBagPrice: 32.50, // $32.50 per 13-gallon bag (about 2 loads)
+    baseBagPrice: 32.50, // $32.50 per 13-gallon bag
     oneBagDeliveryFee: 10.0, // $10 pickup & delivery
     freeDeliveryThresholdBags: 2, // >= 2 bags = FREE pickup & delivery
-    baseKgPrice: 2.75,
-    minKgOrder: 5.0,
-    freeKgDeliveryThresholdSubtotal: 40.0,
+    basePoundPrice: 1.99, // Rate per lb
+    minPoundOrder: 10.0, // Minimum lbs per order
+    maxPoundOrder: 100.0, // Maximum lbs per order
+    freePoundDeliveryThreshold: 30.0, // >= 30 lbs = FREE pickup & delivery
     maxOrdersPerSlotDefault: 15,
   },
   brandColors: {

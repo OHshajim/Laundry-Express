@@ -145,7 +145,7 @@ export function OrderPipeline({
                 key={ord.id}
                 order={ord}
                 onUpdateStatus={handleStatusChangeWithNotification}
-                onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_kg || 5)); }}
+                onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_lbs || 15)); }}
                 onOpenProofModal={handleOpenProofModal}
                 onViewDetails={(o) => setDetailOrderId(o.id)}
               />
@@ -161,7 +161,7 @@ export function OrderPipeline({
             key={ord.id}
             order={ord}
             onUpdateStatus={handleStatusChangeWithNotification}
-            onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_kg || 5)); }}
+            onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_lbs || 15)); }}
             onOpenProofModal={handleOpenProofModal}
             onViewDetails={(o) => setDetailOrderId(o.id)}
           />

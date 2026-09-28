@@ -24,12 +24,11 @@ export class OrderService {
       }
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
-        // Map database columns to typed Order objects
         return data.map((item) => ({
           ...item,
           pricing_mode: item.plan_type || item.pricing_mode || "per_bag",
           bag_count: item.bag_count ?? 1,
-          estimated_weight_kg: Number(item.weight_kg ?? item.estimated_weight_kg ?? 0),
+          estimated_weight_lbs: Number(item.weight_lbs ?? item.estimated_weight_lbs ?? 0),
           pickup_slot: item.pickup_window || item.pickup_slot || "8am-12pm",
           total_amount: Number(item.total_amount ?? 0),
           order_status: (item.order_status || item.delivery_status || "pending") as OrderStatus,
@@ -58,12 +57,12 @@ export class OrderService {
       id: orderPayload.id || `ord-${Date.now()}-${randomSeq}`,
       order_number: orderNumber,
       user_id: orderPayload.user_id || "guest-customer",
-      customer_name: orderPayload.customer_name || "Valued Customer",
-      customer_email: orderPayload.customer_email || "customer@laundryexpress.com",
-      customer_phone: orderPayload.customer_phone || "815-575-9536",
+      customer_name: orderPayload.customer_name?.trim() || "Customer",
+      customer_email: orderPayload.customer_email?.trim() || "",
+      customer_phone: orderPayload.customer_phone?.trim() || "",
       pricing_mode: orderPayload.pricing_mode || "per_bag",
       bag_count: orderPayload.bag_count || 1,
-      estimated_weight_kg: orderPayload.estimated_weight_kg || 0,
+      estimated_weight_lbs: Number(orderPayload.estimated_weight_lbs ?? 0),
       detergent_id: orderPayload.detergent_id || "det-tide-pods",
       wash_temperature: orderPayload.wash_temperature || "cold",
       pickup_date: orderPayload.pickup_date || now.split("T")[0],
@@ -77,11 +76,11 @@ export class OrderService {
       zip_code: orderPayload.zip_code || "60156",
       is_out_of_home: !!orderPayload.is_out_of_home,
       bag_outside_door_confirmed: !!orderPayload.bag_outside_door_confirmed,
-      subtotal: orderPayload.subtotal || 32.5,
-      delivery_fee: orderPayload.delivery_fee || 0,
-      tax_amount: orderPayload.tax_amount || 0,
-      discount_amount: orderPayload.discount_amount || 0,
-      total_amount: orderPayload.total_amount || 32.5,
+      subtotal: Number(orderPayload.subtotal ?? 0),
+      delivery_fee: Number(orderPayload.delivery_fee ?? 0),
+      tax_amount: Number(orderPayload.tax_amount ?? 0),
+      discount_amount: Number(orderPayload.discount_amount ?? 0),
+      total_amount: Number(orderPayload.total_amount ?? 0),
       order_status: "pending",
       payment_method: orderPayload.payment_method || "card",
       payment_status: "paid",
@@ -101,7 +100,7 @@ export class OrderService {
         customer_phone: newOrder.customer_phone,
         plan_type: newOrder.pricing_mode,
         bag_count: newOrder.bag_count,
-        weight_kg: newOrder.estimated_weight_kg,
+        weight_lbs: newOrder.estimated_weight_lbs,
         detergent_id: newOrder.detergent_id,
         wash_temperature: newOrder.wash_temperature,
         pickup_date: newOrder.pickup_date,
@@ -154,14 +153,17 @@ export class OrderService {
   /**
    * Updates final weight and recalculated pricing for weighted laundry orders
    */
-  static async updateFinalWeight(orderId: string, weightKg: number): Promise<boolean> {
+  static async updateFinalWeight(orderId: string, weightLbs: number): Promise<boolean> {
     const existing = ORDERS_MEMORY_STORE.get(orderId);
-    const subtotal = Math.round(weightKg * 2.75 * 100) / 100;
-    const deliveryFee = subtotal >= 40 ? 0 : 10;
+    const unitRate = existing && existing.estimated_weight_lbs && existing.subtotal
+      ? Math.round((existing.subtotal / existing.estimated_weight_lbs) * 100) / 100
+      : 1.99;
+    const subtotal = Math.round(weightLbs * unitRate * 100) / 100;
+    const deliveryFee = weightLbs >= 30 ? 0 : 10;
     const total = subtotal + deliveryFee;
 
     if (existing) {
-      existing.final_weight_kg = weightKg;
+      existing.final_weight_lbs = weightLbs;
       existing.subtotal = subtotal;
       existing.delivery_fee = deliveryFee;
       existing.total_amount = total;
@@ -173,7 +175,7 @@ export class OrderService {
       await supabase
         .from("orders")
         .update({
-          weight_kg: weightKg,
+          weight_lbs: weightLbs,
           subtotal,
           delivery_fee: deliveryFee,
           total_amount: total,

@@ -19,8 +19,9 @@ export interface BusinessSettings {
   operating_hours: string;
   delivery_zones: string[];
   min_order_bag: number;
-  min_order_kg: number;
+  min_order_lbs: number;
   free_delivery_bags: number;
+  free_delivery_lbs: number;
   standard_delivery_fee: number;
 }
 
@@ -30,8 +31,9 @@ let cachedSettings: BusinessSettings = {
   operating_hours: "8:00 AM – 6:00 PM Daily",
   delivery_zones: ["Lake in the Hills", "Algonquin", "Crystal Lake", "Huntley", "Cary", "Elgin", "Schaumburg"],
   min_order_bag: 1,
-  min_order_kg: 5,
+  min_order_lbs: 10,
   free_delivery_bags: 2,
+  free_delivery_lbs: 30,
   standard_delivery_fee: 10,
 };
 

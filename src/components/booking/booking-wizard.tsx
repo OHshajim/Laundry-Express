@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import type { PricingMode, User } from "@/types";
+import type { PricingMode, User, PricingConfig } from "@/types";
 import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
 import { StepPricingMode } from "./step-pricing-mode";
 import { StepBagCounter } from "./step-bag-counter";
@@ -18,8 +18,9 @@ import { useBookingCheckout } from "./use-booking-checkout";
 export interface BookingWizardProps {
   initialMode?: PricingMode;
   initialBagCount?: number;
-  initialWeightKg?: number;
+  initialWeightLbs?: number;
   initialPackageId?: string;
+  initialPricing?: Partial<PricingConfig>;
   currentUser?: User | null;
   currentStep?: number;
   onStepChange?: (step: number) => void;
@@ -28,21 +29,19 @@ export interface BookingWizardProps {
 export function BookingWizard({
   initialMode = "per_bag",
   initialBagCount = 2,
-  initialWeightKg = 8.0,
+  initialWeightLbs,
+  initialPricing,
   currentUser = null,
   currentStep: externalStep,
   onStepChange,
 }: BookingWizardProps) {
   const [internalStep, setInternalStep] = React.useState<number>(1);
   const activeStep = externalStep ?? internalStep;
-  const setStep = (s: number) => {
-    setInternalStep(s);
-    onStepChange?.(s);
-  };
+  const setStep = (s: number) => { setInternalStep(s); onStepChange?.(s); };
 
   const [pricingMode, setPricingMode] = React.useState<PricingMode>(initialMode);
   const [bagCount, setBagCount] = React.useState<number>(initialBagCount);
-  const [weightKg, setWeightKg] = React.useState<number>(initialWeightKg);
+  const [weightLbs, setWeightLbs] = React.useState<number>(() => Number(initialWeightLbs ?? initialPricing?.min_lbs ?? 15));
   const [selectedDetergentId, setSelectedDetergentId] = React.useState<string>("det-tide-pods");
   const [selectedTemp, setSelectedTemp] = React.useState<"cold" | "warm" | "hot">("cold");
   const [selectedDate, setSelectedDate] = React.useState<string>(() => new Date().toISOString().split("T")[0]);
@@ -57,22 +56,30 @@ export function BookingWizard({
   const [appliedPromo, setAppliedPromo] = React.useState<string>("");
   const [promoError, setPromoError] = React.useState<string>("");
   const [paymentMethod, setPaymentMethod] = React.useState<"card" | "apple_pay" | "cash_on_delivery">("card");
-  const [rates, setRates] = React.useState({ bagPrice: 32.50, kgPrice: 2.75, deliveryFee: 10.0, freeDeliveryThreshold: 2 });
+  const [rates, setRates] = React.useState({
+    bagPrice: Number(initialPricing?.bag_price ?? 32.50),
+    poundPrice: Number(initialPricing?.pound_price ?? 1.99),
+    deliveryFee: Number(initialPricing?.standard_delivery_fee ?? 10.0),
+    freeDeliveryBags: Number(initialPricing?.free_delivery_threshold ?? 2),
+    freeDeliveryLbs: Number(initialPricing?.free_delivery_lbs ?? 30),
+    minLbs: Number(initialPricing?.min_lbs ?? 10),
+    maxLbs: Number(initialPricing?.max_lbs ?? 100),
+  });
 
   React.useEffect(() => {
-    fetch("/api/pricing")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.pricing) {
-          setRates({
-            bagPrice: Number(data.pricing.bag_price ?? data.pricing.base_bag_price ?? 32.50),
-            kgPrice: Number(data.pricing.kg_price ?? data.pricing.base_kg_price ?? 2.75),
-            deliveryFee: Number(data.pricing.standard_delivery_fee ?? data.pricing.one_bag_delivery_fee ?? 10.0),
-            freeDeliveryThreshold: Number(data.pricing.free_delivery_threshold ?? 2),
-          });
-        }
-      })
-      .catch(() => {});
+    fetch("/api/pricing").then((r) => r.json()).then((d) => {
+      if (d?.pricing) {
+        setRates({
+          bagPrice: Number(d.pricing.bag_price ?? 32.50),
+          poundPrice: Number(d.pricing.pound_price ?? 1.99),
+          deliveryFee: Number(d.pricing.standard_delivery_fee ?? 10.0),
+          freeDeliveryBags: Number(d.pricing.free_delivery_threshold ?? 2),
+          freeDeliveryLbs: Number(d.pricing.free_delivery_lbs ?? 30),
+          minLbs: Number(d.pricing.min_lbs ?? 10),
+          maxLbs: Number(d.pricing.max_lbs ?? 100),
+        });
+      }
+    }).catch(() => {});
   }, []);
 
   const { checkout, isProcessing, invoice, setInvoice } = useBookingCheckout();
@@ -81,15 +88,18 @@ export function BookingWizard({
     return calculateOrderPrice({
       pricing_mode: pricingMode,
       bag_count: bagCount,
-      estimated_weight_kg: weightKg,
+      estimated_weight_lbs: weightLbs,
       detergent_id: selectedDetergentId,
       promo_code: appliedPromo,
       base_bag_price: rates.bagPrice,
-      base_kg_price: rates.kgPrice,
+      base_pound_price: rates.poundPrice,
+      min_lbs: rates.minLbs,
+      max_lbs: rates.maxLbs,
+      free_delivery_lbs: rates.freeDeliveryLbs,
       one_bag_delivery_fee: rates.deliveryFee,
-      free_delivery_threshold: rates.freeDeliveryThreshold,
+      free_delivery_threshold: rates.freeDeliveryBags,
     });
-  }, [pricingMode, bagCount, weightKg, selectedDetergentId, appliedPromo, rates]);
+  }, [pricingMode, bagCount, weightLbs, selectedDetergentId, appliedPromo, rates]);
 
   const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
@@ -116,7 +126,7 @@ export function BookingWizard({
       currentUser,
       pricingMode,
       bagCount,
-      weightKg,
+      weightLbs,
       selectedDetergentId,
       selectedTemp,
       selectedDate,
@@ -138,15 +148,26 @@ export function BookingWizard({
         <div className="lg:col-span-2 space-y-6">
           {activeStep === 1 && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} bagPrice={rates.bagPrice} kgPrice={rates.kgPrice} />
+              <StepPricingMode
+                selectedMode={pricingMode}
+                onSelectMode={setPricingMode}
+                bagPrice={rates.bagPrice}
+                poundPrice={rates.poundPrice}
+                minLbs={rates.minLbs}
+                freeDeliveryBags={rates.freeDeliveryBags}
+                freeDeliveryLbs={rates.freeDeliveryLbs}
+              />
               <StepBagCounter
                 pricingMode={pricingMode}
                 bagCount={bagCount}
                 onBagCountChange={setBagCount}
-                weightKg={weightKg}
-                onWeightKgChange={setWeightKg}
+                weightLbs={weightLbs}
+                onWeightLbsChange={setWeightLbs}
                 bagPrice={rates.bagPrice}
-                freeDeliveryBags={rates.freeDeliveryThreshold}
+                freeDeliveryBags={rates.freeDeliveryBags}
+                minLbs={rates.minLbs}
+                maxLbs={rates.maxLbs}
+                freeDeliveryLbs={rates.freeDeliveryLbs}
               />
               <div className="flex justify-end pt-2">
                 <Button variant="hero" size="lg" onClick={() => setStep(2)}>
@@ -160,20 +181,12 @@ export function BookingWizard({
           {activeStep === 2 && (
             <div className="space-y-6 animate-in fade-in duration-200">
               <StepDetergent
-                selectedDetergentId={selectedDetergentId}
-                onSelectDetergent={setSelectedDetergentId}
-                selectedTemp={selectedTemp}
-                onSelectTemp={setSelectedTemp}
+                selectedDetergentId={selectedDetergentId} onSelectDetergent={setSelectedDetergentId}
+                selectedTemp={selectedTemp} onSelectTemp={setSelectedTemp}
               />
               <div className="flex items-center justify-between pt-2">
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  <span>Back to Plan</span>
-                </Button>
-                <Button variant="hero" size="lg" onClick={() => setStep(3)}>
-                  <span>Continue to Pickup &amp; Address</span>
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /><span>Back to Plan</span></Button>
+                <Button variant="hero" size="lg" onClick={() => setStep(3)}><span>Continue to Pickup &amp; Address</span><ArrowRight className="h-4 w-4 ml-2" /></Button>
               </div>
             </div>
           )}
@@ -181,24 +194,16 @@ export function BookingWizard({
           {activeStep === 3 && (
             <div className="space-y-6 animate-in fade-in duration-200">
               <StepSlotPicker
-                selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
-                selectedSlot={selectedSlot}
-                onSelectSlot={setSelectedSlot}
-                dropoffDate={dropoffDate}
-                onSelectDropoffDate={setDropoffDate}
+                selectedDate={selectedDate} onSelectDate={setSelectedDate}
+                selectedSlot={selectedSlot} onSelectSlot={setSelectedSlot}
+                dropoffDate={dropoffDate} onSelectDropoffDate={setDropoffDate}
               />
               <StepOutOfHome
-                isOutOfHome={isOutOfHome}
-                onIsOutOfHomeChange={setIsOutOfHome}
-                bagConfirmed={bagConfirmed}
-                onBagConfirmedChange={setBagConfirmed}
-                address={address}
-                onAddressChange={setAddress}
-                addressDetails={addressDetails}
-                onAddressDetailsChange={setAddressDetails}
-                notes={notes}
-                onNotesChange={setNotes}
+                isOutOfHome={isOutOfHome} onIsOutOfHomeChange={setIsOutOfHome}
+                bagConfirmed={bagConfirmed} onBagConfirmedChange={setBagConfirmed}
+                address={address} onAddressChange={setAddress}
+                addressDetails={addressDetails} onAddressDetailsChange={setAddressDetails}
+                notes={notes} onNotesChange={setNotes}
               />
               <div className="flex items-center justify-between pt-2">
                 <Button variant="outline" onClick={() => setStep(2)}>
@@ -215,22 +220,17 @@ export function BookingWizard({
 
           {activeStep === 4 && (
             <StepReview
-              pricingMode={pricingMode}
-              bagCount={bagCount}
-              weightKg={weightKg}
-              selectedDate={selectedDate}
-              selectedSlot={selectedSlot}
-              address={address}
-              isOutOfHome={isOutOfHome}
-              onEditStep={setStep}
-              onBack={() => setStep(3)}
+              pricingMode={pricingMode} bagCount={bagCount} weightLbs={weightLbs}
+              selectedDate={selectedDate} selectedSlot={selectedSlot}
+              address={address} isOutOfHome={isOutOfHome}
+              onEditStep={setStep} onBack={() => setStep(3)}
             />
           )}
         </div>
 
         <div className="lg:col-span-1">
           <OrderSummaryCard
-            pricingMode={pricingMode} bagCount={bagCount} weightKg={weightKg}
+            pricingMode={pricingMode} bagCount={bagCount} weightLbs={weightLbs}
             priceResult={priceResult} promoCode={promoCode} promoError={promoError}
             onPromoCodeChange={setPromoCode} onApplyPromo={handleApplyPromo}
             selectedPaymentMethod={paymentMethod as any} onSelectPaymentMethod={setPaymentMethod}

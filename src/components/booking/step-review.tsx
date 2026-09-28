@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 interface StepReviewProps {
   pricingMode: PricingMode;
   bagCount: number;
-  weightKg: number;
+  weightLbs?: number;
   selectedDate: string;
   selectedSlot: string;
   address: string;
@@ -17,18 +17,10 @@ interface StepReviewProps {
   onBack: () => void;
 }
 
-/**
- * StepReview Component
- *
- * Dedicated Step 4 review component in the laundry booking flow.
- * Displays a clean, structured overview of all customer selections before final payment.
- * Allows instant 1-click jump back to any previous step.
- * Strictly adheres to the 100-250 lines rule.
- */
 export function StepReview({
   pricingMode,
   bagCount,
-  weightKg,
+  weightLbs = 15,
   selectedDate,
   selectedSlot,
   address,
@@ -40,8 +32,8 @@ export function StepReview({
     if (pricingMode === "per_bag") {
       return `${bagCount} Standard 13-Gal Bag${bagCount > 1 ? "s" : ""}`;
     }
-    if (pricingMode === "per_kg") {
-      return `${weightKg} KG Weighed Volume`;
+    if (pricingMode === "per_lb") {
+      return `${weightLbs} lbs Weighed Volume`;
     }
     return "Pre-Paid Package Credit";
   };

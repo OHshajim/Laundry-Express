@@ -27,7 +27,7 @@ export function HowItWorksSection() {
 
   const currentService = SERVICES_DATA[activeService];
 
-  const [rates, setRates] = React.useState({ bagPrice: 32.50, kgPrice: 2.75 });
+  const [rates, setRates] = React.useState({ bagPrice: 32.50, poundPrice: 1.99 });
 
   React.useEffect(() => {
     fetch("/api/pricing")
@@ -36,7 +36,7 @@ export function HowItWorksSection() {
         if (data?.pricing) {
           setRates({
             bagPrice: Number(data.pricing.bag_price ?? data.pricing.base_bag_price ?? 32.50),
-            kgPrice: Number(data.pricing.kg_price ?? data.pricing.base_kg_price ?? 2.75),
+            poundPrice: Number(data.pricing.pound_price ?? 1.99),
           });
         }
       })
@@ -45,8 +45,8 @@ export function HowItWorksSection() {
 
   const displayPrice = activeService === "bag"
     ? `$${rates.bagPrice.toFixed(2)} / bag (about 2 loads)`
-    : activeService === "kg"
-      ? `$${rates.kgPrice.toFixed(2)} / KG (weighed intake)`
+    : activeService === "pound"
+      ? `$${rates.poundPrice.toFixed(2)} / lb (weighed intake)`
       : currentService.price;
 
   // Auto-cycle through the 4 steps along the delivery route on desktop/idle

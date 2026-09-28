@@ -9,7 +9,7 @@ export interface CheckoutPayload {
   currentUser: User | null;
   pricingMode: PricingMode;
   bagCount: number;
-  weightKg: number;
+  weightLbs?: number;
   selectedDetergentId: string;
   selectedTemp: string;
   selectedDate: string;
@@ -31,6 +31,7 @@ export function useBookingCheckout() {
   const checkout = async (p: CheckoutPayload) => {
     setIsProcessing(true);
     const delivery = p.dropoffDate || new Date(Date.now() + 24 * 3600 * 1000).toISOString().split("T")[0];
+    const weightAmount = p.weightLbs ?? 15;
 
     try {
       const res = await fetch("/api/orders", {
@@ -38,12 +39,12 @@ export function useBookingCheckout() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: p.currentUser?.id,
-          customer_name: p.currentUser?.full_name || p.currentUser?.name || "Customer",
-          customer_email: p.currentUser?.email || "customer@laundryexpress.com",
-          customer_phone: p.currentUser?.phone || "815-575-9536",
+          customer_name: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
+          customer_email: p.currentUser?.email || "",
+          customer_phone: p.currentUser?.phone || "",
           pricing_mode: p.pricingMode,
           bag_count: p.bagCount,
-          estimated_weight_kg: p.weightKg,
+          estimated_weight_lbs: weightAmount,
           detergent_id: p.selectedDetergentId,
           wash_temperature: p.selectedTemp,
           pickup_date: p.selectedDate,
@@ -76,12 +77,12 @@ export function useBookingCheckout() {
         deliveryDate: delivery,
         paymentMethod: p.paymentMethod,
         totalAmount: p.priceResult.total_amount,
-        customerName: p.currentUser?.full_name || p.currentUser?.name || "Customer",
-        customerEmail: p.currentUser?.email || "customer@laundryexpress.com",
+        customerName: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
+        customerEmail: p.currentUser?.email || "",
         address: p.address,
         orderDetails: {
-          planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : "By The KG",
-          quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${p.weightKg} KG`,
+          planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : p.pricingMode === "package" ? "Saver Package" : "By The Pound (lb)",
+          quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${weightAmount} lbs`,
           detergent: p.selectedDetergentId,
           temperature: p.selectedTemp,
           specialRequest: p.isOutOfHome ? "Away (Contactless Doorstep)" : "Home (Ring Bell)",

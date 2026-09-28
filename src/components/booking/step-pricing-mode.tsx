@@ -6,15 +6,23 @@ interface StepPricingModeProps {
   selectedMode: PricingMode;
   onSelectMode: (mode: PricingMode) => void;
   bagPrice?: number;
-  kgPrice?: number;
+  poundPrice?: number;
+  minLbs?: number;
+  freeDeliveryBags?: number;
+  freeDeliveryLbs?: number;
 }
 
 export function StepPricingMode({
   selectedMode,
   onSelectMode,
   bagPrice = 32.50,
-  kgPrice = 2.75,
+  poundPrice = 1.99,
+  minLbs = 10,
+  freeDeliveryBags = 2,
+  freeDeliveryLbs = 30,
 }: StepPricingModeProps) {
+  const effectivePoundRate = poundPrice || 1.99;
+
   const modes: Array<{
     id: PricingMode;
     title: string;
@@ -26,17 +34,17 @@ export function StepPricingMode({
     {
       id: "per_bag",
       title: "By the Bag (Most Popular)",
-      badge: "2+ Bags = Free Delivery",
-      description: "Fill our 13-gallon bag (about 2 loads). $10 pickup & delivery, FREE on 2+ bags!",
+      badge: `${freeDeliveryBags}+ Bags = Free Delivery`,
+      description: "Fill our 13-gallon bag (about 2 loads). Doorstep pickup, returned in 24 hours.",
       priceLabel: `$${bagPrice.toFixed(2)} / bag`,
       icon: ShoppingBag,
     },
     {
-      id: "per_kg",
-      title: "By Weight (Per KG)",
-      badge: "Commercial & Bulk",
+      id: "per_lb",
+      title: "By Weight (Per Pound / lb)",
+      badge: `${freeDeliveryLbs}+ lbs = Free Delivery`,
       description: "Pay purely by weighed volume. Weighed on precision scale at our facility.",
-      priceLabel: `$${kgPrice.toFixed(2)} / KG (5KG min)`,
+      priceLabel: `$${effectivePoundRate.toFixed(2)} / lb (${minLbs} lbs min)`,
       icon: Scale,
     },
     {

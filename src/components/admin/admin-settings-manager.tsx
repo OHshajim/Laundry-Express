@@ -8,8 +8,10 @@ export function AdminSettingsManager() {
   const [bagPrice, setBagPrice] = React.useState<number>(32.5);
   const [deliveryFee, setDeliveryFee] = React.useState<number>(10.0);
   const [freeThresholdBags, setFreeThresholdBags] = React.useState<number>(2);
-  const [kgPrice, setKgPrice] = React.useState<number>(2.75);
-  const [minKgOrder, setMinKgOrder] = React.useState<number>(5);
+  const [poundPrice, setPoundPrice] = React.useState<number>(1.99);
+  const [minLbsOrder, setMinLbsOrder] = React.useState<number>(10);
+  const [maxLbsOrder, setMaxLbsOrder] = React.useState<number>(100);
+  const [freeThresholdLbs, setFreeThresholdLbs] = React.useState<number>(30);
 
   const [slot1, setSlot1] = React.useState("8:00 AM – 12:00 PM");
   const [slot2, setSlot2] = React.useState("1:00 PM – 6:00 PM");
@@ -34,8 +36,10 @@ export function AdminSettingsManager() {
           setBagPrice(data.pricing.bag_price);
           setDeliveryFee(data.pricing.standard_delivery_fee);
           setFreeThresholdBags(data.pricing.free_delivery_threshold);
-          setKgPrice(data.pricing.kg_price);
-          setMinKgOrder(data.pricing.min_kg);
+          setPoundPrice(data.pricing.pound_price ?? 1.99);
+          setMinLbsOrder(data.pricing.min_lbs ?? 10);
+          setMaxLbsOrder(data.pricing.max_lbs ?? 100);
+          setFreeThresholdLbs(data.pricing.free_delivery_lbs ?? 30);
         }
       })
       .catch(() => {});
@@ -73,8 +77,10 @@ export function AdminSettingsManager() {
             bag_price: bagPrice,
             standard_delivery_fee: deliveryFee,
             free_delivery_threshold: freeThresholdBags,
-            kg_price: kgPrice,
-            min_kg: minKgOrder,
+            pound_price: poundPrice,
+            min_lbs: minLbsOrder,
+            max_lbs: maxLbsOrder,
+            free_delivery_lbs: freeThresholdLbs,
           }),
         }),
         fetch("/api/content", {
@@ -86,8 +92,9 @@ export function AdminSettingsManager() {
               operating_hours: daysOpen,
               delivery_zones: zones.map((z) => `${z.city} (${z.zip})`),
               min_order_bag: 1,
-              min_order_kg: minKgOrder,
+              min_order_lbs: minLbsOrder,
               free_delivery_bags: freeThresholdBags,
+              free_delivery_lbs: freeThresholdLbs,
               standard_delivery_fee: deliveryFee,
             },
           }),
@@ -106,7 +113,7 @@ export function AdminSettingsManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <h3 className="text-base font-black text-slate-900">Operations, Facility &amp; Rate Settings</h3>
-          <p className="text-xs text-slate-500">Live database configuration for bag &amp; KG pricing, free delivery rules, hours, and service zones.</p>
+          <p className="text-xs text-slate-500">Live database configuration for bag &amp; pound pricing, free delivery rules, hours, and service zones.</p>
         </div>
         <Button type="submit" variant="hero" size="sm" disabled={isSaving} className="cursor-pointer text-xs shrink-0">
           <Save className="h-4 w-4 mr-1.5 shrink-0" />
@@ -134,16 +141,28 @@ export function AdminSettingsManager() {
               <input type="number" step="0.5" value={bagPrice} onChange={(e) => setBagPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
             </div>
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Delivery Fee ($)</label>
-              <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
-            </div>
-            <div>
               <label className="font-bold text-slate-700 block mb-1">Free Delivery (Bags)</label>
               <input type="number" value={freeThresholdBags} onChange={(e) => setFreeThresholdBags(parseInt(e.target.value, 10) || 1)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
             </div>
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Per-KG Rate ($)</label>
-              <input type="number" step="0.05" value={kgPrice} onChange={(e) => setKgPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+              <label className="font-bold text-slate-700 block mb-1">Delivery Fee ($)</label>
+              <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Per-Pound Rate ($/lb)</label>
+              <input type="number" step="0.05" value={poundPrice} onChange={(e) => setPoundPrice(parseFloat(e.target.value) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Min Pounds (lbs)</label>
+              <input type="number" step="1" value={minLbsOrder} onChange={(e) => setMinLbsOrder(parseInt(e.target.value, 10) || 1)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Max Pounds (lbs)</label>
+              <input type="number" step="1" value={maxLbsOrder} onChange={(e) => setMaxLbsOrder(parseInt(e.target.value, 10) || 10)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
+            </div>
+            <div className="col-span-2">
+              <label className="font-bold text-slate-700 block mb-1">Free Delivery Threshold (Pounds / lbs)</label>
+              <input type="number" step="1" value={freeThresholdLbs} onChange={(e) => setFreeThresholdLbs(parseInt(e.target.value, 10) || 0)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold" />
             </div>
           </div>
         </div>

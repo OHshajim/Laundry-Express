@@ -6,6 +6,7 @@ import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { OrderFlow } from "@/components/order/order-flow";
 import { Sparkles, ShieldCheck, Truck } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
+import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 
 export const metadata: Metadata = {
   title: "Book Laundry Pickup & Pay — Fast Checkout",
@@ -48,7 +49,9 @@ function OrderLoadingSkeleton() {
   );
 }
 
-export default function OrderPage() {
+export default async function OrderPage() {
+  const initialPricing = await PricingPlanService.getPricing().catch(() => null);
+
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-clip pt-8 md:pt-10">
       {/* Sticky Global Navigation Navbar */}
@@ -86,7 +89,7 @@ export default function OrderPage() {
 
           {/* Main Booking Wizard in Suspense Boundary */}
           <React.Suspense fallback={<OrderLoadingSkeleton />}>
-            <OrderFlow />
+            <OrderFlow initialPricing={initialPricing ?? undefined} />
           </React.Suspense>
         </div>
       </main>
