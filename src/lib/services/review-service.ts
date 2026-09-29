@@ -43,7 +43,8 @@ export class ReviewService {
   }
 
   /**
-   * Submits a customer review with up to 3 photos (requires completed order)
+   * Submits a customer review with up to 3 photos.
+   * Enforces: order must be completed, one review per order per user.
    */
   static async submitReview(input: {
     orderId: string;
@@ -57,47 +58,69 @@ export class ReviewService {
       return { success: false, error: "Order ID, rating, and review text are required." };
     }
 
-    const photos = (input.photoUrls || []).slice(0, 3);
-    const newRev: OrderReview = {
-      id: `rev-${Date.now()}`,
-      order_id: input.orderId,
-      user_id: input.userId,
-      customer_name: input.customerName || "Customer",
-      rating: Math.min(5, Math.max(1, input.rating)),
-      comment: input.comment.trim(),
-      status: "pending", // Must be approved by admin moderation
-      photo_urls: photos,
-      created_at: new Date().toISOString(),
-    };
-
-    cachedReviews.unshift(newRev);
-
     try {
       const supabase = createAdminSupabaseClient();
+
+      // Verify order is completed and belongs to user
+      const { data: order } = await supabase
+        .from("orders")
+        .select("id, order_status, user_id")
+        .eq("id", input.orderId)
+        .single();
+
+      if (!order) return { success: false, error: "Order not found." };
+      if (order.user_id !== input.userId) return { success: false, error: "You can only review your own orders." };
+      if (order.order_status !== "completed") return { success: false, error: "You can only review completed orders." };
+
+      // Enforce one review per order
+      const { data: existing } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("order_id", input.orderId)
+        .eq("user_id", input.userId)
+        .maybeSingle();
+
+      if (existing) return { success: false, error: "You have already submitted a review for this order." };
+
+      const photos = (input.photoUrls || []).slice(0, 3);
       const { data: revData, error } = await supabase
         .from("reviews")
         .insert({
-          id: newRev.id,
-          order_id: newRev.order_id,
+          order_id: input.orderId,
           user_id: input.userId,
-          rating: newRev.rating,
-          comment: newRev.comment,
-          status: newRev.status,
+          customer_name: input.customerName || "Customer",
+          rating: Math.min(5, Math.max(1, input.rating)),
+          comment: input.comment.trim(),
+          status: "pending",
         })
         .select()
         .single();
 
-      if (!error && revData && photos.length > 0) {
-        const photoInserts = photos.map((url, idx) => ({
-          review_id: revData.id,
-          photo_url: url,
-          display_order: idx + 1,
-        }));
-        await supabase.from("review_photos").insert(photoInserts);
-      }
-    } catch {}
+      if (error || !revData) throw new Error(error?.message || "Insert failed");
 
-    return { success: true, review: newRev };
+      if (photos.length > 0) {
+        await supabase.from("review_photos").insert(
+          photos.map((url, idx) => ({ review_id: revData.id, photo_url: url, display_order: idx + 1 }))
+        );
+      }
+
+      const newRev: OrderReview = {
+        id: revData.id,
+        order_id: revData.order_id,
+        user_id: revData.user_id,
+        customer_name: revData.customer_name,
+        rating: revData.rating,
+        comment: revData.comment,
+        status: "pending",
+        photo_urls: photos,
+        created_at: revData.created_at,
+      };
+      cachedReviews.unshift(newRev);
+      return { success: true, review: newRev };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to submit review.";
+      return { success: false, error: msg };
+    }
   }
 
   /**

@@ -15,8 +15,9 @@ export async function GET(req: NextRequest) {
     const token = await getToken({ req, secret: AUTH_SECRET });
     const isAdmin = token?.role === "admin";
     const userId = isAdmin ? undefined : token?.id || (req.nextUrl.searchParams.get("userId") || undefined);
+    const userEmail = isAdmin ? undefined : token?.email || undefined;
 
-    const orders = await OrderService.getOrders(userId);
+    const orders = await OrderService.getOrders(userId, userEmail);
     return NextResponse.json({ success: true, orders }, { status: 200, headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load orders";

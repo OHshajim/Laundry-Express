@@ -18,7 +18,7 @@
   a. select plan 
   b. Select Pickup Date (use calender) and time (8 am - 12 pm and 1pm to 6pm) delevary will in 24 hours  Drop-off date (optional) (Leave blank and we deliver back within 24 hours).
   c. Pickup & Delivery Address (Street number & name ,Apt / unit (optional),City,  State, zip code ) 
-  d. select quantity and Wash Detergent (multiple option for chosse) & Temperature acording to this show live total price and total weight
+  d. select quantity and Wash Detergent (multiple option for chosse) acording to this show live total price and total weight
 e. take speacial request (optional)
     ```   Will you be home during the pickup window?
         Yes, I will be Home
@@ -29,6 +29,8 @@ e. take speacial request (optional)
         I confirm that my laundry bag(s) are placed securely outside my front door / porch for pickup.```
   f. review and select payment method 
   g. after payment confirm show order confirmation page and order status and generate a invoice (Order ID, Order Date, Pickup Date, Delivery Date, Payment Method, Total Amount, Order Details)
+  h. when order confirm all information includes user infos make apdf for invoice clear content mention all details with logo text "LAUNDRY EXPRESS" in content pdf , there will be option for download and send to user and admin email .
+  
 5. user dashboard
   a. Show overview 
   b. Order tracking page (Order status , Order history , Order details )
@@ -38,7 +40,6 @@ e. take speacial request (optional)
     1. user profile (name, email, phone number, profile picture )
     2. address (add, edit, delete)
     3. password (reset password by verify otp in email and phone number)
-    4. notifications (push, email)
 6. admin dashboard 
   a. overview 
   b. orders 
@@ -51,9 +52,9 @@ e. take speacial request (optional)
   e. Pricing management (add, edit, delete) 
     1. price for per pound (lbs) (minimum and maximum)
     3. price for per bag (with minimum and maximum)
-  f. Detergent Catalog , Temperature Catalog (add, edit, delete) 
+  f. Detergent Catalog (add, edit, delete) 
     1. name 
-    2. type (for detergent) (liquid, powder), (for temperature) (cold, warm, hot)
+    2. type (for detergent) (liquid, powder)
     3. brand (for detargent)
     4. price
     5. description 

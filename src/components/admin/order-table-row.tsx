@@ -43,10 +43,10 @@ export function OrderTableRow({
 
       <td className="p-3.5">
         <span className="font-semibold text-slate-800 block">
-          {order.user?.full_name || "Customer"}
+          {order.customer_name || order.user?.full_name || "Customer"}
         </span>
-        <span className="text-[11px] text-slate-500 block max-w-xs truncate">
-          {order.customer_notes || "Doorstep Address"}
+        <span className="text-[11px] text-slate-500 block max-w-xs truncate" title={[order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address"}>
+          {[order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address"}
         </span>
 
         {/* Status Callout Badges */}

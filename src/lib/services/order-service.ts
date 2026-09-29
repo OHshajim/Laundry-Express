@@ -1,57 +1,84 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Order, OrderStatus } from "@/types";
 
-/**
- * Order Service
- * Enterprise database management for customer bookings & administrative fulfillment.
- * Directly synchronizes orders with Supabase PostgreSQL (public.orders).
- * Strictly complies with the < 250 lines architectural rule.
- */
-
-// Runtime memory cache for active server operations
 const ORDERS_MEMORY_STORE = new Map<string, Order>();
 
+function mapOrderRecord(item: Record<string, any>): Order {
+  const rawMode = item.plan_type || item.pricing_mode || "per_bag";
+  const pricingMode = rawMode === "per_kg" || rawMode === "per_lb" ? "per_lb" : rawMode;
+  const fullAddress = item.pickup_address || (item.street_address ? `${item.street_address}${item.apt_unit ? `, Apt ${item.apt_unit}` : ""}, ${item.city || "Lake in the Hills"}, ${item.state || "IL"} ${item.zip_code || "60156"}` : "");
+  const rawProofs = item.proofs || item.order_proofs || [];
+  const mappedProofs = rawProofs.map((p: any) => ({
+    id: p.id || `prf-${Date.now()}`,
+    order_id: p.order_id || item.id,
+    proof_type: p.proof_type === "pickup_doorstep" ? "pickup" : p.proof_type === "delivery_doorstep" ? "dropoff" : p.proof_type === "processing_wash" ? "damage" : p.proof_type || "pickup",
+    image_url: p.photo_url || p.image_url,
+    notes: p.notes,
+    uploaded_by: p.uploaded_by || "driver",
+    created_at: p.created_at || new Date().toISOString(),
+  }));
+  const memProofs = ORDERS_MEMORY_STORE.get(item.id)?.proofs || ORDERS_MEMORY_STORE.get(item.order_number)?.proofs || [];
+  return {
+    ...item,
+    user_id: item.user_id || "guest-customer",
+    customer_name: item.customer_name || item.user_name || item.name || "Customer",
+    customer_email: item.customer_email || item.email || "",
+    customer_phone: item.customer_phone || item.phone || "",
+    pricing_mode: pricingMode,
+    bag_count: item.bag_count ?? 1,
+    estimated_weight_lbs: Number(item.weight_lbs ?? item.weight_kg ?? item.estimated_weight_lbs ?? 0),
+    pickup_slot: item.pickup_window || item.pickup_slot || "8am-12pm",
+    delivery_slot: item.delivery_window || item.delivery_slot || "8am-12pm",
+    pickup_address: fullAddress,
+    customer_notes: item.customer_notes || item.special_instructions || item.notes || "",
+    is_out_of_home: item.is_out_of_home !== undefined ? !!item.is_out_of_home : item.will_be_home === false,
+    has_preexisting_damage: item.has_preexisting_damage || !!item.damage_photo_url || !!item.damage_notes,
+    damage_notes: item.damage_notes || "",
+    damage_photo_url: item.damage_photo_url || "",
+    proofs: mappedProofs.length > 0 ? mappedProofs : memProofs,
+    total_amount: Number(item.total_amount ?? 0),
+    order_status: (item.order_status || item.delivery_status || "pending") as OrderStatus,
+  } as Order;
+}
+
 export class OrderService {
-  /**
-   * Retrieves orders. If userId is provided, filters for that specific customer.
-   */
-  static async getOrders(userId?: string): Promise<Order[]> {
+  static async getOrders(userId?: string, userEmail?: string): Promise<Order[]> {
     try {
       const supabase = createAdminSupabaseClient();
-      let query = supabase.from("orders").select("*").order("created_at", { ascending: false });
-      if (userId) {
-        query = query.eq("user_id", userId);
+      let query = supabase.from("orders").select("*, proofs:order_proofs(*)").order("created_at", { ascending: false });
+      const filters = [];
+      if (userId) filters.push(`user_id.eq.${userId}`);
+      if (userEmail) filters.push(`customer_email.eq.${userEmail}`);
+      if (filters.length > 0) {
+        query = query.or(filters.join(","));
       }
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
-        return data.map((item) => {
-          const rawMode = item.plan_type || item.pricing_mode || "per_bag";
-          const pricingMode = rawMode === "per_kg" || rawMode === "per_lb" ? "per_lb" : rawMode;
-          return {
-            ...item,
-            pricing_mode: pricingMode,
-            bag_count: item.bag_count ?? 1,
-            estimated_weight_lbs: Number(item.weight_lbs ?? item.weight_kg ?? item.estimated_weight_lbs ?? 0),
-            pickup_slot: item.pickup_window || item.pickup_slot || "8am-12pm",
-            total_amount: Number(item.total_amount ?? 0),
-            order_status: (item.order_status || item.delivery_status || "pending") as OrderStatus,
-          };
-        }) as Order[];
+        return data.map(mapOrderRecord);
       }
-    } catch {
-      // Fall through to memory store
-    }
+    } catch {}
 
     const all = Array.from(ORDERS_MEMORY_STORE.values());
-    if (userId) {
-      return all.filter((o) => o.user_id === userId || o.customer_email?.includes(userId));
+    if (userId || userEmail) {
+      return all.filter((o) => (userId && o.user_id === userId) || (userEmail && o.customer_email?.toLowerCase() === userEmail.toLowerCase()));
     }
     return all.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
-  /**
-   * Creates a new booking in the database
-   */
+  static async getOrderByNumber(orderIdentifier: string): Promise<Order | null> {
+    for (const o of ORDERS_MEMORY_STORE.values()) {
+      if (o.order_number === orderIdentifier || o.id === orderIdentifier) return o;
+    }
+    try {
+      const supabase = createAdminSupabaseClient();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderIdentifier);
+      const query = supabase.from("orders").select("*, proofs:order_proofs(*)");
+      const { data, error } = isUuid ? await query.eq("id", orderIdentifier).maybeSingle() : await query.eq("order_number", orderIdentifier).maybeSingle();
+      if (!error && data) return mapOrderRecord(data);
+    } catch {}
+    return null;
+  }
+
   static async createOrder(orderPayload: Partial<Order>): Promise<Order> {
     const randomSeq = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `LX-${new Date().getFullYear()}-${randomSeq}`;
@@ -78,6 +105,8 @@ export class OrderService {
       city: orderPayload.city || "Lake in the Hills",
       state: orderPayload.state || "IL",
       zip_code: orderPayload.zip_code || "60156",
+      pickup_address: (orderPayload.street_address ? `${orderPayload.street_address}${orderPayload.apt_unit ? `, Apt ${orderPayload.apt_unit}` : ""}, ${orderPayload.city || "Lake in the Hills"}, ${orderPayload.state || "IL"} ${orderPayload.zip_code || "60156"}` : "") || orderPayload.pickup_address || "",
+      customer_notes: (orderPayload as any).customer_notes || (orderPayload as any).special_instructions || (orderPayload as any).notes || "",
       is_out_of_home: !!orderPayload.is_out_of_home,
       bag_outside_door_confirmed: !!orderPayload.bag_outside_door_confirmed,
       subtotal: Number(orderPayload.subtotal ?? 0),
@@ -92,13 +121,14 @@ export class OrderService {
       updated_at: now,
     };
 
-    // Update memory store first for immediate local reactivity
     ORDERS_MEMORY_STORE.set(newOrder.id, newOrder);
+    ORDERS_MEMORY_STORE.set(newOrder.order_number, newOrder);
 
     try {
       const supabase = createAdminSupabaseClient();
       await supabase.from("orders").insert({
         order_number: newOrder.order_number,
+        user_id: newOrder.user_id && newOrder.user_id !== "guest-customer" ? newOrder.user_id : null,
         customer_name: newOrder.customer_name,
         customer_email: newOrder.customer_email,
         customer_phone: newOrder.customer_phone,
@@ -125,23 +155,17 @@ export class OrderService {
         payment_status: newOrder.payment_status,
         order_status: newOrder.order_status,
       });
-    } catch (err: unknown) {
-      console.warn("⚠️ OrderService: Database insert fallback to memory:", err instanceof Error ? err.message : err);
-    }
+    } catch {}
 
     return newOrder;
   }
 
-  /**
-   * Updates fulfillment status of an order
-   */
   static async updateOrderStatus(orderId: string, status: OrderStatus): Promise<boolean> {
     const existing = ORDERS_MEMORY_STORE.get(orderId);
     if (existing) {
       existing.order_status = status;
       existing.updated_at = new Date().toISOString();
     }
-
     try {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
       const supabase = createAdminSupabaseClient();
@@ -153,9 +177,6 @@ export class OrderService {
     }
   }
 
-  /**
-   * Updates final weight and recalculated pricing for weighted laundry orders
-   */
   static async updateFinalWeight(orderId: string, weightLbs: number): Promise<boolean> {
     const existing = ORDERS_MEMORY_STORE.get(orderId);
     const unitRate = existing && existing.estimated_weight_lbs && existing.subtotal
@@ -176,13 +197,7 @@ export class OrderService {
     try {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
       const supabase = createAdminSupabaseClient();
-      const payload = {
-        weight_kg: weightLbs,
-        subtotal,
-        delivery_fee: deliveryFee,
-        total_amount: total,
-        updated_at: new Date().toISOString(),
-      };
+      const payload = { weight_kg: weightLbs, subtotal, delivery_fee: deliveryFee, total_amount: total, updated_at: new Date().toISOString() };
       const query = supabase.from("orders").update(payload);
       if (isUuid) await query.eq("id", orderId);
       else await query.eq("order_number", orderId);
@@ -192,44 +207,40 @@ export class OrderService {
     }
   }
 
-  /**
-   * Records driver photo verification (pickup or drop-off)
-   */
-  static async uploadProof(
-    orderId: string,
-    proofType: "pickup" | "dropoff" | "damage",
-    imageUrl: string,
-    notes?: string
-  ): Promise<boolean> {
-    const existing = ORDERS_MEMORY_STORE.get(orderId);
+  static async uploadProof(orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string): Promise<boolean> {
+    const existing = ORDERS_MEMORY_STORE.get(orderId) || Array.from(ORDERS_MEMORY_STORE.values()).find((o) => o.id === orderId || o.order_number === orderId);
+    const newProof = {
+      id: `prf-${Date.now()}`,
+      order_id: existing?.id || orderId,
+      proof_type: proofType,
+      image_url: imageUrl,
+      notes,
+      uploaded_by: "operations-admin",
+      created_at: new Date().toISOString(),
+    };
     if (existing) {
       const isDamage = proofType === "damage";
-      existing.has_preexisting_damage = isDamage ? true : existing.has_preexisting_damage;
-      existing.damage_notes = isDamage ? notes : existing.damage_notes;
-      existing.damage_photo_url = isDamage ? imageUrl : existing.damage_photo_url;
-      existing.proofs = [
-        ...(existing.proofs || []),
-        {
-          id: `prf-${Date.now()}`,
-          order_id: orderId,
-          proof_type: proofType,
-          image_url: imageUrl,
-          notes,
-          uploaded_by: "driver",
-          created_at: new Date().toISOString(),
-        },
-      ];
+      if (isDamage) {
+        existing.has_preexisting_damage = true;
+        existing.damage_notes = notes || existing.damage_notes;
+        existing.damage_photo_url = imageUrl;
+      }
+      existing.proofs = [...(existing.proofs || []), newProof];
+      ORDERS_MEMORY_STORE.set(existing.id, existing);
+      if (existing.order_number) ORDERS_MEMORY_STORE.set(existing.order_number, existing);
     }
-
     try {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-      if (isUuid) {
-        const supabase = createAdminSupabaseClient();
+      const supabase = createAdminSupabaseClient();
+      let targetUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId) ? orderId : null;
+      if (!targetUuid) {
+        const { data: found } = await supabase.from("orders").select("id").eq("order_number", orderId).maybeSingle();
+        if (found?.id) targetUuid = found.id;
+      }
+      if (targetUuid) {
         const pt = proofType === "pickup" ? "pickup_doorstep" : proofType === "dropoff" ? "delivery_doorstep" : "processing_wash";
-        await supabase.from("order_proofs").insert({ order_id: orderId, proof_type: pt, photo_url: imageUrl, notes });
+        await supabase.from("order_proofs").insert({ order_id: targetUuid, proof_type: pt, photo_url: imageUrl, notes });
       }
     } catch {}
-
     return true;
   }
 }

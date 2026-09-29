@@ -84,15 +84,22 @@ export function StepSlotPicker({
       return { isoDate, dayName, monthDay };
     }), []);
 
+  const isAllTodaySlotsDisabled = isToday && slots.every((s) => isSlotDisabled(s));
+
   React.useEffect(() => {
     if (isToday) {
       const morning = slots[0];
       const afternoon = slots[1];
-      if (isSlotDisabled(morning) && !isSlotDisabled(afternoon) && selectedSlot === "8am-12pm") {
+      if (isSlotDisabled(morning) && isSlotDisabled(afternoon)) {
+        const tomorrow = availableDates[1]?.isoDate;
+        if (tomorrow && selectedDate === todayStr) {
+          onSelectDate(tomorrow);
+        }
+      } else if (isSlotDisabled(morning) && !isSlotDisabled(afternoon) && selectedSlot === "8am-12pm") {
         onSelectSlot("1pm-6pm");
       }
     }
-  }, [selectedDate]);
+  }, [selectedDate, isToday]);
 
   return (
     <div className="space-y-6 p-5 sm:p-6 rounded-2xl bg-white border border-slate-200">

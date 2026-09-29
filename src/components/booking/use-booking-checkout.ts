@@ -16,6 +16,7 @@ export interface CheckoutPayload {
   selectedSlot: string;
   dropoffDate: string;
   address: string;
+  phone?: string;
   addressDetails?: AddressDetails;
   isOutOfHome: boolean;
   isAwayForDropoff: boolean;
@@ -40,9 +41,9 @@ export function useBookingCheckout() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: p.currentUser?.id,
-          customer_name: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
+          customer_name: p.currentUser?.full_name || p.currentUser?.name || "Customer",
           customer_email: p.currentUser?.email || "",
-          customer_phone: p.currentUser?.phone || "",
+          customer_phone: p.phone || p.currentUser?.phone || "",
           pricing_mode: p.pricingMode,
           bag_count: p.bagCount,
           estimated_weight_lbs: weightAmount,
@@ -79,6 +80,15 @@ export function useBookingCheckout() {
       const orderId = data?.order?.order_number || `LX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const slotLabel = p.selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM";
 
+      const detCatalog: Record<string, string> = {
+        "det-tide-pods": "Tide Original Power Pods",
+        "det-eco-plant": "Seventh Generation Eco-Plant",
+        "det-hypoallergenic": "All Free & Clear (Hypoallergenic)",
+        "det-persil": "Persil ProClean Intense",
+        "det-lavender": "Mrs. Meyer's Clean Day",
+      };
+      const friendlyDetergent = detCatalog[p.selectedDetergentId] || p.selectedDetergentId.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
       setInvoice({
         orderId,
         orderDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
@@ -86,18 +96,18 @@ export function useBookingCheckout() {
         pickupSlot: slotLabel,
         deliveryDate: delivery,
         paymentMethod: p.paymentMethod,
-        totalAmount: p.priceResult.total_amount,
-        subtotal: p.priceResult.subtotal,
-        deliveryFee: p.priceResult.delivery_fee,
-        discountAmount: p.priceResult.discount_amount,
-        customerName: p.currentUser?.full_name || p.currentUser?.name || "Direct Customer",
-        customerEmail: p.currentUser?.email || "",
-        address: p.address,
+        totalAmount: Number(data?.order?.total_amount || p.priceResult.total_amount),
+        subtotal: Number(data?.order?.subtotal || p.priceResult.subtotal),
+        deliveryFee: Number(data?.order?.delivery_fee || p.priceResult.delivery_fee),
+        discountAmount: Number(data?.order?.discount_amount || p.priceResult.discount_amount),
+        customerName: data?.order?.customer_name || p.currentUser?.full_name || p.currentUser?.name || "Customer",
+        customerEmail: data?.order?.customer_email || p.currentUser?.email || "",
+        address: data?.order?.pickup_address || p.address,
         orderDetails: {
           planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : p.pricingMode === "package" ? "Saver Package" : "By The Pound (lb)",
           quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${weightAmount} lbs`,
-          detergent: p.selectedDetergentId,
-          temperature: "cold",
+          detergent: friendlyDetergent,
+          temperature: "Standard Cold Eco-Wash (30°C)",
           specialRequest: p.isOutOfHome ? "Away (Contactless Pickup)" : "Home (Ring Bell)",
         },
       });

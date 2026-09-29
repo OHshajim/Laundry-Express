@@ -127,7 +127,7 @@ export function CustomerOverview({ orders: initialOrders }: CustomerOverviewProp
                         <span className="font-semibold text-slate-700 truncate">{ord.pickup_date} ({ord.pickup_slot})</span>
                       </div>
                       <span className="text-[11px] text-slate-500 mt-0.5 block truncate">
-                        {ord.bag_count} Bag(s) • Cold Water Clean • {ord.delivery_fee === 0 ? "Free Delivery" : `$${ord.delivery_fee} Delivery`}
+                        {ord.pricing_mode === "per_bag" ? `${ord.bag_count || 1} Bag(s)` : ord.pricing_mode === "package" ? "Package Credits" : `${ord.final_weight_lbs || ord.estimated_weight_lbs || 15} lbs`} • Cold Water Clean • {ord.delivery_fee === 0 ? "Free Delivery" : `$${ord.delivery_fee} Delivery`}
                       </span>
                     </div>
 

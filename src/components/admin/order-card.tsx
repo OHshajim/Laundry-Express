@@ -59,11 +59,11 @@ export function OrderCard({
       {/* Customer Info & Badges */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-900">{order.user?.full_name || "Customer"}</span>
+          <span className="font-bold text-slate-900">{order.customer_name || order.user?.full_name || "Customer"}</span>
           <span className="font-black text-slate-900 text-sm">{formatCurrency(order.total_amount)}</span>
         </div>
         <p className="text-[11px] text-slate-500 line-clamp-1">
-          {order.customer_notes || "Doorstep Address"}
+          {[order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address"}
         </p>
 
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">

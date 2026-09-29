@@ -24,6 +24,7 @@ export interface InvoiceData {
   discountAmount?: number;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   address: string;
   orderDetails: {
     planName: string;
@@ -71,6 +72,7 @@ export function OrderInvoiceModal({ invoice, onClose }: OrderInvoiceModalProps) 
     card: "Credit / Debit Card (Stripe)",
     apple_pay: "Apple Pay (Stripe)",
     cash_on_delivery: "Cash on Delivery",
+    stripe: "Stripe 256-bit Secure Checkout",
   };
 
   return (

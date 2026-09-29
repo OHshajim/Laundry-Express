@@ -141,15 +141,15 @@ export function StepBagCounter({
             : "bg-amber-50 border-amber-200 text-amber-800"
         )}
       >
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-rose-500 fill-rose-500 shrink-0" />
+        <div className="flex items-center gap-2 min-w-0">
+          <Zap className="h-4 w-4 text-emerald-600 fill-emerald-600 shrink-0" />
           {isFreeDelivery ? (
-            <span>
-              <strong>Superhero Bonus Unlocked!</strong> You have 2+ bags — Delivery is <strong>100% FREE ($0.00)</strong>!
+            <span className="leading-snug">
+              <strong>Free Delivery Qualified!</strong> Orders with {freeDeliveryBags}+ bags qualify for <strong>$0.00 delivery</strong>.
             </span>
           ) : (
-            <span>
-              <strong>1 Bag Delivery Fee is $10.00.</strong> Add 1 more bag to unlock <strong>FREE Delivery ($0.00)</strong>!
+            <span className="leading-snug">
+              Standard delivery fee applies. Add {Math.max(1, freeDeliveryBags - bagCount)} more bag to unlock <strong>Free Delivery ($0.00)</strong>!
             </span>
           )}
         </div>
@@ -157,8 +157,8 @@ export function StepBagCounter({
         {!isFreeDelivery && (
           <button
             type="button"
-            onClick={() => onBagCountChange(2)}
-            className="text-xs font-bold text-sky-700 underline hover:text-sky-900 shrink-0 ml-2"
+            onClick={() => onBagCountChange(freeDeliveryBags)}
+            className="text-xs font-bold text-sky-700 underline hover:text-sky-900 shrink-0 ml-2 whitespace-nowrap cursor-pointer"
           >
             + Add Bag
           </button>

@@ -17,15 +17,34 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
     return orders.filter((o) => o.order_status === "completed");
   }, [orders]);
 
+  // Filter out orders that already have a review (passed in from parent)
+  const [reviewedOrderIds, setReviewedOrderIds] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    // Fetch this user's reviews to know which orders are already reviewed
+    fetch("/api/reviews")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.reviews)) {
+          setReviewedOrderIds(new Set(d.reviews.map((r: { order_id: string }) => r.order_id)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const eligibleOrders = React.useMemo(() => {
+    return completedOrders.filter((o) => !reviewedOrderIds.has(o.id));
+  }, [completedOrders, reviewedOrderIds]);
+
   const [selectedOrderId, setSelectedOrderId] = React.useState<string>(() => {
     return completedOrders[0]?.id || orders[0]?.id || "";
   });
 
   React.useEffect(() => {
-    if (!selectedOrderId && (completedOrders[0] || orders[0])) {
-      setSelectedOrderId((completedOrders[0] || orders[0]).id);
+    if (!selectedOrderId && eligibleOrders[0]) {
+      setSelectedOrderId(eligibleOrders[0].id);
     }
-  }, [completedOrders, orders, selectedOrderId]);
+  }, [eligibleOrders, selectedOrderId]);
 
   const [rating, setRating] = React.useState(5);
   const [comment, setComment] = React.useState("");
@@ -92,7 +111,7 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
           orderId: selectedOrderId,
           rating,
           comment: comment.trim(),
-          photos,
+          photoUrls: photos,
         }),
       });
       const data = await res.json();
@@ -103,6 +122,8 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
       setComment("");
       setPhotos([]);
       setSubmittedMessage(true);
+      // Mark order as reviewed locally
+      setReviewedOrderIds((prev) => new Set([...prev, selectedOrderId]));
       setTimeout(() => setSubmittedMessage(false), 4500);
     } catch (err: any) {
       setUploadError(err.message || "Failed to submit review.");
@@ -140,38 +161,37 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Select Order to Rate</label>
-            <select
-              value={selectedOrderId}
-              onChange={(e) => setSelectedOrderId(e.target.value)}
-              className="w-full p-2.5 text-xs rounded-xl border border-slate-200 bg-white"
-              disabled={completedOrders.length === 0 && orders.length === 0}
-            >
-              {(completedOrders.length > 0 ? completedOrders : orders).map((ord) => (
-                <option key={ord.id} value={ord.id}>
-                  Order #{ord.order_number} ({ord.pickup_date} • {ord.bag_count} Bag(s))
-                </option>
-              ))}
-              {orders.length === 0 && (
-                <option value="">No completed orders available yet</option>
-              )}
-            </select>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Select Completed Order to Rate</label>
+            {eligibleOrders.length === 0 ? (
+              <div className="p-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
+                {completedOrders.length === 0
+                  ? "No completed orders yet."
+                  : "You have already reviewed all your completed orders."}
+              </div>
+            ) : (
+              <select
+                value={selectedOrderId}
+                onChange={(e) => setSelectedOrderId(e.target.value)}
+                className="w-full p-2.5 text-xs rounded-xl border border-slate-200 bg-white"
+              >
+                {eligibleOrders.map((ord) => (
+                  <option key={ord.id} value={ord.id}>
+                    Order #{ord.order_number} ({ord.pickup_date} • {ord.bag_count} Bag(s))
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Star Rating</label>
             <div className="flex items-center gap-2 pt-1">
               {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  type="button"
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className="p-1 hover:scale-110 transition-transform cursor-pointer"
-                >
+                <button key={star} type="button" onClick={() => setRating(star)} className="p-1 hover:scale-110 transition-transform cursor-pointer">
                   <Star className={`h-6 w-6 ${star <= rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
                 </button>
               ))}
-              <span className="text-xs font-bold text-slate-700 ml-2">{rating} of 5 Stars</span>
+              <span className="text-xs font-bold text-slate-700 ml-2">{rating}/5</span>
             </div>
           </div>
         </div>
@@ -188,37 +208,22 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
           />
         </div>
 
-        {/* 3 Photos Max Upload */}
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Camera className="h-3.5 w-3.5 text-primary" />
-              <span>Attach Laundry Photos (Max 3, up to 5MB each)</span>
+              <Camera className="h-3.5 w-3.5 text-primary" /><span>Photos (max 3, 5MB each)</span>
             </label>
-            <span className="text-[11px] font-semibold text-slate-400">{photos.length} of 3 photos added</span>
+            <span className="text-[11px] text-slate-400">{photos.length}/3</span>
           </div>
-
           <div className="flex flex-wrap items-center gap-3">
             {photos.map((url, idx) => (
               <div key={idx} className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xs">
                 <Image src={url} alt={`Review photo ${idx + 1}`} fill sizes="80px" className="object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setPhotos((p) => p.filter((_, i) => i !== idx))}
-                  className="absolute top-1 right-1 p-1 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 cursor-pointer"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                <button type="button" onClick={() => setPhotos((p) => p.filter((_, i) => i !== idx))} className="absolute top-1 right-1 p-1 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 cursor-pointer"><X className="h-3 w-3" /></button>
               </div>
             ))}
-
             {photos.length < 3 && (
-              <button
-                type="button"
-                disabled={isUploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="h-20 w-20 rounded-2xl border-2 border-dashed border-slate-300 hover:border-primary flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary cursor-pointer disabled:opacity-50"
-              >
+              <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className="h-20 w-20 rounded-2xl border-2 border-dashed border-slate-300 hover:border-primary flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary cursor-pointer disabled:opacity-50">
                 {isUploading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Plus className="h-5 w-5" />}
                 <span className="text-[9px] font-bold">{isUploading ? "Compressing" : "Add Photo"}</span>
               </button>
@@ -228,7 +233,11 @@ export function ReviewSubmitForm({ orders = [], onReviewSubmitted }: ReviewSubmi
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" disabled={isUploading} className="bg-primary hover:bg-primary-dark text-white text-xs cursor-pointer">
+          <Button
+            type="submit"
+            disabled={isUploading || !selectedOrderId || eligibleOrders.length === 0}
+            className="bg-primary hover:bg-primary-dark text-white text-xs cursor-pointer"
+          >
             <Plus className="h-3.5 w-3.5 mr-1" />
             <span>Submit Review</span>
           </Button>

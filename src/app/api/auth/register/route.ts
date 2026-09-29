@@ -54,7 +54,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { fullName, email, password, phone } = body;
+    const fullName = body.fullName || body.full_name || body.name;
+    const { email, password, phone } = body;
 
     if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
       return NextResponse.json(
