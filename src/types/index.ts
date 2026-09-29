@@ -98,7 +98,6 @@ export interface Order {
   pricing_mode: PricingMode;
   package_id?: string | null;
   detergent_id: string;
-  wash_temperature?: string;
   bag_count: number;
   estimated_weight_lbs?: number | null;
   final_weight_lbs?: number | null;

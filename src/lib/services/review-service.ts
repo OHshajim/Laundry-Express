@@ -13,33 +13,35 @@ export class ReviewService {
   /**
    * Returns reviews. If onlyApproved is true, returns public approved reviews for landing page.
    */
-  static async getReviews(onlyApproved: boolean = false): Promise<OrderReview[]> {
+  static async getReviews(onlyApproved: boolean = false, userId?: string): Promise<OrderReview[]> {
     try {
       const supabase = createAdminSupabaseClient();
-      let q = supabase.from("reviews").select("*, review_photos(photo_url)").order("created_at", { ascending: false });
-      if (onlyApproved) {
-        q = q.eq("status", "approved");
-      }
+      let q = supabase
+        .from("reviews")
+        .select("*, review_photos(photo_url)")
+        .order("created_at", { ascending: false });
+      if (onlyApproved) q = q.eq("status", "approved");
+      if (userId) q = q.eq("user_id", userId);
       const { data, error } = await q;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data.map((r) => ({
           id: r.id,
           order_id: r.order_id,
-          user_id: r.user_id || "u-1",
+          user_id: r.user_id || "",
           customer_name: r.customer_name || "Verified Customer",
           rating: Number(r.rating || 5),
           comment: r.comment || "",
-          status: r.status || "approved",
+          status: r.status || "pending",
           photo_urls: (r.review_photos || []).map((p: { photo_url: string }) => p.photo_url),
           created_at: r.created_at,
         }));
       }
     } catch {}
 
-    if (onlyApproved) {
-      return cachedReviews.filter((r) => r.status === "approved");
-    }
-    return cachedReviews;
+    const base = userId
+      ? cachedReviews.filter((r) => r.user_id === userId)
+      : cachedReviews;
+    return onlyApproved ? base.filter((r) => r.status === "approved") : base;
   }
 
   /**

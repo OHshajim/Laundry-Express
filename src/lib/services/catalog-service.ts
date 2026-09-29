@@ -16,7 +16,7 @@ const isUuid = (val?: string): boolean =>
 let cachedDetergents: DetergentItem[] = [];
 
 export class CatalogService {
-  static async getCatalog(): Promise<{ detergents: DetergentItem[]; temperatures: [] }> {
+  static async getCatalog(): Promise<{ detergents: DetergentItem[] }> {
     try {
       const supabase = createAdminSupabaseClient();
       const { data, error } = await supabase
@@ -39,7 +39,7 @@ export class CatalogService {
           }));
       }
     } catch {}
-    return { detergents: cachedDetergents, temperatures: [] };
+    return { detergents: cachedDetergents };
   }
 
   static async saveDetergent(item: Partial<DetergentItem>): Promise<DetergentItem> {

@@ -18,7 +18,6 @@ interface StepReviewProps {
   bagCount: number;
   weightLbs?: number;
   selectedDetergentId?: string;
-  selectedTemp?: string;
   selectedDate: string;
   selectedSlot: string;
   address: string;
@@ -38,7 +37,6 @@ export function StepReview({
   bagCount,
   weightLbs = 15,
   selectedDetergentId,
-  selectedTemp = "cold",
   selectedDate,
   selectedSlot,
   address,

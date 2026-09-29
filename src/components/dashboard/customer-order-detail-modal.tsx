@@ -41,7 +41,7 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
         paymentMethod: order.payment_method === "card" ? "Credit / Debit Card (Stripe)" : "Stripe Secure Checkout",
         totalAmount: Number(order.total_amount || 0), subtotal: Number(order.subtotal || order.total_amount || 0), deliveryFee: Number(order.delivery_fee || 0), discountAmount: Number(order.discount_amount || 0),
         customerName: order.customer_name || "Valued Customer", customerEmail: order.customer_email || "", address: fullAddress,
-        orderDetails: { planName: planLabel, quantity: quantityLabel, detergent: resolveDetergentName(order.detergent_id), temperature: "Standard Cold Eco-Wash (30°C)", specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
+        orderDetails: { planName: planLabel, quantity: quantityLabel, detergent: resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
       };
       await downloadInvoiceAsPdf(inv, `LaundryExpress-Invoice-${order.order_number}.pdf`);
     } catch { window.print(); } finally { setIsPdfGenerating(false); }
@@ -103,7 +103,6 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
             <div className="flex justify-between"><span className="text-slate-500">Service Plan:</span><span className="font-bold text-slate-900">{planLabel}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Intake Volume:</span><span className="font-bold text-slate-900">{quantityLabel}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Detergent Formula:</span><span className="font-bold text-slate-900">{resolveDetergentName(order.detergent_id)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Temperature:</span><span className="font-semibold text-slate-800">Cold Water Gentle Care (30°C)</span></div>
             <div className="flex justify-between pt-1 border-t border-slate-100">
               <span className="text-slate-500">Doorstep Protocol:</span>
               <span className="font-bold text-slate-900">{order.is_out_of_home ? "Away (Contactless Doorstep)" : "Home (Driver Rings Bell)"}</span>

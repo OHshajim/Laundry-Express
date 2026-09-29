@@ -72,13 +72,13 @@ CREATE TABLE IF NOT EXISTS public.plans (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 6. CATALOG ITEMS (Detergents & Temperatures managed by Admin)
+-- 6. CATALOG ITEMS (Detergents managed by Admin)
 CREATE TABLE IF NOT EXISTS public.catalog_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    category TEXT NOT NULL CHECK (category IN ('detergent', 'temperature')),
+    category TEXT NOT NULL CHECK (category IN ('detergent')),
     name TEXT NOT NULL,
     brand TEXT,
-    item_type TEXT NOT NULL, -- e.g. liquid, powder, pods / cold, warm, hot
+    item_type TEXT NOT NULL, -- e.g. liquid, powder, pods
     price NUMERIC(10,2) DEFAULT 0.00,
     description TEXT,
     in_stock BOOLEAN DEFAULT TRUE,
@@ -113,7 +113,6 @@ CREATE TABLE IF NOT EXISTS public.orders (
     weight_lbs NUMERIC(10,2) DEFAULT 0,
     detergent_id UUID,
     detergent_name TEXT,
-    wash_temperature TEXT,
     pickup_date DATE NOT NULL,
     pickup_time_slot TEXT NOT NULL,
     dropoff_date DATE,

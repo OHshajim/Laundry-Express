@@ -30,7 +30,6 @@ export interface InvoiceData {
     planName: string;
     quantity: string;
     detergent: string;
-    temperature: string;
     specialRequest: string;
   };
 }

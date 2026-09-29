@@ -8,9 +8,12 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: AUTH_SECRET });
     const isAdmin = token?.role === "admin";
-    const onlyApproved = !isAdmin || req.nextUrl.searchParams.get("public") === "true";
+    const isPublic = req.nextUrl.searchParams.get("public") === "true";
+    const onlyApproved = !isAdmin || isPublic;
+    // Regular users only see their own reviews; admin & public landing see all
+    const userId = !isAdmin && !isPublic && token?.id ? String(token.id) : undefined;
 
-    const reviews = await ReviewService.getReviews(onlyApproved);
+    const reviews = await ReviewService.getReviews(onlyApproved, userId);
     return NextResponse.json({ success: true, reviews }, { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load reviews";

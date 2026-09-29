@@ -40,7 +40,6 @@ export function BookingWizard({
   const [bagCount, setBagCount] = React.useState(initialBagCount);
   const [weightLbs, setWeightLbs] = React.useState(() => Number(initialWeightLbs ?? initialPricing?.min_lbs ?? 15));
   const [selectedDetergentId, setSelectedDetergentId] = React.useState("");
-  const [selectedTemp, setSelectedTemp] = React.useState("cold");
   const [showStep2Errors, setShowStep2Errors] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState(() => new Date().toISOString().split("T")[0]);
   const [dropoffDate, setDropoffDate] = React.useState("");
@@ -120,7 +119,7 @@ export function BookingWizard({
 
   const handleConfirm = () => {
     checkout({
-      currentUser, pricingMode, bagCount, weightLbs, selectedDetergentId, selectedTemp,
+      currentUser, pricingMode, bagCount, weightLbs, selectedDetergentId,
       selectedDate, selectedSlot, dropoffDate, address, phone, addressDetails, isOutOfHome,
       isAwayForDropoff, bagConfirmed, notes, priceResult, paymentMethod,
     });
@@ -213,7 +212,7 @@ export function BookingWizard({
           {step === 5 && (
             <StepReview
               pricingMode={pricingMode} bagCount={bagCount} weightLbs={weightLbs}
-              selectedDetergentId={selectedDetergentId} selectedTemp={selectedTemp} selectedDate={selectedDate} selectedSlot={selectedSlot}
+              selectedDetergentId={selectedDetergentId} selectedDate={selectedDate} selectedSlot={selectedSlot}
               address={address} phone={phone} isOutOfHome={isOutOfHome}
               slot1Start={settings.slot1Start} slot1End={settings.slot1End}
               slot2Start={settings.slot2Start} slot2End={settings.slot2End}

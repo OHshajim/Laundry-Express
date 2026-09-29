@@ -11,7 +11,6 @@ export interface CheckoutPayload {
   bagCount: number;
   weightLbs?: number;
   selectedDetergentId: string;
-  selectedTemp: string;
   selectedDate: string;
   selectedSlot: string;
   dropoffDate: string;
@@ -48,7 +47,6 @@ export function useBookingCheckout() {
           bag_count: p.bagCount,
           estimated_weight_lbs: weightAmount,
           detergent_id: p.selectedDetergentId,
-          wash_temperature: p.selectedTemp,
           pickup_date: p.selectedDate,
           pickup_slot: p.selectedSlot,
           delivery_date: delivery,
@@ -107,7 +105,6 @@ export function useBookingCheckout() {
           planName: p.pricingMode === "per_bag" ? "By The Bag (13 Gal)" : p.pricingMode === "package" ? "Saver Package" : "By The Pound (lb)",
           quantity: p.pricingMode === "per_bag" ? `${p.bagCount} Bag(s)` : `${weightAmount} lbs`,
           detergent: friendlyDetergent,
-          temperature: "Standard Cold Eco-Wash (30°C)",
           specialRequest: p.isOutOfHome ? "Away (Contactless Pickup)" : "Home (Ring Bell)",
         },
       });
