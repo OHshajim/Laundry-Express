@@ -11,7 +11,7 @@ import { Footer } from "@/components/shared/footer";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";
 import type { InvoiceData } from "@/components/booking/order-invoice-modal";
 import type { Order } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatSlotLabel } from "@/lib/utils";
 import { OrderSummaryCard } from "./order-summary-card";
 
 function resolveDetergent(id?: string): string {
@@ -36,6 +36,13 @@ function SuccessContent() {
   const [emailSent, setEmailSent] = React.useState(false);
   const [paid, setPaid] = React.useState(true);
   const autoEmailSentRef = React.useRef(false);
+  const [slotTimes, setSlotTimes] = React.useState({ s1: "08:00", e1: "12:00", s2: "13:00", e2: "18:00" });
+
+  React.useEffect(() => {
+    fetch("/api/content?type=settings").then((r) => r.json()).then((d) => {
+      if (d?.settings) setSlotTimes({ s1: d.settings.slot1_start || "08:00", e1: d.settings.slot1_end || "12:00", s2: d.settings.slot2_start || "13:00", e2: d.settings.slot2_end || "18:00" });
+    }).catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     const url = `/api/checkout?order_id=${encodeURIComponent(orderId)}${sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : ""}`;
@@ -81,7 +88,9 @@ function SuccessContent() {
   const customerName = order.customer_name || "Valued Customer";
   const customerEmail = order.customer_email || "";
   const fullAddress = [order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address";
-  const slotLabel = order.pickup_slot === "8am-12pm" ? "8:00 AM – 12:00 PM" : order.pickup_slot === "1pm-6pm" ? "1:00 PM – 6:00 PM" : order.pickup_slot || "Scheduled Window";
+  const slotLabel = order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm"
+    ? formatSlotLabel(order.pickup_slot as "8am-12pm" | "1pm-6pm", slotTimes.s1, slotTimes.e1, slotTimes.s2, slotTimes.e2)
+    : order.pickup_slot || "Scheduled Window";
 
   const getInvoiceData = (): InvoiceData => ({
     orderId: order.order_number || orderId,

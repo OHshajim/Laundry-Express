@@ -48,12 +48,30 @@ export function formatDateTime(date: string | Date): string {
 }
 
 /**
- * Formats slot ID to descriptive text.
+ * Converts "HH:MM" 24-hour time to "H:MM AM/PM" 12-hour display.
  */
-export function formatSlotLabel(slotId: "8am-12pm" | "1pm-6pm"): string {
-  return slotId === "8am-12pm"
-    ? "Morning Window (8:00 AM – 12:00 PM)"
-    : "Afternoon Window (1:00 PM – 6:00 PM)";
+export function fmt12h(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return m === 0 ? `${h12}:00 ${ampm}` : `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+/**
+ * Builds a human-readable slot label from admin-configured times.
+ * Falls back to standard defaults if times are not provided.
+ */
+export function formatSlotLabel(
+  slotId: "8am-12pm" | "1pm-6pm",
+  slot1Start = "08:00",
+  slot1End = "12:00",
+  slot2Start = "13:00",
+  slot2End = "18:00"
+): string {
+  if (slotId === "8am-12pm") {
+    return `${fmt12h(slot1Start)} – ${fmt12h(slot1End)}`;
+  }
+  return `${fmt12h(slot2Start)} – ${fmt12h(slot2End)}`;
 }
 
 /**

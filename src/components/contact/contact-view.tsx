@@ -1,34 +1,24 @@
+"use client";
+
 import Link from "next/link";
 import { MapPin, Clock, ShieldCheck, Phone, Sparkles } from "lucide-react";
 import { LocationCard, OFFICIAL_LOCATION } from "@/components/contact/location-card";
 import { GoggleMap } from "@/components/shared/google-map";
 import { ContactForm } from "@/components/contact/contact-form";
 import { APP_CONFIG } from "@/lib/constants";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
-// Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
-
-/**
- * ContactView Component
- *
- * Implements the responsive two-column contact showcase:
- * - Left side: Regional territory, click-to-call Phone (815-575-9536), Email, Hours of Operation,
- *   and high-converting Bubble Pink Call Now button.
- * - Right side: Clean Google Map displaying shaded 30-mile service radius.
- * - Interactive glassmorphic Contact Form with instant feedback.
- * - Dispatch perks and direct telephone callout strips.
- * - Strict adherence to the 100-250 lines rule.
- */
 export function ContactView() {
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
+
   return (
     <div className="w-full space-y-10">
-      {/* 2-Column Responsive Layout: Left Details, Right Google Map */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
-        {/* Left Column: Contact Details Cards & Operating Schedule */}
         <div className="lg:col-span-6 flex flex-col justify-between">
-          <LocationCard location={OFFICIAL_LOCATION} />
+          <LocationCard location={OFFICIAL_LOCATION} slot1={slot1} slot2={slot2} />
         </div>
-
-        {/* Right Column: Interactive Google Map with 30-Mile Shaded Radius */}
         <div className="lg:col-span-6 min-h-[460px] sm:min-h-[520px] flex">
           <GoggleMap
             title={OFFICIAL_LOCATION.title}
@@ -37,7 +27,7 @@ export function ContactView() {
         </div>
       </div>
 
-      {/* Dispatch Area Highlights */}
+      {/* Dispatch Highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-pink-100 text-primary flex items-center justify-center shrink-0">
@@ -54,8 +44,8 @@ export function ContactView() {
             <Clock className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-xs font-black text-slate-900 block">Daily 8am-6pm Operations</span>
-            <span className="text-[11px] text-slate-500">Morning (8am-12pm) &amp; Afternoon (1pm-6pm)</span>
+            <span className="text-xs font-black text-slate-900 block">Daily Pickup Operations</span>
+            <span className="text-[11px] text-slate-500">Morning ({slot1}) &amp; Afternoon ({slot2})</span>
           </div>
         </div>
 
@@ -70,25 +60,18 @@ export function ContactView() {
         </div>
       </div>
 
-      {/* Interactive Contact & Message Form */}
       <div className="pt-2 max-w-4xl mx-auto">
         <ContactForm />
       </div>
 
-      {/* Helpful Support Footer Strip & Direct Assistance */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200/80 text-center text-xs text-slate-500 shadow-2xs space-y-3">
         <p className="leading-relaxed text-slate-600 max-w-2xl mx-auto">
           Need a special pickup request or have delicate wash requirements? Explore our{" "}
-          <Link href="/pricing" className="text-primary font-black hover:underline">
-            Plans &amp; Bags
-          </Link>{" "}
+          <Link href="/pricing" className="text-primary font-black hover:underline">Plans &amp; Bags</Link>{" "}
           or inspect our{" "}
-          <Link href="/#faq" className="text-primary font-black hover:underline">
-            Frequently Asked Questions
-          </Link>
-          . Our Lake in the Hills dispatch team is at your service 7 days a week from 8:00 AM to 6:00 PM.
+          <Link href="/#faq" className="text-primary font-black hover:underline">Frequently Asked Questions</Link>
+          . Our dispatch team is at your service 7 days a week from {slot1} and {slot2}.
         </p>
-
         <div className="pt-2 flex items-center justify-center gap-2 text-[11px] text-slate-400 font-medium">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           <span>Local family-operated laundry delivery service serving McHenry County</span>
@@ -97,5 +80,3 @@ export function ContactView() {
     </div>
   );
 }
-
-export default ContactView;

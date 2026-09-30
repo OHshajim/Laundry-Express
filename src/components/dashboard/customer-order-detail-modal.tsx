@@ -5,7 +5,7 @@ import Image from "next/image";
 import { X, MapPin, Phone, Sparkles, Camera, Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatSlotLabel } from "@/lib/utils";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";
 import type { Order } from "@/types";
 
@@ -24,10 +24,20 @@ function resolveDetergentName(id?: string): string {
 export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrderDetailModalProps) {
   const [isPdfGenerating, setIsPdfGenerating] = React.useState(false);
   const [activePhoto, setActivePhoto] = React.useState<string | null>(null);
+  const [slotTimes, setSlotTimes] = React.useState({ s1: "08:00", e1: "12:00", s2: "13:00", e2: "18:00" });
+
+  React.useEffect(() => {
+    fetch("/api/content?type=settings").then((r) => r.json()).then((d) => {
+      if (d?.settings) setSlotTimes({ s1: d.settings.slot1_start || "08:00", e1: d.settings.slot1_end || "12:00", s2: d.settings.slot2_start || "13:00", e2: d.settings.slot2_end || "18:00" });
+    }).catch(() => {});
+  }, []);
+
   if (!isOpen || !order) return null;
 
   const fullAddress = [order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city || "Lake in the Hills", order.state || "IL", order.zip_code || "60156"].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address";
-  const slotLabel = order.pickup_slot === "8am-12pm" ? "8:00 AM – 12:00 PM" : order.pickup_slot === "1pm-6pm" ? "1:00 PM – 6:00 PM" : order.pickup_slot;
+  const slotLabel = order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm"
+    ? formatSlotLabel(order.pickup_slot as "8am-12pm" | "1pm-6pm", slotTimes.s1, slotTimes.e1, slotTimes.s2, slotTimes.e2)
+    : order.pickup_slot;
   const planLabel = order.pricing_mode === "per_bag" ? "By The Bag Wash & Fold (13 Gal)" : order.pricing_mode === "package" ? "Saver Package Credit" : "By The Pound (lb) Wash & Fold";
   const quantityLabel = order.pricing_mode === "per_bag" ? `${order.bag_count || 1} Bag(s)` : `${order.final_weight_lbs || order.estimated_weight_lbs || 15} lbs`;
 

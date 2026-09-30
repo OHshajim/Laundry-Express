@@ -4,6 +4,7 @@ import * as React from "react";
 import type { InvoiceData } from "./order-invoice-modal";
 import type { AddressDetails } from "./step-out-of-home";
 import type { PricingMode, User } from "@/types";
+import { formatSlotLabel } from "@/lib/utils";
 
 export interface CheckoutPayload {
   currentUser: User | null;
@@ -23,6 +24,10 @@ export interface CheckoutPayload {
   notes: string;
   priceResult: { subtotal: number; delivery_fee: number; discount_amount: number; total_amount: number };
   paymentMethod: "card" | "apple_pay" | "cash_on_delivery";
+  slot1Start?: string;
+  slot1End?: string;
+  slot2Start?: string;
+  slot2End?: string;
 }
 
 export function useBookingCheckout() {
@@ -76,7 +81,10 @@ export function useBookingCheckout() {
       }
 
       const orderId = data?.order?.order_number || `LX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const slotLabel = p.selectedSlot === "8am-12pm" ? "8:00 AM – 12:00 PM" : "1:00 PM – 6:00 PM";
+      const slotLabel = formatSlotLabel(
+        p.selectedSlot as "8am-12pm" | "1pm-6pm",
+        p.slot1Start, p.slot1End, p.slot2Start, p.slot2End
+      );
 
       const detCatalog: Record<string, string> = {
         "det-tide-pods": "Tide Original Power Pods",

@@ -73,8 +73,15 @@ export class OtpService {
       console.warn("⚠️ Exception storing OTP in DB, using memory fallback:", msg);
     }
 
-    // Secure email dispatch simulation (logs securely on server, NEVER sent to client)
-    console.info(`📨 [EMAIL DISPATCH] Sent 6-digit OTP to [${normalized}] for [${purpose}]: Code is ${code}`);
+    // Dispatch real email via Resend
+    try {
+      const { sendOtpEmail } = await import("@/lib/services/email-service");
+      await sendOtpEmail(normalized, code, purpose);
+    } catch (emailErr: unknown) {
+      const msg = emailErr instanceof Error ? emailErr.message : "Email dispatch failed";
+      console.error("❌ OTP email dispatch error:", msg);
+      // Don't fail the request — OTP is still stored in DB; user can retry
+    }
 
     return { success: true };
   }

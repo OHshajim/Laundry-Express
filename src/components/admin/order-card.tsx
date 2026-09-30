@@ -180,15 +180,10 @@ export function OrderCard({
         )}
 
         {order.order_status === "completed" && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-8 px-2.5 text-xs text-emerald-800 bg-emerald-50 border-emerald-200"
-            onClick={() => onOpenProofModal(order, "dropoff")}
-          >
-            <Check className="h-3.5 w-3.5 mr-1 text-emerald-600 shrink-0" />
-            Proofs ({order.proofs?.length || 0})
-          </Button>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <Check className="h-3 w-3 text-emerald-600 shrink-0" />
+            Completed
+          </span>
         )}
       </div>
     </div>

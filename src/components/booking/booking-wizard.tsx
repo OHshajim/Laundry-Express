@@ -122,6 +122,8 @@ export function BookingWizard({
       currentUser, pricingMode, bagCount, weightLbs, selectedDetergentId,
       selectedDate, selectedSlot, dropoffDate, address, phone, addressDetails, isOutOfHome,
       isAwayForDropoff, bagConfirmed, notes, priceResult, paymentMethod,
+      slot1Start: settings.slot1Start, slot1End: settings.slot1End,
+      slot2Start: settings.slot2Start, slot2End: settings.slot2End,
     });
   };
 
