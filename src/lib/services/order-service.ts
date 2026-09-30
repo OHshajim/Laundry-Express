@@ -36,8 +36,13 @@ function mapOrderRecord(item: Record<string, any>): Order {
     damage_notes: item.damage_notes || "",
     damage_photo_url: item.damage_photo_url || "",
     proofs: mappedProofs.length > 0 ? mappedProofs : memProofs,
+    subtotal: Number(item.subtotal ?? 0),
+    delivery_fee: Number(item.delivery_fee ?? 0),
+    discount_amount: Number(item.discount_amount ?? 0),
     total_amount: Number(item.total_amount ?? 0),
+    payment_status: item.payment_status || "pending",
     order_status: (item.order_status || item.delivery_status || "pending") as OrderStatus,
+    stripe_payment_intent: item.stripe_payment_intent || item.stripe_payment_intent_id || undefined,
   } as Order;
 }
 
@@ -49,13 +54,9 @@ export class OrderService {
       const filters = [];
       if (userId) filters.push(`user_id.eq.${userId}`);
       if (userEmail) filters.push(`customer_email.eq.${userEmail}`);
-      if (filters.length > 0) {
-        query = query.or(filters.join(","));
-      }
+      if (filters.length > 0) query = query.or(filters.join(","));
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        return data.map(mapOrderRecord);
-      }
+      if (!error && data && data.length > 0) return data.map(mapOrderRecord);
     } catch {}
 
     const all = Array.from(ORDERS_MEMORY_STORE.values());
@@ -115,7 +116,7 @@ export class OrderService {
       total_amount: Number(orderPayload.total_amount ?? 0),
       order_status: "pending",
       payment_method: orderPayload.payment_method || "card",
-      payment_status: "paid",
+      payment_status: "pending", // Always pending until confirmed via verified webhook
       created_at: now,
       updated_at: now,
     };
@@ -150,12 +151,51 @@ export class OrderService {
         discount_amount: newOrder.discount_amount,
         total_amount: newOrder.total_amount,
         payment_method: newOrder.payment_method,
-        payment_status: newOrder.payment_status,
-        order_status: newOrder.order_status,
+        payment_status: "pending",
+        order_status: "pending",
       });
     } catch {}
 
     return newOrder;
+  }
+
+  static async markOrderPaid(
+    orderIdentifier: string,
+    details?: {
+      stripe_payment_intent_id?: string;
+      customer_name?: string;
+      customer_email?: string;
+      payment_method?: string;
+    }
+  ): Promise<Order | null> {
+    const existing = await this.getOrderByNumber(orderIdentifier);
+    if (!existing) return null;
+
+    const now = new Date().toISOString();
+    existing.payment_status = "paid";
+    existing.order_status = "confirmed";
+    existing.updated_at = now;
+    if (details?.stripe_payment_intent_id) existing.stripe_payment_intent = details.stripe_payment_intent_id;
+    if (details?.customer_name && (!existing.customer_name || existing.customer_name === "Customer")) {
+      existing.customer_name = details.customer_name;
+    }
+    if (details?.customer_email && !existing.customer_email) existing.customer_email = details.customer_email;
+    if (details?.payment_method) existing.payment_method = details.payment_method;
+
+    ORDERS_MEMORY_STORE.set(existing.id, existing);
+    if (existing.order_number) ORDERS_MEMORY_STORE.set(existing.order_number, existing);
+
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing.id);
+      const supabase = createAdminSupabaseClient();
+      const updateData: Record<string, any> = { payment_status: "paid", order_status: "confirmed", updated_at: now };
+      if (details?.stripe_payment_intent_id) updateData.stripe_payment_intent_id = details.stripe_payment_intent_id;
+      const query = supabase.from("orders").update(updateData);
+      if (isUuid) await query.eq("id", existing.id);
+      else await query.eq("order_number", existing.order_number);
+    } catch {}
+
+    return existing;
   }
 
   static async updateOrderStatus(orderId: string, status: OrderStatus): Promise<boolean> {
@@ -177,7 +217,7 @@ export class OrderService {
 
   static async updateFinalWeight(orderId: string, weightLbs: number): Promise<boolean> {
     const existing = ORDERS_MEMORY_STORE.get(orderId);
-    const unitRate = existing && existing.estimated_weight_lbs && existing.subtotal
+    const unitRate = existing?.estimated_weight_lbs && existing?.subtotal
       ? Math.round((existing.subtotal / existing.estimated_weight_lbs) * 100) / 100
       : 1.99;
     const subtotal = Math.round(weightLbs * unitRate * 100) / 100;
@@ -199,10 +239,8 @@ export class OrderService {
       const query = supabase.from("orders").update(payload);
       if (isUuid) await query.eq("id", orderId);
       else await query.eq("order_number", orderId);
-      return true;
-    } catch {
-      return true;
-    }
+    } catch {}
+    return true;
   }
 
   static async uploadProof(orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string): Promise<boolean> {
@@ -217,8 +255,7 @@ export class OrderService {
       created_at: new Date().toISOString(),
     };
     if (existing) {
-      const isDamage = proofType === "damage";
-      if (isDamage) {
+      if (proofType === "damage") {
         existing.has_preexisting_damage = true;
         existing.damage_notes = notes || existing.damage_notes;
         existing.damage_photo_url = imageUrl;

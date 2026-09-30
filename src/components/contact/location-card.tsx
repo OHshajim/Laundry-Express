@@ -25,6 +25,8 @@ export const OFFICIAL_LOCATION: ContactLocationInfo = {
 
 interface LocationCardProps {
   location?: ContactLocationInfo;
+  slot1?: string;
+  slot2?: string;
 }
 
 /**
@@ -37,7 +39,7 @@ interface LocationCardProps {
  * 4. Structured Hours of Operation (8:00 AM – 6:00 PM)
  * 5. Attractive Bubble Pink Call Now button
  */
-export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps) {
+export function LocationCard({ location = OFFICIAL_LOCATION, slot1 = "8:00 AM – 12:00 PM", slot2 = "1:00 PM – 6:00 PM" }: LocationCardProps) {
   return (
     <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-pink-200/90 shadow-[0_0_35px_rgba(236,72,153,0.12)] p-6 sm:p-8 space-y-7 transition-all">
       {/* Top Bubble Pink Hub Badge */}
@@ -131,10 +133,10 @@ export function LocationCard({ location = OFFICIAL_LOCATION }: LocationCardProps
               Hours of Operation
             </h4>
             <p className="text-sm font-bold text-slate-800">
-              All Week: <span className="text-primary font-black">{location.hours}</span>
+              All Week: <span className="text-primary font-black">{slot1} &amp; {slot2}</span>
             </p>
             <span className="text-xs text-slate-400 block font-normal">
-              Morning (8am–12pm) &amp; Afternoon (1pm–6pm) Slots
+              Morning &amp; Afternoon Pickup Slots
             </span>
           </div>
         </div>

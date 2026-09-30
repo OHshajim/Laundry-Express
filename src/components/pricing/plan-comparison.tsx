@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PricingConfig } from "@/types";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 interface PlanComparisonProps {
   initialRates?: Partial<PricingConfig>;
@@ -19,6 +20,9 @@ export function PlanComparison({ initialRates }: PlanComparisonProps) {
     freeDeliveryLbs: Number(initialRates?.free_delivery_lbs ?? 30),
     deliveryFee: Number(initialRates?.standard_delivery_fee ?? 10),
   });
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
 
   React.useEffect(() => {
     fetch("/api/pricing")
@@ -53,8 +57,8 @@ export function PlanComparison({ initialRates }: PlanComparisonProps) {
     },
     {
       feature: "Pickup & Drop-off Windows",
-      bag: "8am–12pm or 1pm–6pm Daily",
-      pound: "8am–12pm or 1pm–6pm Daily",
+      bag: `${slot1} or ${slot2} Daily`,
+      pound: `${slot1} or ${slot2} Daily`,
       package: "Priority reservation on all slots",
     },
     {

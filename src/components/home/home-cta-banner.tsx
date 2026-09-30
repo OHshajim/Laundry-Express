@@ -13,6 +13,7 @@ import {
   Clock,
   Lock,
 } from "lucide-react";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { FloatingBubbles } from "@/components/shared/floating-bubbles";
 
@@ -28,6 +29,9 @@ import { FloatingBubbles } from "@/components/shared/floating-bubbles";
  */
 export function HomeCtaBanner() {
   const prefersReduced = useReducedMotion();
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
 
   return (
     <section
@@ -86,7 +90,7 @@ export function HomeCtaBanner() {
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-200 whitespace-nowrap backdrop-blur-sm">
                   <Clock className="h-4 w-4 text-sky-400 shrink-0" />
-                  <span className="font-bold text-white">Daily 8am-12pm &amp; 1pm-6pm</span>
+                  <span className="font-bold text-white">Daily {slot1} &amp; {slot2}</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 whitespace-nowrap backdrop-blur-sm">
                   <Lock className="h-3.5 w-3.5 text-emerald-400 shrink-0" />

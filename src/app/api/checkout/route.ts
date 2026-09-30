@@ -4,82 +4,117 @@ import Stripe from "stripe";
 import { OrderService } from "@/lib/services/order-service";
 import { AddressService } from "@/lib/services/address-service";
 import { UserDbService } from "@/lib/services/user-db-service";
+import { PricingPlanService } from "@/lib/services/pricing-plan-service";
+import { CatalogService } from "@/lib/services/catalog-service";
+import { CouponService } from "@/lib/services/coupon-service";
+import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
 
 const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
 const stripeKey = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" as any }) : null;
 
-const stripe = stripeKey
-  ? new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" as any })
-  : null;
-
+/**
+ * GET /api/checkout?order_id=...&session_id=...
+ * Reads the actual database order status without mutating payment state.
+ * Payment confirmation is strictly delegated to verified Stripe webhooks.
+ */
 export async function GET(req: NextRequest) {
   try {
-    const sessionId = req.nextUrl.searchParams.get("session_id");
     const orderNumber = req.nextUrl.searchParams.get("order_id");
-    const token = await getToken({ req, secret: AUTH_SECRET });
-
-    let order = orderNumber ? await OrderService.getOrderByNumber(orderNumber) : null;
-    let isPaid = order ? order.payment_status === "paid" || order.order_status === "confirmed" : false;
-    let stripeCustomerName: string | undefined;
-    let stripeCustomerEmail: string | undefined;
-
-    if (sessionId && stripe) {
-      try {
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
-        isPaid = session.payment_status === "paid";
-        stripeCustomerName = session.customer_details?.name || undefined;
-        stripeCustomerEmail = session.customer_details?.email || undefined;
-
-        if (isPaid && order) {
-          order.order_status = "confirmed";
-          order.payment_status = "paid";
-          if (stripeCustomerName && (!order.customer_name || order.customer_name === "Direct Customer" || order.customer_name === "Customer")) {
-            order.customer_name = stripeCustomerName;
-          }
-          if (stripeCustomerEmail && (!order.customer_email || order.customer_email === "customer@laundryexpress.com")) {
-            order.customer_email = stripeCustomerEmail;
-          }
-          if (token?.id && (order.user_id === "guest-customer" || !order.user_id)) {
-            order.user_id = token.id;
-          }
-          await OrderService.updateOrderStatus(order.id, "confirmed");
-        }
-      } catch (stripeErr) {
-        console.warn("Stripe session retrieval notice:", stripeErr);
-      }
+    if (!orderNumber) {
+      return NextResponse.json({ success: false, error: "Missing order identifier" }, { status: 400 });
     }
 
-    if (!order && orderNumber) {
-      const orders = await OrderService.getOrders();
-      order = orders.find((o) => o.order_number === orderNumber || o.id === orderNumber) || null;
+    const order = await OrderService.getOrderByNumber(orderNumber);
+    if (!order) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
+
+    const isPaid = order.payment_status === "paid";
 
     return NextResponse.json({
       success: true,
       paid: isPaid,
       order,
-      customerName: stripeCustomerName || order?.customer_name,
-      customerEmail: stripeCustomerEmail || order?.customer_email,
+      customerName: order.customer_name,
+      customerEmail: order.customer_email,
     });
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Failed to verify session";
+    const msg = error instanceof Error ? error.message : "Failed to retrieve order";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
+/**
+ * POST /api/checkout
+ * Validates prices server-side, creates a pending order, and initializes a Stripe Checkout Session.
+ */
 export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: AUTH_SECRET });
     const body = await req.json();
 
+    // 1. Server-side zero-trust price calculation & validation
+    const pricingConfig = await PricingPlanService.getPricing();
+    const { detergents } = await CatalogService.getCatalog();
+    const detergent = detergents.find((d) => d.id === body.detergent_id);
+    const detergentFee = detergent ? detergent.price : 0;
+
+    let validatedPromoCode: string | undefined;
+    if (body.promo_code) {
+      const preliminaryPrice = calculateOrderPrice({
+        pricing_mode: body.pricing_mode || "per_bag",
+        bag_count: body.bag_count,
+        estimated_weight_lbs: body.estimated_weight_lbs,
+        detergent_fee: detergentFee,
+        base_bag_price: pricingConfig.base_bag_price,
+        base_pound_price: pricingConfig.base_pound_price,
+        min_lbs: pricingConfig.min_lbs,
+        max_lbs: pricingConfig.max_lbs,
+        free_delivery_lbs: pricingConfig.free_delivery_lbs,
+        one_bag_delivery_fee: pricingConfig.one_bag_delivery_fee,
+        free_delivery_threshold: pricingConfig.free_delivery_threshold,
+      });
+
+      const couponCheck = await CouponService.validateCoupon(body.promo_code, preliminaryPrice.subtotal);
+      if (couponCheck.valid && couponCheck.coupon) {
+        validatedPromoCode = couponCheck.coupon.code;
+      }
+    }
+
+    const serverPrice = calculateOrderPrice({
+      pricing_mode: body.pricing_mode || "per_bag",
+      bag_count: body.bag_count,
+      estimated_weight_lbs: body.estimated_weight_lbs,
+      detergent_fee: detergentFee,
+      promo_code: validatedPromoCode,
+      base_bag_price: pricingConfig.base_bag_price,
+      base_pound_price: pricingConfig.base_pound_price,
+      min_lbs: pricingConfig.min_lbs,
+      max_lbs: pricingConfig.max_lbs,
+      free_delivery_lbs: pricingConfig.free_delivery_lbs,
+      one_bag_delivery_fee: pricingConfig.one_bag_delivery_fee,
+      free_delivery_threshold: pricingConfig.free_delivery_threshold,
+    });
+
+    // 2. Create the order with verified server prices and PENDING_PAYMENT status
     const createdOrder = await OrderService.createOrder({
       ...body,
       user_id: token?.id || body.user_id || "guest-customer",
       customer_name: body.customer_name || token?.name || "Customer",
       customer_email: token?.email || body.customer_email || "",
       customer_phone: body.customer_phone || (token as any)?.phone || "",
+      subtotal: serverPrice.subtotal,
+      delivery_fee: serverPrice.delivery_fee,
+      discount_amount: serverPrice.discount_amount,
+      tax_amount: serverPrice.tax_amount,
+      total_amount: serverPrice.total_amount,
+      payment_method: body.payment_method || "card",
+      payment_status: "pending",
+      order_status: "pending",
     });
 
+    // 3. Persist address & profile updates for authenticated users
     if (createdOrder.user_id && createdOrder.user_id !== "guest-customer") {
       if (body.customer_phone) {
         try {
@@ -102,37 +137,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const isCard = body.payment_method === "card" || body.payment_method === "apple_pay" || body.payment_method === "stripe";
+    // 4. Create Stripe Checkout Session if card / online payment
+    const isOnline = body.payment_method === "card" || body.payment_method === "apple_pay" || body.payment_method === "stripe";
 
-    if (isCard && stripe) {
+    if (isOnline && stripe) {
       const origin = req.headers.get("origin") || req.nextUrl.origin || "http://localhost:3000";
-      const subtotalCents = Math.max(100, Math.round(Number(body.subtotal || body.total_amount || 32.50) * 100));
-      const deliveryCents = Math.round(Number(body.delivery_fee || 0) * 100);
+      const netServiceAmountCents = Math.max(50, Math.round((serverPrice.subtotal - serverPrice.discount_amount) * 100));
+      const deliveryFeeCents = Math.round(serverPrice.delivery_fee * 100);
 
       const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
         {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Laundry Express — ${body.pricing_mode === "per_bag" ? "By The Bag Wash & Fold" : body.pricing_mode === "package" ? "Saver Package Credit" : "By The Pound (lb)"}`,
-              description: `${body.pricing_mode === "per_bag" ? `${body.bag_count || 1} Bag(s)` : `${body.estimated_weight_lbs || 15} lbs`} • Cold Water Gentle Care • 24hr Return`,
+              name: `Laundry Express — ${createdOrder.pricing_mode === "per_bag" ? "By The Bag Wash & Fold" : createdOrder.pricing_mode === "package" ? "Saver Package Credit" : "By The Pound (lb)"}`,
+              description: `${createdOrder.pricing_mode === "per_bag" ? `${createdOrder.bag_count || 1} Bag(s)` : `${createdOrder.estimated_weight_lbs || 15} lbs`} • Cold Water Gentle Care • 24hr Return`,
               images: [`${origin}/brand/logo-badge.jpg`],
             },
-            unit_amount: subtotalCents,
+            unit_amount: netServiceAmountCents,
           },
           quantity: 1,
         },
       ];
 
-      if (deliveryCents > 0) {
+      if (deliveryFeeCents > 0) {
         lineItems.push({
           price_data: {
             currency: "usd",
             product_data: {
               name: "Doorstep Pickup & Return Delivery",
-              description: "Doorstep service within scheduled window",
+              description: "Doorstep pickup and 24hr return delivery",
             },
-            unit_amount: deliveryCents,
+            unit_amount: deliveryFeeCents,
           },
           quantity: 1,
         });
@@ -144,13 +180,13 @@ export async function POST(req: NextRequest) {
         mode: "payment",
         customer_email: body.customer_email || token?.email || undefined,
         success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}&order_id=${createdOrder.order_number}`,
-        cancel_url: `${origin}/order?canceled=true`,
+        cancel_url: `${origin}/order?canceled=true&order_id=${createdOrder.order_number}`,
         metadata: {
           order_id: createdOrder.id,
           order_number: createdOrder.order_number,
           user_id: createdOrder.user_id || "",
-          pickup_date: body.pickup_date || "",
-          pickup_slot: body.pickup_slot || "",
+          pickup_date: createdOrder.pickup_date || "",
+          pickup_slot: createdOrder.pickup_slot || "",
         },
       });
 

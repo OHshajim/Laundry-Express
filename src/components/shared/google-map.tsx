@@ -3,6 +3,7 @@
 import * as React from "react";
 import { MapPin, Navigation, ExternalLink, ShieldCheck } from "lucide-react";
 import { SERVICE_CITIES } from "@/lib/constants";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 export interface GoogleMapProps {
   title?: string;
@@ -27,6 +28,9 @@ export function GoggleMap({
   title = "Lake in the Hills & 30-Mile Service Area",
   className = "",
 }: GoogleMapProps) {
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
   const embedUrl =
     "https://maps.google.com/maps?q=Lake+in+the+Hills,+IL&hl=en&z=11&output=embed";
   const externalMapsUrl =
@@ -90,7 +94,7 @@ export function GoggleMap({
         </div>
 
         <div className="text-[11px] text-slate-500 font-medium shrink-0 hidden sm:block">
-          Daily 8am–12pm &amp; 1pm–6pm
+          Daily {slot1} &amp; {slot2}
         </div>
       </div>
     </div>

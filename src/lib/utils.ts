@@ -116,3 +116,21 @@ export function formatRelativeTime(dateString: string): string {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 }
+
+/**
+ * Resolves a catalog detergent ID to its human-readable brand name.
+ */
+export function resolveDetergentName(id?: string | null): string {
+  if (!id) return "Standard Eco Detergent";
+  const catalog: Record<string, string> = {
+    "det-tide-pods": "Tide Original Power Pods",
+    "det-eco-plant": "Seventh Generation Eco-Plant",
+    "det-hypoallergenic": "All Free & Clear (Hypoallergenic)",
+    "det-persil": "Persil ProClean Intense",
+    "det-lavender": "Mrs. Meyer's Clean Day",
+  };
+  return (
+    catalog[id] ||
+    id.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}

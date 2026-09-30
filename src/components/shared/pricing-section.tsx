@@ -1,9 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { Check, ShoppingBag, Scale, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FloatingBubbles } from "./floating-bubbles";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 export function PricingSection() {
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
   return (
     <section id="pricing" className="relative overflow-hidden py-20 bg-slate-50/70 scroll-mt-20">
       <FloatingBubbles variant="banner" />
@@ -71,7 +77,7 @@ export function PricingSection() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>Scheduled slots: 8am-12pm or 1pm-6pm</span>
+                  <span>Scheduled pickup: {slot1} or {slot2}</span>
                 </li>
               </ul>
             </div>

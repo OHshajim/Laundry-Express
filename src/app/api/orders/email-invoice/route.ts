@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { OrderService } from "@/lib/services/order-service";
 import { ContentService } from "@/lib/services/content-service";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
-import { formatSlotLabel } from "@/lib/utils";
+import { formatSlotLabel, resolveDetergentName } from "@/lib/utils";
 
 /**
  * POST /api/orders/email-invoice
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       quantity: order.pricing_mode === "per_bag"
         ? `${order.bag_count} Bag(s)`
         : `${order.final_weight_lbs || order.estimated_weight_lbs || 0} lbs`,
-      detergent: order.detergent_id || "Standard",
+      detergent: resolveDetergentName(order.detergent_id),
       subtotal: Number(order.subtotal || 0),
       deliveryFee: Number(order.delivery_fee || 0),
       discountAmount: Number(order.discount_amount || 0),

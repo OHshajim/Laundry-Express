@@ -5,7 +5,7 @@ import Image from "next/image";
 import { X, MapPin, Phone, Sparkles, Camera, Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate, formatSlotLabel } from "@/lib/utils";
+import { formatCurrency, formatDate, formatSlotLabel, resolveDetergentName } from "@/lib/utils";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";
 import type { Order } from "@/types";
 
@@ -13,12 +13,6 @@ interface CustomerOrderDetailModalProps {
   order: Order | null;
   isOpen: boolean;
   onClose: () => void;
-}
-
-function resolveDetergentName(id?: string): string {
-  if (!id) return "Standard Eco Detergent";
-  const map: Record<string, string> = { "det-tide-pods": "Tide Original Power Pods", "det-eco-plant": "Seventh Generation Eco-Plant", "det-hypoallergenic": "All Free & Clear (Hypoallergenic)", "det-persil": "Persil ProClean Intense", "det-lavender": "Mrs. Meyer's Clean Day" };
-  return map[id] || id.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrderDetailModalProps) {
@@ -50,7 +44,7 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
         pickupDate: order.pickup_date, pickupSlot: slotLabel, deliveryDate: order.delivery_date || "Within 24 Hours",
         paymentMethod: order.payment_method === "card" ? "Credit / Debit Card (Stripe)" : "Stripe Secure Checkout",
         totalAmount: Number(order.total_amount || 0), subtotal: Number(order.subtotal || order.total_amount || 0), deliveryFee: Number(order.delivery_fee || 0), discountAmount: Number(order.discount_amount || 0),
-        customerName: order.customer_name || "Valued Customer", customerEmail: order.customer_email || "", address: fullAddress,
+        customerName: order.customer_name || "Valued Customer", customerEmail: order.customer_email || "", customerPhone: order.customer_phone || "", address: fullAddress,
         orderDetails: { planName: planLabel, quantity: quantityLabel, detergent: resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
       };
       await downloadInvoiceAsPdf(inv, `LaundryExpress-Invoice-${order.order_number}.pdf`);

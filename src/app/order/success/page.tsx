@@ -11,20 +11,8 @@ import { Footer } from "@/components/shared/footer";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";
 import type { InvoiceData } from "@/components/booking/order-invoice-modal";
 import type { Order } from "@/types";
-import { formatCurrency, formatSlotLabel } from "@/lib/utils";
+import { formatCurrency, formatSlotLabel, resolveDetergentName } from "@/lib/utils";
 import { OrderSummaryCard } from "./order-summary-card";
-
-function resolveDetergent(id?: string): string {
-  if (!id) return "Standard Eco Detergent";
-  const catalog: Record<string, string> = {
-    "det-tide-pods": "Tide Original Power Pods",
-    "det-eco-plant": "Seventh Generation Eco-Plant",
-    "det-hypoallergenic": "All Free & Clear (Hypoallergenic)",
-    "det-persil": "Persil ProClean Intense",
-    "det-lavender": "Mrs. Meyer's Clean Day",
-  };
-  return catalog[id] || id.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -45,35 +33,30 @@ function SuccessContent() {
   }, []);
 
   React.useEffect(() => {
+    let attempts = 0;
     const url = `/api/checkout?order_id=${encodeURIComponent(orderId)}${sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : ""}`;
-    fetch(url)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.order) setOrder(d.order);
-        if (d?.paid !== undefined) setPaid(d.paid);
-      })
-      .catch(() => {});
-  }, [sessionId, orderId]);
 
-  React.useEffect(() => {
-    if (order && paid && !autoEmailSentRef.current) {
-      autoEmailSentRef.current = true;
-      fetch("/api/orders/email-invoice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: order.id,
-          orderNumber: order.order_number || orderId,
-          customerEmail: order.customer_email,
-          customerName: order.customer_name,
-          totalAmount: order.total_amount,
-        }),
-      })
+    const checkStatus = () => {
+      fetch(url)
         .then((r) => r.json())
-        .then((res) => { if (res.success) setEmailSent(true); })
+        .then((d) => {
+          if (d?.order) {
+            setOrder(d.order);
+            const isOrderPaid = d.order.payment_status === "paid" || d.paid;
+            setPaid(isOrderPaid);
+            // If already confirmed or reached max attempts, stop polling
+            if (isOrderPaid || attempts >= 5) return;
+          }
+          attempts++;
+          if (attempts < 5) {
+            setTimeout(checkStatus, 2000);
+          }
+        })
         .catch(() => {});
-    }
-  }, [order, paid, orderId]);
+    };
+
+    checkStatus();
+  }, [sessionId, orderId]);
 
   if (!order) {
     return (
@@ -110,7 +93,7 @@ function SuccessContent() {
     orderDetails: {
       planName: order.pricing_mode === "per_bag" ? "By The Bag Wash & Fold (13 Gal)" : order.pricing_mode === "package" ? "Saver Package Credit" : "By The Pound (lb) Wash & Fold",
       quantity: order.pricing_mode === "per_bag" ? `${order.bag_count || 1} Bag(s)` : `${order.final_weight_lbs || order.estimated_weight_lbs || 15} lbs`,
-      detergent: resolveDetergent(order.detergent_id),
+      detergent: resolveDetergentName(order.detergent_id),
       specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell",
     },
   });
@@ -154,8 +137,8 @@ function SuccessContent() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 sm:py-16 text-center space-y-6">
-      <div className="relative h-16 w-16 mx-auto rounded-2xl overflow-hidden border-2 border-slate-200 shadow-md">
-        <Image src="/brand/logo-badge.jpg" alt="Laundry Express" fill className="object-cover" sizes="64px" priority />
+      <div className="relative h-16 w-16 mx-auto rounded-2xl overflow-hidden border border-slate-200 bg-white p-1 shadow-sm flex items-center justify-center">
+        <Image src="/brand/logo-badge.jpg" alt="Laundry Express" width={64} height={64} className="object-contain rounded-xl" priority />
       </div>
 
       <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/10">

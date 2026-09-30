@@ -3,7 +3,8 @@
 import type { InvoiceData } from "@/components/booking/order-invoice-modal";
 import { loadLogoImage, drawRoundRect, triggerCanvasDownload } from "./canvas-helpers";
 import { drawPortraitHeader, drawPortraitMetaAndCards } from "./canvas-invoice-sections";
-import { drawPortraitTable, drawPortraitTotals, drawPortraitFooterNotes } from "./canvas-invoice-body";
+import { drawPortraitTable, drawPortraitTotals } from "./canvas-invoice-body";
+import { drawPortraitFooterNotes } from "./canvas-invoice-footer";
 
 /**
  * Standard A4 Portrait Invoice Dimensions (High-DPI 1:1.4142 ratio)
