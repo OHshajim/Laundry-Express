@@ -133,11 +133,11 @@ export class ImageStorageService {
         return { success: false, error: error.message };
       }
 
-      const { data: publicData } = supabase.storage
-        .from(STORAGE_BUCKETS.ORDER_PROOFS)
-        .getPublicUrl(data.path);
-
-      return { success: true, url: publicData.publicUrl };
+      const query = new URLSearchParams({
+        orderId,
+        path: data.path,
+      });
+      return { success: true, url: `/api/order-proof?${query.toString()}` };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to upload proof";
       return { success: false, error: msg };

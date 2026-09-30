@@ -8,18 +8,18 @@
 7. Only then: the minimum that works
 
 # Need : 
-1. Login and signu and google sign in and logout , passowrd forget and password chnage 
+1. Login and signup and google sign in and logout , password forget and password change 
 2. Home page where a hero section , order lifecycle, work process , review ,faq, cta banner
 3. plan page 
   a. By bag - per bag weight will be 13 gallon 
   b. by the pound (lbs) 
-  c. packges made by admin
+  c. packages made by admin
 4. Order creation page step by step 
   a. select plan 
-  b. Select Pickup Date (use calender) and time (8 am - 12 pm and 1pm to 6pm) delevary will in 24 hours  Drop-off date (optional) (Leave blank and we deliver back within 24 hours).
+  b. Select Pickup Date (use calender) and time (8 am - 12 pm and 1pm to 6pm) delivery will in 24 hours  Drop-off date (optional) (Leave blank and we deliver back within 24 hours).
   c. Pickup & Delivery Address (Street number & name ,Apt / unit (optional),City,  State, zip code ) 
-  d. select quantity and Wash Detergent (multiple option for chosse) acording to this show live total price and total weight
-e. take speacial request (optional)
+  d. select quantity and Wash Detergent (multiple option for chose) according to this show live total price and total weight
+e. take spacial request (optional)
     ```   Will you be home during the pickup window?
         Yes, I will be Home
         Driver rings bell upon arrival
@@ -55,7 +55,7 @@ e. take speacial request (optional)
   f. Detergent Catalog (add, edit, delete) 
     1. name 
     2. type (for detergent) (liquid, powder)
-    3. brand (for detargent)
+    3. brand (for detergent)
     4. price
     5. description 
   g. Coupon & Offer Manager Create, edit, toggle active status, or delete coupon codes.
@@ -71,11 +71,11 @@ e. take speacial request (optional)
 
 # rules : 
  1. Must be responsive in every screen 
- 2. text not braking or overlaping 
+ 2. text not braking or overlapping 
  3. less icons uses and let text repeated 
  4. less use of repeated text and context
- 5. SEO and LLM Must be Implemented  professionally hilevel requements
- 6. Must be Production Ready Code . no bolgary , no extra comments , no chatty reponse must be profassional 
+ 5. SEO and LLM Must be Implemented  professionally high-level requirements
+ 6. Must be Production Ready Code . no bulgery , no extra comments , no chatty response must be professional 
  7. Do not over-engineer the solution 
  8. Must be scalable and maintainable 
  9. Must be secure 
@@ -83,11 +83,11 @@ e. take speacial request (optional)
  11. Must be easy to understand
  12. Must be easy to modify
  13. Must be test and debug after a change
- 14. less static data and remove all juncks after code 
+ 14. less static data and remove all junks after code 
  15. delete all unused libraries and functions 
  16. use reusable component is the fast priority ***
  17. If i remove a component don't add this again and keep the website simple don't need add too much content and text or component 
- 18. Write code per file maximun 250 lines and stucture maintain must be clean and readable 
+ 18. Write code per file maximum 250 lines and structure maintain must be clean and readable 
  19. no duplicate code
 
 

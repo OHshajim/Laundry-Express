@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod",
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
     error: "/login",
@@ -88,9 +88,9 @@ export const authOptions: NextAuthOptions = {
 
     // Google OAuth Provider with dynamic role synchronization
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "google-oauth-client-id-placeholder",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "google-oauth-client-secret-placeholder",
-      allowDangerousEmailAccountLinking: true,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: false,
       async profile(profile) {
         const normalizedEmail = profile.email?.trim().toLowerCase() || "";
 

@@ -18,10 +18,39 @@ export interface SyncUserInput {
   role?: UserRole;
   image?: string | null;
   avatar_url?: string | null;
-  password?: string;
 }
 
 export class UserDbService {
+  static async registerCustomer(input: {
+    email: string;
+    name: string;
+    phone?: string;
+    password: string;
+  }): Promise<User> {
+    const email = input.email.trim().toLowerCase();
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("users")
+      .insert({
+        email,
+        full_name: input.name.trim(),
+        phone: input.phone?.trim() || null,
+        role: "customer",
+        is_active: true,
+        password_hash: hashPassword(input.password),
+      })
+      .select("*")
+      .single();
+
+    if (error?.code === "23505") {
+      throw new Error("An account with this email already exists.");
+    }
+    if (error || !data) {
+      throw new Error(error?.message || "Unable to create the account.");
+    }
+    return data as User;
+  }
+
   /**
    * Synchronizes an authenticated user into the database
    */
@@ -44,7 +73,6 @@ export class UserDbService {
           avatar_url: avatarUrl || existingUser.avatar_url,
           role: resolvedRole,
           updated_at: new Date().toISOString(),
-          ...(input.password ? { password_hash: hashPassword(input.password) } : {}),
         };
 
         const { data: updatedUser } = await supabase.from("users").update(updatePayload).eq("id", existingUser.id).select("*").single();
@@ -63,7 +91,6 @@ export class UserDbService {
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        ...(input.password ? { password_hash: hashPassword(input.password) } : {}),
       };
 
       const { data: newUser } = await supabase.from("users").insert(insertPayload).select("*").single();
@@ -96,20 +123,27 @@ export class UserDbService {
 
     try {
       const supabase = createAdminSupabaseClient();
-      const { data: dbUser } = await supabase.from("users").select("*").eq("email", normalized).maybeSingle();
-      const inMem = CustomUserStore.findByEmail(normalized);
-      const targetUser = (dbUser as User) || inMem;
+      const { data: dbUser, error } = await supabase
+        .from("users")
+        .select("id,email,full_name,avatar_url,phone,address,role,is_active,created_at,updated_at,password_hash")
+        .eq("email", normalized)
+        .maybeSingle();
+      if (error) {
+        return { success: false, error: "Authentication service temporarily unavailable." };
+      }
+      const targetUser = dbUser as (User & { password_hash?: string }) | null;
 
       if (!targetUser) {
         return { success: false, error: "No account found with this email. Please check your spelling or register." };
       }
+      if (!targetUser.is_active) {
+        return { success: false, error: "This account is inactive. Contact support for assistance." };
+      }
 
-      const dbHash = (dbUser as { password_hash?: string })?.password_hash;
-      const memHash = inMem?.passwordHash;
-      const isAdminFallback = (normalized === "admin@laundryexpress.com");
+      const dbHash = targetUser.password_hash;
 
       // Detect accounts created with Google OAuth that do not yet have a password set
-      if (!dbHash && !memHash && !isAdminFallback) {
+      if (!dbHash) {
         return {
           success: false,
           error: "This account was created with Google (no password set). Please sign in with Google or use 'Forgot password' to create a password.",
@@ -117,9 +151,7 @@ export class UserDbService {
       }
 
       if (
-        (dbHash && verifyPassword(password, dbHash)) ||
-        (memHash && verifyPassword(password, memHash)) ||
-        (isAdminFallback && password === "admin123")
+        verifyPassword(password, dbHash)
       ) {
         return { success: true, user: targetUser };
       }
@@ -182,14 +214,26 @@ export class UserDbService {
    */
   static async getUserByEmail(email: string): Promise<User | null> {
     const normalized = email.trim().toLowerCase();
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("users").select("*").eq("email", normalized).maybeSingle();
-      if (error || !data) return CustomUserStore.findByEmail(normalized);
-      return data as User;
-    } catch {
-      return CustomUserStore.findByEmail(normalized);
-    }
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("users")
+      .select("id,email,full_name,avatar_url,phone,address,role,is_active,created_at,updated_at")
+      .eq("email", normalized)
+      .maybeSingle();
+    if (error) throw new Error(`Unable to verify user account: ${error.message}`);
+    return data as User | null;
+  }
+
+  static async getActiveUserById(userId: string): Promise<User | null> {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("users")
+      .select("id,email,full_name,avatar_url,phone,address,role,is_active,created_at,updated_at")
+      .eq("id", userId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (error) throw new Error(`Unable to verify user account: ${error.message}`);
+    return data as User | null;
   }
 
   /**

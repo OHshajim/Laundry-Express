@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { Metadata } from "next";
+import { DashboardAuthGate } from "@/components/auth/dashboard-auth-gate";
 
 export const metadata: Metadata = {
   title: "Dashboard & Operations Control — Laundry Express",
@@ -23,5 +24,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="min-h-screen bg-slate-50/60 font-sans antialiased overflow-x-clip">{children}</div>;
+  return (
+    <div className="min-h-screen bg-slate-50/60 font-sans antialiased overflow-x-clip">
+      <DashboardAuthGate>{children}</DashboardAuthGate>
+    </div>
+  );
 }

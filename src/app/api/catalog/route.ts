@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { CatalogService } from "@/lib/services/catalog-service";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 const requireAdmin = async (req: NextRequest) => {
   const token = await getToken({ req, secret: AUTH_SECRET });

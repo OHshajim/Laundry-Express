@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 /**
  * Enterprise Password Security Utilities
@@ -7,7 +8,6 @@ import crypto from "crypto";
  */
 
 const KEY_LENGTH = 64;
-const TOKEN_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
 const TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
@@ -23,8 +23,7 @@ export function hashPassword(password: string): string {
 }
 
 /**
- * Verify a plain text password against a stored hash
- * Supports legacy plain hashes gracefully for existing seeded accounts
+ * Verify a plain text password against a salted scrypt hash.
  */
 export function verifyPassword(password: string, storedHash: string): boolean {
   if (!password || !storedHash) {
@@ -45,8 +44,7 @@ export function verifyPassword(password: string, storedHash: string): boolean {
     }
   }
 
-  // Fallback for legacy seeded development credentials
-  return password === storedHash;
+  return false;
 }
 
 /**
@@ -57,7 +55,7 @@ export function createPasswordResetToken(email: string): string {
   const expiresAt = Date.now() + TOKEN_TTL_MS;
   const payload = `${normalized}:${expiresAt}`;
   const signature = crypto
-    .createHmac("sha256", TOKEN_SECRET)
+    .createHmac("sha256", getAuthSecret())
     .update(payload)
     .digest("hex");
   return Buffer.from(`${payload}:${signature}`).toString("base64url");
@@ -82,7 +80,7 @@ export function verifyPasswordResetToken(token: string): { valid: boolean; email
     }
 
     const expectedSignature = crypto
-      .createHmac("sha256", TOKEN_SECRET)
+      .createHmac("sha256", getAuthSecret())
       .update(`${email}:${expiresAtStr}`)
       .digest("hex");
 

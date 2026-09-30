@@ -31,7 +31,7 @@ export class OtpService {
    */
   static async generateAndSaveOtp(
     email: string,
-    purpose: "change_password" | "reset_password"
+    purpose: "change_password" | "reset_password" | "register_email"
   ): Promise<{ success: boolean; error?: string }> {
     const normalized = email.trim().toLowerCase();
     const code = crypto.randomInt(100000, 1000000).toString();
@@ -80,7 +80,8 @@ export class OtpService {
     } catch (emailErr: unknown) {
       const msg = emailErr instanceof Error ? emailErr.message : "Email dispatch failed";
       console.error("❌ OTP email dispatch error:", msg);
-      // Don't fail the request — OTP is still stored in DB; user can retry
+      MEMORY_OTP_CACHE.delete(memKey);
+      return { success: false, error: "Unable to send the verification code. Please retry." };
     }
 
     return { success: true };
@@ -92,7 +93,7 @@ export class OtpService {
   static async verifyAndConsumeOtp(
     email: string,
     inputOtp: string,
-    purpose: "change_password" | "reset_password"
+    purpose: "change_password" | "reset_password" | "register_email"
   ): Promise<{ success: boolean; error?: string }> {
     if (!email || !inputOtp || inputOtp.trim().length !== 6) {
       return { success: false, error: "A valid 6-digit code is required." };

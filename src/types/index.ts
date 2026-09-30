@@ -126,6 +126,7 @@ export interface Order {
   admin_notes?: string;
   payment_method?: string;
   payment_status?: string;
+  invoice_email_sent_at?: string | null;
   order_status: OrderStatus;
   stripe_customer_id?: string;
   stripe_payment_method_id?: string;

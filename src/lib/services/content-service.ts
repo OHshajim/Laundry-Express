@@ -18,6 +18,10 @@ export interface TermItem {
 export interface BusinessSettings {
   operating_hours: string;
   delivery_zones: string[];
+  slot1_start?: string;
+  slot1_end?: string;
+  slot2_start?: string;
+  slot2_end?: string;
   min_order_bag: number;
   min_order_lbs: number;
   free_delivery_bags: number;

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { createEmailInvoicePdf } from "@/lib/invoice/email-invoice-pdf";
 
 // ---------------------------------------------------------------------------
 // Transport — configure via env vars. Supports any SMTP provider:
@@ -23,12 +24,16 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@laundryexpress.com";
 
 /** Send 6-digit OTP verification email */
 export async function sendOtpEmail(to: string, otp: string, purpose: string): Promise<void> {
-  const label = purpose === "change_password" ? "Change Password" : "Reset Password";
+  const label = purpose === "change_password"
+    ? "Change Password"
+    : purpose === "register_email"
+      ? "Email Verification"
+      : "Reset Password";
   const transport = createTransport();
   await transport.sendMail({
     from: FROM,
     to,
-    subject: `Your Laundry Express Verification Code — ${otp}`,
+    subject: "Your Laundry Express Verification Code",
     html: `
       <div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#f8fafc;border-radius:16px">
         <h1 style="font-size:20px;font-weight:900;color:#0f172a;margin-bottom:4px">Laundry Express</h1>
@@ -46,6 +51,8 @@ export async function sendOtpEmail(to: string, otp: string, purpose: string): Pr
 
 export interface InvoiceEmailPayload {
   orderNumber: string;
+  orderDate: string;
+  paymentMethod: string;
   customerName: string;
   customerEmail: string;
   pickupDate: string;
@@ -65,7 +72,33 @@ function usd(n: number) {
   return `$${Number(n).toFixed(2)}`;
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return entities[character];
+  });
+}
+
 export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<void> {
+  const safe = {
+    ...payload,
+    orderNumber: escapeHtml(payload.orderNumber),
+    customerName: escapeHtml(payload.customerName),
+    customerEmail: escapeHtml(payload.customerEmail),
+    pickupDate: escapeHtml(payload.pickupDate),
+    pickupSlot: escapeHtml(payload.pickupSlot),
+    deliveryDate: escapeHtml(payload.deliveryDate),
+    planName: escapeHtml(payload.planName),
+    quantity: escapeHtml(payload.quantity),
+    detergent: escapeHtml(payload.detergent),
+    address: escapeHtml(payload.address),
+  };
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:580px;margin:auto;background:#ffffff;padding:0;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden">
       <!-- Top Brand Accent Bar -->
@@ -91,7 +124,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
                 ✔ PAID &amp; CONFIRMED
               </span>
               <p style="margin:4px 0 0;color:#94a3b8;font-size:10px;font-family:monospace;font-weight:700">
-                ${payload.orderNumber}
+                ${safe.orderNumber}
               </p>
             </td>
           </tr>
@@ -101,11 +134,12 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:16px">
           <p style="font-weight:800;color:#be185d;margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Pickup &amp; Schedule Details</p>
           <table style="width:100%;font-size:12px;border-collapse:collapse">
-            <tr><td style="color:#64748b;padding:4px 0">Customer</td><td style="text-align:right;color:#0f172a;font-weight:700">${payload.customerName}</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Email</td><td style="text-align:right;color:#0f172a;font-weight:600">${payload.customerEmail}</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Doorstep Address</td><td style="text-align:right;color:#0f172a;font-weight:600">${payload.address}</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Pickup Window</td><td style="text-align:right;color:#0f172a;font-weight:700">${payload.pickupDate} (${payload.pickupSlot})</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Estimated Delivery</td><td style="text-align:right;color:#047857;font-weight:800">${payload.deliveryDate} (24hr Return)</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Customer</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.customerName}</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Email</td><td style="text-align:right;color:#0f172a;font-weight:600">${safe.customerEmail}</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Order Date</td><td style="text-align:right;color:#0f172a;font-weight:600">${escapeHtml(payload.orderDate)}</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Doorstep Address</td><td style="text-align:right;color:#0f172a;font-weight:600">${safe.address}</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Pickup Window</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.pickupDate} (${safe.pickupSlot})</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Estimated Delivery</td><td style="text-align:right;color:#047857;font-weight:800">${safe.deliveryDate} (24hr Return)</td></tr>
           </table>
         </div>
 
@@ -113,9 +147,10 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:16px">
           <p style="font-weight:800;color:#be185d;margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Service Breakdown</p>
           <table style="width:100%;font-size:12px;border-collapse:collapse">
-            <tr><td style="color:#64748b;padding:4px 0">Selected Plan</td><td style="text-align:right;color:#0f172a;font-weight:700">${payload.planName}</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Quantity</td><td style="text-align:right;color:#0f172a;font-weight:700">${payload.quantity}</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Formula &amp; Care</td><td style="text-align:right;color:#0f172a;font-weight:600">${payload.detergent} &bull; Gentle Cold Wash</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Selected Plan</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.planName}</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Quantity</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.quantity}</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Formula &amp; Care</td><td style="text-align:right;color:#0f172a;font-weight:600">${safe.detergent} &bull; Gentle Cold Wash</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Payment Method</td><td style="text-align:right;color:#0f172a;font-weight:600">${escapeHtml(payload.paymentMethod)}</td></tr>
           </table>
         </div>
 
@@ -159,13 +194,19 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
   `;
 
   const transport = createTransport();
+  const invoicePdf = createEmailInvoicePdf(payload);
+  const attachment = {
+    filename: `LaundryExpress-Invoice-${payload.orderNumber.replace(/[^A-Za-z0-9-]/g, "")}.pdf`,
+    content: invoicePdf,
+    contentType: "application/pdf",
+  };
   const [userResult, adminResult] = await Promise.allSettled([
-    transport.sendMail({ from: FROM, to: payload.customerEmail, subject: `Order Confirmed — ${payload.orderNumber} | Laundry Express`, html }),
-    transport.sendMail({ from: FROM, to: ADMIN_EMAIL, subject: `New Order — ${payload.orderNumber} | ${payload.customerName}`, html }),
+    transport.sendMail({ from: FROM, to: payload.customerEmail, subject: `Order Confirmed — ${payload.orderNumber.replace(/[\r\n]/g, " ")} | Laundry Express`, html, attachments: [attachment] }),
+    transport.sendMail({ from: FROM, to: ADMIN_EMAIL, subject: `New Order — ${payload.orderNumber.replace(/[\r\n]/g, " ")} | ${payload.customerName.replace(/[\r\n]/g, " ")}`, html, attachments: [attachment] }),
   ]);
 
   const errors: string[] = [];
   if (userResult.status === "rejected") errors.push(`User email: ${userResult.reason}`);
   if (adminResult.status === "rejected") errors.push(`Admin email: ${adminResult.reason}`);
-  if (errors.length === 2) throw new Error(errors.join("; "));
+  if (errors.length > 0) throw new Error(errors.join("; "));
 }

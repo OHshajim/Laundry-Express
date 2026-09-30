@@ -24,7 +24,7 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB maximum image ceiling
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(req: NextRequest) {
   try {

@@ -52,33 +52,24 @@ export class CustomUserStore {
    * Create or register a new user in the custom store with hashed password
    */
   static createCustomer(params: {
+    id?: string;
     email: string;
     fullName: string;
     phone?: string;
-    password?: string;
-    role?: UserRole;
+    password: string;
   }): StoredUser {
     const normalized = params.email.trim().toLowerCase();
-    const existing = USER_REGISTRY.get(normalized);
-    if (existing) {
-      if (params.password) {
-        existing.passwordHash = hashPassword(params.password);
-      }
-      if (params.role) {
-        existing.role = params.role;
-      }
-      return existing;
+    if (USER_REGISTRY.has(normalized)) {
+      throw new Error("An account with this email already exists.");
     }
 
-    const assignedRole = params.role || "customer";
-
     const newUser: StoredUser = {
-      id: `u-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: params.id || `u-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       email: normalized,
-      passwordHash: hashPassword(params.password || "customer123"),
+      passwordHash: hashPassword(params.password),
       full_name: params.fullName.trim() || "Valued Customer",
       phone: params.phone?.trim() || "815-575-9536",
-      role: assignedRole,
+      role: "customer",
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -106,11 +97,6 @@ export class CustomUserStore {
     const isValid = verifyPassword(password, existing.passwordHash);
     if (!isValid) {
       return null;
-    }
-
-    // Upgrade legacy plaintext hash to scrypt if needed
-    if (!existing.passwordHash.includes(":")) {
-      existing.passwordHash = hashPassword(password);
     }
 
     return {

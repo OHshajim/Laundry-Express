@@ -16,7 +16,7 @@ import { UserDbService } from "@/lib/services/user-db-service";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(req: NextRequest) {
   try {

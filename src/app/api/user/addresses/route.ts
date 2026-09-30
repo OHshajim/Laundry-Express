@@ -1,18 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { AddressService } from "@/lib/services/address-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    const queryUserId = req.nextUrl.searchParams.get("userId");
-    const userId = (token?.id as string) || (token?.sub as string) || (token?.email as string) || queryUserId || req.headers.get("x-user-id");
-    if (!userId) {
+    const token = await getToken({ req, secret: getAuthSecret() });
+    if (!token?.id) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
-    const addresses = await AddressService.getAddresses(userId);
+    const addresses = await AddressService.getAddresses(token.id);
     return NextResponse.json({ success: true, addresses });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load addresses";
@@ -22,15 +19,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    const body = await req.json();
-    const userId = (token?.id as string) || (token?.sub as string) || (token?.email as string) || body.user_id || req.headers.get("x-user-id");
-    if (!userId) {
+    const token = await getToken({ req, secret: getAuthSecret() });
+    if (!token?.id) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    const body = await req.json();
     const saved = await AddressService.saveAddress({
       ...body,
-      user_id: userId,
+      user_id: token.id,
     });
     return NextResponse.json({ success: true, address: saved }, { status: 201 });
   } catch (error: unknown) {
@@ -41,9 +37,14 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: getAuthSecret() });
+    if (!token?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     const id = req.nextUrl.searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "Address ID required" }, { status: 400 });
-    await AddressService.deleteAddress(id);
+    const deleted = await AddressService.deleteAddress(id, token.id);
+    if (!deleted) return NextResponse.json({ success: false, error: "Address not found." }, { status: 404 });
     return NextResponse.json({ success: true, message: "Address deleted." });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to delete address";

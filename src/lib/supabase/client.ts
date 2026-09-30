@@ -60,22 +60,8 @@ export async function fetchOrderById(orderId: string): Promise<Order | null> {
 /**
  * Generates temporary signed URL for private proof images (90-day retention).
  */
-export async function getSignedProofUrl(storagePath: string): Promise<string> {
-  try {
-    const supabase = createClient();
-    const { data, error } = await supabase.storage
-      .from("order-proofs")
-      .createSignedUrl(storagePath, 3600); // 1 hour validity
-
-    if (error || !data) {
-      return "/brand/logo-badge.jpg";
-    }
-
-    return data.signedUrl;
-  } catch (err) {
-    console.error("Failed to create signed proof URL:", err);
-    return "/brand/logo-badge.jpg";
-  }
+export async function getSignedProofUrl(storagePath: string, orderId: string): Promise<string> {
+  return `/api/order-proof?${new URLSearchParams({ orderId, path: storagePath }).toString()}`;
 }
 
 /**

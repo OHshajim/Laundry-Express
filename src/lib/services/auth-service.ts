@@ -22,6 +22,7 @@ export interface RegisterPayload {
   fullName: string;
   email: string;
   password: string;
+  verificationCode: string;
   phone?: string;
 }
 
@@ -116,7 +117,7 @@ class AuthService {
    */
   async sendOtp(
     email: string,
-    purpose: "change_password" | "reset_password"
+    purpose: "change_password" | "reset_password" | "register_email"
   ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const res = await fetch(`${this.baseUrl}/otp/send`, {

@@ -126,7 +126,7 @@ export class OrderService {
 
     try {
       const supabase = createAdminSupabaseClient();
-      await supabase.from("orders").insert({
+      const { error } = await supabase.from("orders").insert({
         order_number: newOrder.order_number,
         user_id: newOrder.user_id && newOrder.user_id !== "guest-customer" ? newOrder.user_id : null,
         customer_name: newOrder.customer_name,
@@ -154,7 +154,12 @@ export class OrderService {
         payment_status: "pending",
         order_status: "pending",
       });
-    } catch {}
+      if (error) throw new Error(`Unable to save order before checkout: ${error.message}`);
+    } catch (error: unknown) {
+      ORDERS_MEMORY_STORE.delete(newOrder.id);
+      ORDERS_MEMORY_STORE.delete(newOrder.order_number);
+      throw error;
+    }
 
     return newOrder;
   }
@@ -172,30 +177,54 @@ export class OrderService {
     if (!existing) return null;
 
     const now = new Date().toISOString();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing.id);
+    const supabase = createAdminSupabaseClient();
+    const updateData: Record<string, string> = {
+      payment_status: "paid",
+      order_status: "confirmed",
+      updated_at: now,
+    };
+    if (details?.stripe_payment_intent_id) updateData.stripe_payment_intent_id = details.stripe_payment_intent_id;
+    if (details?.customer_name) updateData.customer_name = details.customer_name;
+    if (details?.customer_email) updateData.customer_email = details.customer_email;
+    if (details?.payment_method) updateData.payment_method = details.payment_method;
+    const query = supabase.from("orders").update(updateData);
+    const { data, error } = isUuid
+      ? await query.eq("id", existing.id).select("id").maybeSingle()
+      : await query.eq("order_number", existing.order_number).select("id").maybeSingle();
+    if (error || !data) throw new Error(`Unable to confirm paid order: ${error?.message || "Order not found."}`);
+
     existing.payment_status = "paid";
     existing.order_status = "confirmed";
     existing.updated_at = now;
     if (details?.stripe_payment_intent_id) existing.stripe_payment_intent = details.stripe_payment_intent_id;
-    if (details?.customer_name && (!existing.customer_name || existing.customer_name === "Customer")) {
-      existing.customer_name = details.customer_name;
-    }
-    if (details?.customer_email && !existing.customer_email) existing.customer_email = details.customer_email;
+    if (details?.customer_name) existing.customer_name = details.customer_name;
+    if (details?.customer_email) existing.customer_email = details.customer_email;
     if (details?.payment_method) existing.payment_method = details.payment_method;
-
     ORDERS_MEMORY_STORE.set(existing.id, existing);
     if (existing.order_number) ORDERS_MEMORY_STORE.set(existing.order_number, existing);
 
-    try {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing.id);
-      const supabase = createAdminSupabaseClient();
-      const updateData: Record<string, any> = { payment_status: "paid", order_status: "confirmed", updated_at: now };
-      if (details?.stripe_payment_intent_id) updateData.stripe_payment_intent_id = details.stripe_payment_intent_id;
-      const query = supabase.from("orders").update(updateData);
-      if (isUuid) await query.eq("id", existing.id);
-      else await query.eq("order_number", existing.order_number);
-    } catch {}
-
     return existing;
+  }
+
+  static async markInvoiceEmailSent(orderId: string): Promise<void> {
+    const supabase = createAdminSupabaseClient();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+    const query = supabase
+      .from("orders")
+      .update({ invoice_email_sent_at: new Date().toISOString() })
+      .is("invoice_email_sent_at", null);
+    const { error } = isUuid
+      ? await query.eq("id", orderId)
+      : await query.eq("order_number", orderId);
+    if (error) throw new Error(`Unable to record invoice delivery: ${error.message}`);
+    const order = ORDERS_MEMORY_STORE.get(orderId) ||
+      Array.from(ORDERS_MEMORY_STORE.values()).find((item) => item.order_number === orderId);
+    if (order) {
+      order.invoice_email_sent_at = new Date().toISOString();
+      ORDERS_MEMORY_STORE.set(order.id, order);
+      ORDERS_MEMORY_STORE.set(order.order_number, order);
+    }
   }
 
   static async updateOrderStatus(orderId: string, status: OrderStatus): Promise<boolean> {

@@ -3,6 +3,8 @@ import { OrderService } from "@/lib/services/order-service";
 import { ContentService } from "@/lib/services/content-service";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { formatSlotLabel, resolveDetergentName } from "@/lib/utils";
+import { getToken } from "next-auth/jwt";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 /**
  * POST /api/orders/email-invoice
@@ -11,6 +13,11 @@ import { formatSlotLabel, resolveDetergentName } from "@/lib/utils";
  */
 export async function POST(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: getAuthSecret() });
+    if (!token?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { orderId, orderNumber } = body;
 
@@ -27,13 +34,22 @@ export async function POST(req: NextRequest) {
     if (!order) {
       return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
+    if (order.payment_status !== "paid") {
+      return NextResponse.json({ success: false, error: "Invoice is available after payment is confirmed." }, { status: 409 });
+    }
+    if (
+      token.role !== "admin" &&
+      order.user_id !== token.id &&
+      (!token.email || order.customer_email?.toLowerCase() !== token.email.toLowerCase())
+    ) {
+      return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+    }
 
-    const s = settings as any;
     const slotLabel = order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm"
       ? formatSlotLabel(
           order.pickup_slot as "8am-12pm" | "1pm-6pm",
-          s.slot1_start || "08:00", s.slot1_end || "12:00",
-          s.slot2_start || "13:00", s.slot2_end || "18:00"
+          settings.slot1_start || "08:00", settings.slot1_end || "12:00",
+          settings.slot2_start || "13:00", settings.slot2_end || "18:00"
         )
       : order.pickup_slot || "Scheduled Window";
 
@@ -51,6 +67,8 @@ export async function POST(req: NextRequest) {
 
     await sendInvoiceEmail({
       orderNumber: order.order_number,
+      orderDate: order.created_at,
+      paymentMethod: order.payment_method || "Credit / Debit Card (Stripe)",
       customerName: order.customer_name || "Valued Customer",
       customerEmail: order.customer_email || "",
       pickupDate: order.pickup_date,
@@ -67,10 +85,11 @@ export async function POST(req: NextRequest) {
       totalAmount: Number(order.total_amount || 0),
       address: fullAddress,
     });
+    await OrderService.markInvoiceEmailSent(order.id);
 
     return NextResponse.json({
       success: true,
-      message: `Invoice dispatched to ${order.customer_email} and admin`,
+      message: "Invoice sent to the order email and administrator.",
       orderNumber: order.order_number,
     });
   } catch (error: unknown) {

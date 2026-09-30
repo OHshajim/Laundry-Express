@@ -77,32 +77,31 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { order_id, order_number } = session.metadata || {};
   const identifier = order_number || order_id;
   if (!identifier) {
-    console.warn("[stripe-webhook] checkout.session.completed missing order metadata");
-    return;
+    throw new Error("checkout.session.completed is missing order metadata.");
   }
 
-  let order = await OrderService.getOrderByNumber(identifier);
+  const order = await OrderService.getOrderByNumber(identifier);
   if (!order) {
-    console.warn("[stripe-webhook] order not found in database:", identifier);
+    throw new Error(`Paid order ${identifier} was not found.`);
+  }
+
+  if (order.payment_status === "paid" && order.invoice_email_sent_at) {
+    console.info("[stripe-webhook] paid order invoice already sent:", identifier);
     return;
   }
 
-  // Idempotency check 2: Order already verified and paid
-  if (order.payment_status === "paid") {
-    console.info("[stripe-webhook] order already marked as paid:", identifier);
-    return;
+  let finalOrder = order;
+  if (order.payment_status !== "paid") {
+    const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+    const updatedOrder = await OrderService.markOrderPaid(order.id, {
+      stripe_payment_intent_id: paymentIntentId,
+      customer_name: session.customer_details?.name || order.customer_name,
+      customer_email: session.customer_details?.email || order.customer_email,
+      payment_method: "card",
+    });
+    if (!updatedOrder) throw new Error(`Could not confirm paid order ${identifier}.`);
+    finalOrder = updatedOrder;
   }
-
-  // 1. Change order to PAID and record payment intent
-  const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
-  const updatedOrder = await OrderService.markOrderPaid(order.id, {
-    stripe_payment_intent_id: paymentIntentId,
-    customer_name: session.customer_details?.name || order.customer_name,
-    customer_email: session.customer_details?.email || order.customer_email,
-    payment_method: "card",
-  });
-
-  const finalOrder = updatedOrder || order;
 
   // 2. Generate and dispatch official invoice email to customer and admin
   try {
@@ -122,22 +121,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     const customerEmail = session.customer_details?.email || finalOrder.customer_email;
     if (!customerEmail) {
-      console.warn("[stripe-webhook] missing customer email, skipped email for:", identifier);
-      return;
+      throw new Error(`No customer email is available for paid order ${identifier}.`);
     }
 
-    const settings = await ContentService.getSettings().catch(() => ({} as any));
-    const s = settings as any;
+    const settings = await ContentService.getSettings();
     const slotLabel = finalOrder.pickup_slot === "8am-12pm" || finalOrder.pickup_slot === "1pm-6pm"
       ? formatSlotLabel(
           finalOrder.pickup_slot as "8am-12pm" | "1pm-6pm",
-          s.slot1_start || "08:00", s.slot1_end || "12:00",
-          s.slot2_start || "13:00", s.slot2_end || "18:00"
+          settings.slot1_start || "08:00", settings.slot1_end || "12:00",
+          settings.slot2_start || "13:00", settings.slot2_end || "18:00"
         )
       : finalOrder.pickup_slot || "Scheduled Window";
 
     await sendInvoiceEmail({
       orderNumber: finalOrder.order_number,
+      orderDate: finalOrder.created_at,
+      paymentMethod: "Credit / Debit Card (Stripe)",
       customerName: session.customer_details?.name || finalOrder.customer_name || "Valued Customer",
       customerEmail,
       pickupDate: finalOrder.pickup_date,
@@ -155,8 +154,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       address: fullAddress,
     });
 
+    await OrderService.markInvoiceEmailSent(finalOrder.id);
     console.info(`[stripe-webhook] Payment captured and invoice emailed for order ${finalOrder.order_number}`);
   } catch (emailErr: unknown) {
     console.error("[stripe-webhook] Invoice email dispatch failed:", emailErr);
+    throw emailErr;
   }
 }

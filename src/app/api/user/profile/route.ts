@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { UserDbService } from "@/lib/services/user-db-service";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 /**
  * POST /api/user/profile
@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Forbidden. You cannot edit another user's profile." },
         { status: 403 }
+      );
+    }
+
+    const activeUser = await UserDbService.getActiveUserById(token.id);
+    if (!activeUser) {
+      return NextResponse.json(
+        { success: false, error: "Account is no longer active." },
+        { status: 401 }
       );
     }
 
@@ -73,13 +81,13 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token?.email) {
+    if (!token?.id) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await UserDbService.getUserByEmail(token.email);
+    const user = await UserDbService.getActiveUserById(token.id);
     if (!user) {
-      return NextResponse.json({ success: false, error: "User profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Account is no longer active." }, { status: 401 });
     }
 
     return NextResponse.json(
@@ -91,4 +99,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
-

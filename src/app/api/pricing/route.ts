@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function GET() {
   try {

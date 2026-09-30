@@ -9,7 +9,7 @@ import { CatalogService } from "@/lib/services/catalog-service";
 import { CouponService } from "@/lib/services/coupon-service";
 import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 const stripeKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" as any }) : null;
 

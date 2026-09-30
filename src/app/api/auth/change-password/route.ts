@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { OtpService } from "@/lib/security/otp-service";
 import { UserDbService } from "@/lib/services/user-db-service";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 /**
  * POST /api/auth/change-password

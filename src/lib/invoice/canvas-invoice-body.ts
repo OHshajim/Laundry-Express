@@ -4,6 +4,48 @@ import type { InvoiceData } from "@/components/booking/order-invoice-modal";
 import { drawRoundRect } from "./canvas-helpers";
 import { resolveDetergentName } from "@/lib/utils";
 
+function fitLines(
+  ctx: CanvasRenderingContext2D,
+  value: string,
+  maxWidth: number,
+  maxLines: number
+): string[] {
+  const words = value.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (ctx.measureText(candidate).width <= maxWidth) {
+      line = candidate;
+      continue;
+    }
+    if (line) {
+      lines.push(line);
+      line = "";
+    }
+    if (lines.length === maxLines) break;
+    let shortened = "";
+    for (const character of word) {
+      if (ctx.measureText(`${shortened}${character}`).width > maxWidth) break;
+      shortened += character;
+    }
+    line = shortened || word.slice(0, 1);
+    if (shortened.length < word.length) break;
+  }
+
+  if (line && lines.length < maxLines) lines.push(line);
+  const hasMore = lines.join(" ").replace(/\.\.\.$/, "").length < value.trim().length;
+  if (hasMore && lines.length) {
+    let last = lines[lines.length - 1];
+    while (last && ctx.measureText(`${last}...`).width > maxWidth) {
+      last = last.slice(0, -1);
+    }
+    lines[lines.length - 1] = `${last.trimEnd()}...`;
+  }
+  return lines;
+}
+
 export function drawPortraitTable(
   ctx: CanvasRenderingContext2D,
   W: number,
@@ -18,10 +60,10 @@ export function drawPortraitTable(
   ctx.fill();
 
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("SERVICE / ORDER DESCRIPTION", 70, tableY + 25);
-  ctx.fillText("SPECIFICATION & FORMULA", 470, tableY + 25);
-  ctx.fillText("QUANTITY", 780, tableY + 25);
+  ctx.fillText("SPECIFICATION & FORMULA", 430, tableY + 25);
+  ctx.fillText("QUANTITY", 740, tableY + 25);
   ctx.textAlign = "right";
   ctx.fillText("AMOUNT (USD)", W - 70, tableY + 25);
   ctx.textAlign = "left";
@@ -54,7 +96,7 @@ export function drawPortraitTable(
 
   let y = tableY + 40;
   rows.forEach((r, idx) => {
-    const rowH = 48;
+    const rowH = 58;
     ctx.fillStyle = idx % 2 === 0 ? "#FFFFFF" : "#F8FAFC";
     ctx.fillRect(50, y, tableW, rowH);
     ctx.strokeStyle = "#E2E8F0";
@@ -62,16 +104,22 @@ export function drawPortraitTable(
     ctx.strokeRect(50, y, tableW, rowH);
 
     ctx.fillStyle = "#0F172A";
-    ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(r.item, 70, y + 29);
+    ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, sans-serif";
+    fitLines(ctx, r.item, 340, 2).forEach((line, lineIndex) => {
+      ctx.fillText(line, 70, y + 23 + lineIndex * 16);
+    });
 
     ctx.fillStyle = "#475569";
     ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(r.spec, 470, y + 29);
+    fitLines(ctx, r.spec, 285, 2).forEach((line, lineIndex) => {
+      ctx.fillText(line, 430, y + 23 + lineIndex * 16);
+    });
 
     ctx.fillStyle = "#0F172A";
-    ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(r.qty, 780, y + 29);
+    ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, sans-serif";
+    fitLines(ctx, r.qty, 135, 2).forEach((line, lineIndex) => {
+      ctx.fillText(line, 740, y + 23 + lineIndex * 16);
+    });
 
     ctx.textAlign = "right";
     ctx.fillStyle = r.amt === "FREE" ? "#059669" : "#0F172A";

@@ -40,6 +40,9 @@ CREATE TABLE IF NOT EXISTS public.auth_otps (
 );
 
 CREATE INDEX IF NOT EXISTS idx_auth_otps_email_purpose ON public.auth_otps(email, purpose);
+ALTER TABLE public.auth_otps DROP CONSTRAINT IF EXISTS auth_otps_purpose_check;
+ALTER TABLE public.auth_otps ADD CONSTRAINT auth_otps_purpose_check
+    CHECK (purpose IN ('change_password', 'reset_password', 'register_email'));
 
 -- 4. PRICING CONFIGS (By Bag & By Pound pricing managed by Admin)
 CREATE TABLE IF NOT EXISTS public.pricing_configs (
@@ -134,6 +137,18 @@ CREATE TABLE IF NOT EXISTS public.orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(order_status);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_email_sent_at TIMESTAMPTZ;
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_order_status_check;
+UPDATE public.orders SET order_status = CASE order_status
+    WHEN 'received' THEN 'pending'
+    WHEN 'in_washing' THEN 'in_wash'
+    WHEN 'delivered' THEN 'completed'
+    ELSE order_status
+END
+WHERE order_status IN ('received', 'in_washing', 'delivered');
+ALTER TABLE public.orders ADD CONSTRAINT orders_order_status_check CHECK (
+    order_status IN ('pending', 'confirmed', 'driver_assigned', 'picked_up', 'in_wash', 'out_for_delivery', 'completed', 'cancelled')
+);
 
 -- 9. ORDER PROOFS TABLE (Driver pickup & delivery photos)
 CREATE TABLE IF NOT EXISTS public.order_proofs (
@@ -209,7 +224,7 @@ ALTER TABLE public.faqs_and_terms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_addresses ENABLE ROW LEVEL SECURITY;
 
--- Permissive public policies for API client access
+-- Remove legacy permissive policies before applying least-privilege read access.
 DO $$
 DECLARE
     t text;
@@ -217,25 +232,34 @@ BEGIN
     FOR t IN SELECT unnest(ARRAY['users', 'auth_otps', 'pricing_configs', 'plans', 'catalog_items', 'coupons', 'orders', 'order_proofs', 'reviews', 'faqs_and_terms', 'system_settings', 'user_addresses'])
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS "Public read %s" ON public.%I', t, t);
-        EXECUTE format('CREATE POLICY "Public read %s" ON public.%I FOR SELECT USING (true)', t, t);
         EXECUTE format('DROP POLICY IF EXISTS "Public insert %s" ON public.%I', t, t);
-        EXECUTE format('CREATE POLICY "Public insert %s" ON public.%I FOR INSERT WITH CHECK (true)', t, t);
         EXECUTE format('DROP POLICY IF EXISTS "Public update %s" ON public.%I', t, t);
-        EXECUTE format('CREATE POLICY "Public update %s" ON public.%I FOR UPDATE USING (true)', t, t);
         EXECUTE format('DROP POLICY IF EXISTS "Public delete %s" ON public.%I', t, t);
-        EXECUTE format('CREATE POLICY "Public delete %s" ON public.%I FOR DELETE USING (true)', t, t);
     END LOOP;
 END $$;
 
--- 14. SUPABASE STORAGE BUCKETS
-INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true), ('order-proofs', 'order-proofs', true), ('review-photos', 'review-photos', true) ON CONFLICT (id) DO UPDATE SET public = true;
+DROP POLICY IF EXISTS "Public read active pricing" ON public.pricing_configs;
+DROP POLICY IF EXISTS "Public read active plans" ON public.plans;
+DROP POLICY IF EXISTS "Public read active catalog" ON public.catalog_items;
+DROP POLICY IF EXISTS "Public read active FAQs and terms" ON public.faqs_and_terms;
+DROP POLICY IF EXISTS "Public read approved reviews" ON public.reviews;
+CREATE POLICY "Public read active pricing" ON public.pricing_configs
+    FOR SELECT TO anon, authenticated USING (is_active = true);
+CREATE POLICY "Public read active plans" ON public.plans
+    FOR SELECT TO anon, authenticated USING (is_active = true);
+CREATE POLICY "Public read active catalog" ON public.catalog_items
+    FOR SELECT TO anon, authenticated USING (is_active = true);
+CREATE POLICY "Public read active FAQs and terms" ON public.faqs_and_terms
+    FOR SELECT TO anon, authenticated USING (is_active = true);
+CREATE POLICY "Public read approved reviews" ON public.reviews
+    FOR SELECT TO anon, authenticated USING (status = 'approved');
 
--- Storage object policies for CDN reads and uploads
+-- 14. SUPABASE STORAGE BUCKETS
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true), ('order-proofs', 'order-proofs', false), ('review-photos', 'review-photos', true) ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+
+-- Public assets are readable, but writes and deletes require the server service role.
 DROP POLICY IF EXISTS "Public Storage Read" ON storage.objects;
-CREATE POLICY "Public Storage Read" ON storage.objects FOR SELECT USING (bucket_id IN ('avatars', 'order-proofs', 'review-photos'));
+CREATE POLICY "Public Storage Read" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id IN ('avatars', 'review-photos'));
 
 DROP POLICY IF EXISTS "Public Storage Insert" ON storage.objects;
-CREATE POLICY "Public Storage Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id IN ('avatars', 'order-proofs', 'review-photos'));
-
 DROP POLICY IF EXISTS "Public Storage Delete" ON storage.objects;
-CREATE POLICY "Public Storage Delete" ON storage.objects FOR DELETE USING (bucket_id IN ('avatars', 'order-proofs', 'review-photos'));

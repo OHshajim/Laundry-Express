@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { OtpService } from "@/lib/security/otp-service";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 // Rate limiting map (5 OTP requests per minute per IP)
 const otpRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (purpose !== "change_password" && purpose !== "reset_password") {
+    if (purpose !== "change_password" && purpose !== "reset_password" && purpose !== "register_email") {
       return NextResponse.json(
         { success: false, error: "Invalid purpose specified." },
         { status: 400 }

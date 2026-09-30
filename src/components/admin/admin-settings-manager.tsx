@@ -20,7 +20,7 @@ export function AdminSettingsManager() {
   const [daysOpen, setDaysOpen] = React.useState("Monday – Sunday (7 Days / Week)");
 
   const [zones, setZones] = React.useState([
-    { zip: "60156", city: "Lake in the Hills" },
+    { zip: "60155", city: "Lake in the Hills" },
     { zip: "60102", city: "Algonquin" },
     { zip: "60110", city: "Carpentersville" },
     { zip: "60118", city: "Dundee" },
