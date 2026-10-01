@@ -42,7 +42,7 @@ export function StepOutOfHome({
   isOutOfHome, onIsOutOfHomeChange,
   isAwayForDropoff, onIsAwayForDropoffChange,
   bagConfirmed, onBagConfirmedChange,
-  onAddressChange, addressDetails, onAddressDetailsChange,
+  address, onAddressChange, addressDetails, onAddressDetailsChange,
   notes, onNotesChange,
   deliveryZones = [],
   showValidationErrors = false,
@@ -60,13 +60,19 @@ export function StepOutOfHome({
   const [zip, setZip] = React.useState(addressDetails?.zip ?? defaultZone.zip);
 
   const isInitialFetchDone = React.useRef(false);
+  const isAddressInvalid = showValidationErrors && (
+    address.trim().length < 5 ||
+    !city.trim() ||
+    !/^[A-Z]{2}$/.test(state.trim()) ||
+    !/^\d{5}(-\d{4})?$/.test(zip.trim())
+  );
 
   const push = React.useCallback(
-    (s: string, a: string, c: string, z: string) => {
-      onAddressChange([s, a ? `Apt ${a}` : "", c, state, z].filter(Boolean).join(", "));
-      onAddressDetailsChange?.({ street: s, apt: a, city: c, state, zip: z });
+    (s: string, a: string, c: string, z: string, stateValue: string) => {
+      onAddressChange([s, a ? `Apt ${a}` : "", c, stateValue, z].filter(Boolean).join(", "));
+      onAddressDetailsChange?.({ street: s, apt: a, city: c, state: stateValue, zip: z });
     },
-    [state, onAddressChange, onAddressDetailsChange]
+    [onAddressChange, onAddressDetailsChange]
   );
 
   React.useEffect(() => {
@@ -102,8 +108,9 @@ export function StepOutOfHome({
           setStreet(defaultAddr.street_address);
           setApt(defaultAddr.apt_unit || "");
           setCity(defaultAddr.city);
+          setState(defaultAddr.state || "");
           setZip(defaultAddr.zip_code);
-          push(defaultAddr.street_address, defaultAddr.apt_unit || "", defaultAddr.city, defaultAddr.zip_code);
+          push(defaultAddr.street_address, defaultAddr.apt_unit || "", defaultAddr.city, defaultAddr.zip_code, defaultAddr.state || "");
         } else {
           setIsAddingNew(true);
         }
@@ -121,8 +128,9 @@ export function StepOutOfHome({
     setStreet(addr.street_address);
     setApt(addr.apt_unit || "");
     setCity(addr.city);
+    setState(addr.state || "");
     setZip(addr.zip_code);
-    push(addr.street_address, addr.apt_unit || "", addr.city, addr.zip_code);
+    push(addr.street_address, addr.apt_unit || "", addr.city, addr.zip_code, addr.state || "");
   };
 
   const handleStartAddNew = () => {
@@ -132,8 +140,9 @@ export function StepOutOfHome({
     setStreet("");
     setApt("");
     setCity(defaultZone.city);
+    setState("");
     setZip(defaultZone.zip);
-    push("", "", defaultZone.city, defaultZone.zip);
+    push("", "", defaultZone.city, defaultZone.zip, "");
   };
 
   const handleEditAddress = (addr: UserAddress) => {
@@ -143,8 +152,9 @@ export function StepOutOfHome({
     setStreet(addr.street_address);
     setApt(addr.apt_unit || "");
     setCity(addr.city);
+    setState(addr.state || "");
     setZip(addr.zip_code);
-    push(addr.street_address, addr.apt_unit || "", addr.city, addr.zip_code);
+    push(addr.street_address, addr.apt_unit || "", addr.city, addr.zip_code, addr.state || "");
   };
 
   const handleAddressSaved = (savedAddr: UserAddress) => {
@@ -181,21 +191,26 @@ export function StepOutOfHome({
           onStartAddNew={handleStartAddNew}
           onEditAddress={handleEditAddress}
         />
+        {isAddressInvalid && (
+          <p role="alert" className="text-xs font-medium text-rose-600">
+            Enter a street address, city, 2-letter state code, and valid 5-digit ZIP code.
+          </p>
+        )}
 
         {(isAddingNew || savedAddresses.length === 0) && (
           <NewAddressForm
             key={editingAddress?.id || "new-address"}
             currentUser={currentUser}
             street={street}
-            onStreetChange={(v) => { setStreet(v); push(v, apt, city, zip); }}
+            onStreetChange={(v) => { setStreet(v); push(v, apt, city, zip, state); }}
             apt={apt}
-            onAptChange={(v) => { setApt(v); push(street, v, city, zip); }}
+            onAptChange={(v) => { setApt(v); push(street, v, city, zip, state); }}
             city={city}
-            onCityChange={(v) => { setCity(v); push(street, apt, v, zip); }}
+            onCityChange={(v) => { setCity(v); push(street, apt, v, zip, state); }}
             state={state}
-            onStateChange={setState}
+            onStateChange={(v) => { setState(v); push(street, apt, city, zip, v); }}
             zip={zip}
-            onZipChange={(v) => { setZip(v); push(street, apt, city, v); }}
+            onZipChange={(v) => { setZip(v); push(street, apt, city, v, state); }}
             deliveryZones={deliveryZones}
             showValidationErrors={showValidationErrors}
             onAddressSaved={handleAddressSaved}

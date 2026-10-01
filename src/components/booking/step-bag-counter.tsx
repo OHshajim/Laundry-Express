@@ -6,6 +6,8 @@ interface StepBagCounterProps {
   pricingMode: PricingMode;
   bagCount: number;
   onBagCountChange: (count: number) => void;
+  minBags: number;
+  maxBags: number;
   weightLbs?: number;
   onWeightLbsChange?: (lbs: number) => void;
   bagPrice: number;
@@ -19,6 +21,8 @@ export function StepBagCounter({
   pricingMode,
   bagCount,
   onBagCountChange,
+  minBags,
+  maxBags,
   weightLbs,
   onWeightLbsChange,
   bagPrice,
@@ -110,8 +114,8 @@ export function StepBagCounter({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => onBagCountChange(Math.max(1, bagCount - 1))}
-            disabled={bagCount <= 1}
+            onClick={() => onBagCountChange(Math.max(minBags, bagCount - 1))}
+            disabled={bagCount <= minBags}
             className="h-9 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 transition-colors"
           >
             <Minus className="h-4 w-4" />
@@ -124,7 +128,8 @@ export function StepBagCounter({
           <button
             type="button"
             onClick={() => onBagCountChange(bagCount + 1)}
-            className="h-9 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center hover:bg-slate-100 transition-colors"
+            disabled={bagCount >= maxBags}
+            className="h-9 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 transition-colors"
           >
             <Plus className="h-4 w-4" />
           </button>

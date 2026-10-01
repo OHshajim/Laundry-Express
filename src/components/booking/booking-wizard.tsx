@@ -66,16 +66,33 @@ export function BookingWizard({
 
   const { checkout, isProcessing, checkoutError } = useBookingCheckout();
 
-  const priceResult = React.useMemo(() => calculateOrderPrice({
-    pricing_mode: pricingMode, bag_count: bagCount, estimated_weight_lbs: weightLbs,
-    detergent_id: selectedDetergentId, detergent_fee: selectedDetergent?.price || 0,
-    promo: appliedCoupon, base_bag_price: rates.bagPrice,
-    base_pound_price: rates.poundPrice, min_bags: rates.minBags, max_bags: rates.maxBags, min_lbs: rates.minLbs, max_lbs: rates.maxLbs,
-    free_delivery_lbs: rates.freeDeliveryLbs, one_bag_delivery_fee: rates.deliveryFee,
-    free_delivery_threshold: rates.freeDeliveryBags,
-  }), [pricingMode, bagCount, weightLbs, selectedDetergentId, selectedDetergent?.price, appliedCoupon, rates]);
+  const boundedBagCount = rates.minBags > 0 && rates.maxBags >= rates.minBags
+    ? Math.min(rates.maxBags, Math.max(rates.minBags, bagCount))
+    : bagCount;
+  const boundedWeightLbs = rates.minLbs > 0 && rates.maxLbs >= rates.minLbs
+    ? Math.min(rates.maxLbs, Math.max(rates.minLbs, weightLbs))
+    : weightLbs;
+  const pricingIsValid = rates.bagPrice > 0 &&
+    rates.poundPrice > 0 &&
+    rates.minBags > 0 &&
+    rates.maxBags >= rates.minBags &&
+    rates.minLbs > 0 &&
+    rates.maxLbs >= rates.minLbs;
+
+  const priceResult = React.useMemo(() => {
+    if (isConfigLoading || configError || !pricingIsValid) return null;
+    return calculateOrderPrice({
+      pricing_mode: pricingMode, bag_count: boundedBagCount, estimated_weight_lbs: boundedWeightLbs,
+      detergent_id: selectedDetergentId, detergent_fee: selectedDetergent?.price || 0,
+      promo: appliedCoupon, base_bag_price: rates.bagPrice,
+      base_pound_price: rates.poundPrice, min_bags: rates.minBags, max_bags: rates.maxBags, min_lbs: rates.minLbs, max_lbs: rates.maxLbs,
+      free_delivery_lbs: rates.freeDeliveryLbs, one_bag_delivery_fee: rates.deliveryFee,
+      free_delivery_threshold: rates.freeDeliveryBags,
+    });
+  }, [isConfigLoading, configError, pricingIsValid, pricingMode, boundedBagCount, boundedWeightLbs, selectedDetergentId, selectedDetergent?.price, appliedCoupon, rates]);
 
   const handleApplyPromo = async () => {
+    if (!priceResult) return;
     const code = promoCode.trim().toUpperCase();
     if (!code) return;
     try {
@@ -88,8 +105,8 @@ export function BookingWizard({
 
   // Step validations
   const isStep1Valid = pricingMode === "per_lb"
-    ? (weightLbs >= rates.minLbs && weightLbs <= rates.maxLbs && !isNaN(weightLbs))
-    : pricingMode === "per_bag" && bagCount >= rates.minBags && bagCount <= rates.maxBags;
+    ? (boundedWeightLbs >= rates.minLbs && boundedWeightLbs <= rates.maxLbs && !isNaN(boundedWeightLbs))
+    : pricingMode === "per_bag" && boundedBagCount >= rates.minBags && boundedBagCount <= rates.maxBags;
   const isStep2Valid = Boolean(selectedDetergentId);
   const isDateValid = Boolean(selectedDate && selectedDate >= new Date().toISOString().split("T")[0]);
   const isDropoffValid = !dropoffDate || dropoffDate >= selectedDate;
@@ -102,8 +119,9 @@ export function BookingWizard({
   const isStep4Valid = Boolean(isAddressValid && isPhoneValid && (!isOutOfHome || bagConfirmed));
 
   const handleConfirm = () => {
+    if (!priceResult) return;
     checkout({
-      currentUser, pricingMode, bagCount, weightLbs, selectedDetergentId,
+      currentUser, pricingMode, bagCount: boundedBagCount, weightLbs: boundedWeightLbs, selectedDetergentId,
       selectedDate, selectedSlot, dropoffDate, address, phone: phoneValue, addressDetails, isOutOfHome,
       isAwayForDropoff, bagConfirmed, notes, priceResult, paymentMethod,
       coupon: appliedCoupon,
@@ -112,9 +130,9 @@ export function BookingWizard({
 
   return (
     <div id="book-now" className="scroll-mt-24 py-4 w-full max-w-full">
-      {isConfigLoading || configError ? (
-        <div role={configError ? "alert" : "status"} className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700">
-          {isConfigLoading ? "Loading current service settings..." : configError}
+      {isConfigLoading || configError || !priceResult ? (
+        <div role={isConfigLoading ? "status" : "alert"} className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700">
+          {isConfigLoading ? "Loading current service settings..." : configError || "Pricing is not configured correctly. Please contact Laundry Express."}
         </div>
       ) : (
       <>
@@ -135,7 +153,7 @@ export function BookingWizard({
                   Package-credit redemption is not available yet. Choose by bag or by pound to continue.
                 </p>
               )}
-              <StepBagCounter pricingMode={pricingMode} bagCount={bagCount} onBagCountChange={setBagCount} weightLbs={weightLbs} onWeightLbsChange={setWeightLbs} bagPrice={rates.bagPrice} freeDeliveryBags={rates.freeDeliveryBags} minLbs={rates.minLbs} maxLbs={rates.maxLbs} freeDeliveryLbs={rates.freeDeliveryLbs} />
+              <StepBagCounter pricingMode={pricingMode} bagCount={boundedBagCount} onBagCountChange={setBagCount} minBags={rates.minBags} maxBags={rates.maxBags} weightLbs={boundedWeightLbs} onWeightLbsChange={setWeightLbs} bagPrice={rates.bagPrice} freeDeliveryBags={rates.freeDeliveryBags} minLbs={rates.minLbs} maxLbs={rates.maxLbs} freeDeliveryLbs={rates.freeDeliveryLbs} />
               <div className="flex justify-end pt-2">
                 <Button variant="hero" size="lg" disabled={!isStep1Valid} onClick={() => isStep1Valid && setStep(2)}>
                   Continue to Detergent <ArrowRight className="h-4 w-4 ml-2" />
@@ -206,7 +224,7 @@ export function BookingWizard({
               />
               <div className="flex items-center justify-between pt-2">
                 <Button variant="outline" onClick={() => setStep(3)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
-                <Button variant="hero" size="lg" disabled={!isStep4Valid} onClick={() => { if (!isStep4Valid) { setShowStep4Errors(true); return; } setStep(5); }}>
+                <Button variant="hero" size="lg" onClick={() => { if (!isStep4Valid) { setShowStep4Errors(true); return; } setStep(5); }}>
                   Review Order <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
@@ -215,7 +233,7 @@ export function BookingWizard({
 
           {step === 5 && (
             <StepReview
-              pricingMode={pricingMode} bagCount={bagCount} weightLbs={weightLbs}
+              pricingMode={pricingMode} bagCount={boundedBagCount} weightLbs={boundedWeightLbs}
               selectedDetergentId={selectedDetergentId} selectedDate={selectedDate} selectedSlot={selectedSlot}
               address={address} phone={phoneValue} isOutOfHome={isOutOfHome}
               slot1Start={settings.slot1Start} slot1End={settings.slot1End}
@@ -236,7 +254,7 @@ export function BookingWizard({
 
         <div className="lg:col-span-1">
           <OrderSummaryCard
-            pricingMode={pricingMode} bagCount={bagCount} weightLbs={weightLbs} priceResult={priceResult}
+            pricingMode={pricingMode} bagCount={boundedBagCount} weightLbs={boundedWeightLbs} priceResult={priceResult}
           />
         </div>
       </div>
