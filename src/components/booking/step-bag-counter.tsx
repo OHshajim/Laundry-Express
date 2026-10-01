@@ -1,32 +1,35 @@
 import { Plus, Minus, ShoppingBag, Zap, Scale, CheckCircle2 } from "lucide-react";
 import type { PricingMode } from "@/types";
-import { APP_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface StepBagCounterProps {
   pricingMode: PricingMode;
   bagCount: number;
   onBagCountChange: (count: number) => void;
+  minBags: number;
+  maxBags: number;
   weightLbs?: number;
   onWeightLbsChange?: (lbs: number) => void;
-  bagPrice?: number;
-  freeDeliveryBags?: number;
-  minLbs?: number;
-  maxLbs?: number;
-  freeDeliveryLbs?: number;
+  bagPrice: number;
+  freeDeliveryBags: number;
+  minLbs: number;
+  maxLbs: number;
+  freeDeliveryLbs: number;
 }
 
 export function StepBagCounter({
   pricingMode,
   bagCount,
   onBagCountChange,
+  minBags,
+  maxBags,
   weightLbs,
   onWeightLbsChange,
-  bagPrice = 32.50,
-  freeDeliveryBags = 2,
-  minLbs = 10,
-  maxLbs = 100,
-  freeDeliveryLbs = 30,
+  bagPrice,
+  freeDeliveryBags,
+  minLbs,
+  maxLbs,
+  freeDeliveryLbs,
 }: StepBagCounterProps) {
   const currentLbs = weightLbs ?? minLbs;
   const handleLbsChange = (val: number) => {
@@ -111,8 +114,8 @@ export function StepBagCounter({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => onBagCountChange(Math.max(1, bagCount - 1))}
-            disabled={bagCount <= 1}
+            onClick={() => onBagCountChange(Math.max(minBags, bagCount - 1))}
+            disabled={bagCount <= minBags}
             className="h-9 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 transition-colors"
           >
             <Minus className="h-4 w-4" />
@@ -125,7 +128,8 @@ export function StepBagCounter({
           <button
             type="button"
             onClick={() => onBagCountChange(bagCount + 1)}
-            className="h-9 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center hover:bg-slate-100 transition-colors"
+            disabled={bagCount >= maxBags}
+            className="h-9 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 transition-colors"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -141,15 +145,15 @@ export function StepBagCounter({
             : "bg-amber-50 border-amber-200 text-amber-800"
         )}
       >
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-rose-500 fill-rose-500 shrink-0" />
+        <div className="flex items-center gap-2 min-w-0">
+          <Zap className="h-4 w-4 text-emerald-600 fill-emerald-600 shrink-0" />
           {isFreeDelivery ? (
-            <span>
-              <strong>Superhero Bonus Unlocked!</strong> You have 2+ bags — Delivery is <strong>100% FREE ($0.00)</strong>!
+            <span className="leading-snug">
+              <strong>Free Delivery Qualified!</strong> Orders with {freeDeliveryBags}+ bags qualify for <strong>$0.00 delivery</strong>.
             </span>
           ) : (
-            <span>
-              <strong>1 Bag Delivery Fee is $10.00.</strong> Add 1 more bag to unlock <strong>FREE Delivery ($0.00)</strong>!
+            <span className="leading-snug">
+              Standard delivery fee applies. Add {Math.max(1, freeDeliveryBags - bagCount)} more bag to unlock <strong>Free Delivery ($0.00)</strong>!
             </span>
           )}
         </div>
@@ -157,8 +161,8 @@ export function StepBagCounter({
         {!isFreeDelivery && (
           <button
             type="button"
-            onClick={() => onBagCountChange(2)}
-            className="text-xs font-bold text-sky-700 underline hover:text-sky-900 shrink-0 ml-2"
+            onClick={() => onBagCountChange(freeDeliveryBags)}
+            className="text-xs font-bold text-sky-700 underline hover:text-sky-900 shrink-0 ml-2 whitespace-nowrap cursor-pointer"
           >
             + Add Bag
           </button>

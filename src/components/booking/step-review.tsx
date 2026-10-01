@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Sparkles, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import type { PricingMode } from "@/types";
 import { Button } from "@/components/ui/button";
+import { useDetergents } from "@/hooks/use-detergents";
 
 function fmt12(t?: string): string {
   if (!t) return "";
@@ -16,15 +16,17 @@ function fmt12(t?: string): string {
 interface StepReviewProps {
   pricingMode: PricingMode;
   bagCount: number;
-  weightLbs?: number;
+  weightLbs: number;
+  selectedDetergentId?: string;
   selectedDate: string;
   selectedSlot: string;
   address: string;
+  phone?: string;
   isOutOfHome: boolean;
-  slot1Start?: string;
-  slot1End?: string;
-  slot2Start?: string;
-  slot2End?: string;
+  slot1Start: string;
+  slot1End: string;
+  slot2Start: string;
+  slot2End: string;
   onEditStep: (step: number) => void;
   onBack: () => void;
   onContinue: () => void;
@@ -33,19 +35,23 @@ interface StepReviewProps {
 export function StepReview({
   pricingMode,
   bagCount,
-  weightLbs = 15,
+  weightLbs,
+  selectedDetergentId,
   selectedDate,
   selectedSlot,
   address,
+  phone,
   isOutOfHome,
-  slot1Start = "08:00",
-  slot1End = "12:00",
-  slot2Start = "13:00",
-  slot2End = "18:00",
+  slot1Start,
+  slot1End,
+  slot2Start,
+  slot2End,
   onEditStep,
   onBack,
   onContinue,
 }: StepReviewProps) {
+  const { detergents } = useDetergents();
+  const detergentName = detergents.find((detergent) => detergent.id === selectedDetergentId)?.name || "Selected detergent";
   const getPlanDescription = () => {
     if (pricingMode === "per_bag") return `${bagCount} Standard 13-Gal Bag${bagCount > 1 ? "s" : ""}`;
     if (pricingMode === "per_lb") return `${weightLbs} lbs Weighed Volume`;
@@ -78,8 +84,10 @@ export function StepReview({
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-            <span className="text-slate-400 uppercase font-bold text-[10px]">Detergent & Cycle</span>
-            <p className="font-bold text-slate-900">Premium Wash · Cold Gentle Cycle</p>
+            <span className="text-slate-400 uppercase font-bold text-[10px]">Detergent &amp; Cycle</span>
+            <p className="font-bold text-slate-900">
+              {detergentName} · Standard Cold Eco-Wash (30°C)
+            </p>
             <button type="button" onClick={() => onEditStep(2)} className="text-sky-600 font-semibold hover:underline cursor-pointer">Edit Detergent →</button>
           </div>
 
@@ -91,12 +99,13 @@ export function StepReview({
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-            <span className="text-slate-400 uppercase font-bold text-[10px]">Address & Presence</span>
+            <span className="text-slate-400 uppercase font-bold text-[10px]">Address &amp; Contact</span>
             <p className="font-bold text-slate-900 break-words">{address || "—"}</p>
+            {phone && <p className="text-[11px] font-semibold text-slate-700">Phone: {phone}</p>}
             <span className="text-[11px] text-slate-500 block">
               {isOutOfHome ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell"}
             </span>
-            <button type="button" onClick={() => onEditStep(4)} className="text-sky-600 font-semibold hover:underline cursor-pointer">Edit Address →</button>
+            <button type="button" onClick={() => onEditStep(4)} className="text-sky-600 font-semibold hover:underline cursor-pointer">Edit Address &amp; Phone →</button>
           </div>
         </div>
 

@@ -27,7 +27,7 @@ export function HowItWorksSection() {
 
   const currentService = SERVICES_DATA[activeService];
 
-  const [rates, setRates] = React.useState({ bagPrice: 32.50, poundPrice: 1.99 });
+  const [rates, setRates] = React.useState<{ bagPrice: number; poundPrice: number } | null>(null);
 
   React.useEffect(() => {
     fetch("/api/pricing")
@@ -35,8 +35,8 @@ export function HowItWorksSection() {
       .then((data) => {
         if (data?.pricing) {
           setRates({
-            bagPrice: Number(data.pricing.bag_price ?? data.pricing.base_bag_price ?? 32.50),
-            poundPrice: Number(data.pricing.pound_price ?? 1.99),
+            bagPrice: Number(data.pricing.bag_price),
+            poundPrice: Number(data.pricing.pound_price),
           });
         }
       })
@@ -44,9 +44,9 @@ export function HowItWorksSection() {
   }, []);
 
   const displayPrice = activeService === "bag"
-    ? `$${rates.bagPrice.toFixed(2)} / bag (about 2 loads)`
+    ? rates ? `$${rates.bagPrice.toFixed(2)} / bag` : "Pricing managed by administrator"
     : activeService === "pound"
-      ? `$${rates.poundPrice.toFixed(2)} / lb (weighed intake)`
+      ? rates ? `$${rates.poundPrice.toFixed(2)} / lb` : "Pricing managed by administrator"
       : currentService.price;
 
   // Auto-cycle through the 4 steps along the delivery route on desktop/idle

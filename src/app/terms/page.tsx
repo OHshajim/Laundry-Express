@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ShieldCheck, Sparkles, HeartHandshake, AlertCircle, ArrowLeft, Phone } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Phone } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default async function TermsPage() {
             Terms of Service &amp; Guarantee Policies
           </h1>
           <p className="text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed">
-            At Laundry Express, we treat your clothing like our own. Every order is backed by our verified dual photo proof guarantee and dedicated customer care team in McHenry County, IL.
+            Review the current service terms and guarantees published by Laundry Express.
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default async function TermsPage() {
             <ShieldCheck className="h-10 w-10 text-primary mx-auto opacity-60" />
             <h3 className="text-base font-bold text-slate-900">Standard Service Commitments</h3>
             <p className="text-xs text-slate-600 max-w-lg mx-auto">
-              Our complete terms and satisfaction guarantees are maintained by our operations team. If you have questions about care instructions, contact customer support anytime.
+              Terms and guarantees will appear here when they are published by the operations team.
             </p>
           </div>
         )}
@@ -92,7 +92,7 @@ export default async function TermsPage() {
           <div className="space-y-2 text-center md:text-left">
             <h3 className="text-xl font-black">Questions About Our Terms or Guarantees?</h3>
             <p className="text-xs sm:text-sm text-pink-100 max-w-xl">
-              Our Lake in the Hills customer care team is available daily from 8:00 AM to 6:00 PM.
+              Contact our customer care team with questions about these terms.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 shrink-0">

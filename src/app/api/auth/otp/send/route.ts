@@ -1,30 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { OtpService } from "@/lib/security/otp-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
-
-// Rate limiting map (5 OTP requests per minute per IP)
-const otpRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
-
-function checkOtpRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 5;
-
-  const entry = otpRateLimitMap.get(ip);
-  if (!entry || now > entry.expiresAt) {
-    otpRateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
-  entry.count += 1;
-  return true;
-}
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { getVerifiedUser } from "@/lib/auth-request";
+import { UserDbService } from "@/lib/services/user-db-service";
 
 /**
  * POST /api/auth/otp/send
@@ -33,8 +11,7 @@ function checkOtpRateLimit(ip: string): boolean {
  */
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (!checkOtpRateLimit(ip)) {
+    if (!await consumeRateLimit(req, "otp-send", 5, 60)) {
       return NextResponse.json(
         { success: false, error: "Too many code requests. Please wait 60 seconds." },
         { status: 429 }
@@ -51,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (purpose !== "change_password" && purpose !== "reset_password") {
+    if (purpose !== "change_password" && purpose !== "reset_password" && purpose !== "register_email") {
       return NextResponse.json(
         { success: false, error: "Invalid purpose specified." },
         { status: 400 }
@@ -62,18 +39,28 @@ export async function POST(req: NextRequest) {
 
     // If changing password in settings, verify caller is authenticated and owns the email
     if (purpose === "change_password") {
-      const token = await getToken({ req, secret: AUTH_SECRET });
-      if (!token) {
+      const verified = await getVerifiedUser(req);
+      if (!verified) {
         return NextResponse.json(
           { success: false, error: "Unauthorized. Please sign in to change your password." },
           { status: 401 }
         );
       }
-      if (token.email && token.email.toLowerCase() !== normalizedEmail && token.role !== "admin") {
+      if (verified.user.email.toLowerCase() !== normalizedEmail) {
         return NextResponse.json(
           { success: false, error: "Forbidden. You can only request codes for your own account." },
           { status: 403 }
         );
+      }
+    }
+
+    if (purpose === "reset_password") {
+      const user = await UserDbService.getUserByEmail(normalizedEmail);
+      if (!user?.is_active) {
+        return NextResponse.json({
+          success: true,
+          message: "If an active account is associated with this email, a verification code has been sent.",
+        }, { headers: { "Cache-Control": "no-store, max-age=0" } });
       }
     }
 
@@ -87,10 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      {
-        success: true,
-        message: `A 6-digit verification code has been dispatched to ${normalizedEmail}.`,
-      },
+      { success: true, message: "A 6-digit verification code has been dispatched." },
       {
         status: 200,
         headers: { "Cache-Control": "no-store, max-age=0" },

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Plus, Trash2, Droplets } from "lucide-react";
+import { Sparkles, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
@@ -23,71 +23,74 @@ export function DetergentsManager() {
   const [detType, setDetType] = React.useState<"liquid" | "powder" | "pods">("liquid");
   const [price, setPrice] = React.useState<string>("");
   const [description, setDescription] = React.useState("");
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
-    fetch("/api/catalog")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.detergents) && data.detergents.length > 0) {
-          setDetergents(data.detergents);
-        }
+    fetch("/api/catalog?all=true", { cache: "no-store" })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || "Unable to load detergent catalog.");
+        return data;
       })
-      .catch(() => {});
+      .then((data) => {
+        if (Array.isArray(data.detergents)) setDetergents(data.detergents.map((item: DetergentConfig & { is_active?: boolean }) => ({
+          ...item, in_stock: item.is_active ?? item.in_stock,
+        })));
+      })
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load detergent catalog."));
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-
-    const numPrice = parseFloat(price) || 0;
-    const newD: DetergentConfig = {
-      id: `det-${Date.now()}`,
-      name: name.trim(),
-      brand: brand.trim() || "Standard",
-      type: detType,
-      price: numPrice,
-      description: description.trim() || "Laundry wash formulation.",
-      in_stock: true,
-    };
-
-    setDetergents((prev) => [...prev, newD]);
-    setName("");
-    setBrand("");
-    setDescription("");
-    setPrice("");
-
+    setError("");
     try {
-      await fetch("/api/catalog", {
+      const response = await fetch("/api/catalog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newD),
+        body: JSON.stringify({ name: name.trim(), brand: brand.trim(), type: detType, price: Number(price), description: description.trim(), is_active: true }),
       });
-    } catch {}
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to save detergent.");
+      setDetergents((prev) => [...prev, { ...data.item, in_stock: data.item.is_active }]);
+      setName(""); setBrand(""); setDescription(""); setPrice("");
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to save detergent.");
+    }
   };
 
   const handleToggleStock = async (id: string) => {
     const existing = detergents.find((d) => d.id === id);
     if (!existing) return;
-    const updated = { ...existing, in_stock: !existing.in_stock };
-    setDetergents((prev) => prev.map((d) => (d.id === id ? updated : d)));
+    setError("");
     try {
-      await fetch("/api/catalog", {
+      const response = await fetch("/api/catalog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
+        body: JSON.stringify({ ...existing, in_stock: !existing.in_stock, is_active: !existing.in_stock }),
       });
-    } catch {}
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to update detergent.");
+      setDetergents((prev) => prev.map((d) => d.id === id ? { ...data.item, in_stock: data.item.is_active } : d));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to update detergent.");
+    }
   };
 
   const handleDelete = async (id: string) => {
-    setDetergents((prev) => prev.filter((d) => d.id !== id));
+    setError("");
     try {
-      await fetch(`/api/catalog?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-    } catch {}
+      const response = await fetch(`/api/catalog?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to delete detergent.");
+      setDetergents((prev) => prev.filter((d) => d.id !== id));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to delete detergent.");
+    }
   };
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs space-y-6">
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>

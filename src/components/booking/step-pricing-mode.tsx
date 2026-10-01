@@ -5,24 +5,22 @@ import { cn } from "@/lib/utils";
 interface StepPricingModeProps {
   selectedMode: PricingMode;
   onSelectMode: (mode: PricingMode) => void;
-  bagPrice?: number;
-  poundPrice?: number;
-  minLbs?: number;
-  freeDeliveryBags?: number;
-  freeDeliveryLbs?: number;
+  bagPrice: number;
+  poundPrice: number;
+  minLbs: number;
+  freeDeliveryBags: number;
+  freeDeliveryLbs: number;
 }
 
 export function StepPricingMode({
   selectedMode,
   onSelectMode,
-  bagPrice = 32.50,
-  poundPrice = 1.99,
-  minLbs = 10,
-  freeDeliveryBags = 2,
-  freeDeliveryLbs = 30,
+  bagPrice,
+  poundPrice,
+  minLbs,
+  freeDeliveryBags,
+  freeDeliveryLbs,
 }: StepPricingModeProps) {
-  const effectivePoundRate = poundPrice || 1.99;
-
   const modes: Array<{
     id: PricingMode;
     title: string;
@@ -44,7 +42,7 @@ export function StepPricingMode({
       title: "By Weight (Per Pound / lb)",
       badge: `${freeDeliveryLbs}+ lbs = Free Delivery`,
       description: "Pay purely by weighed volume. Weighed on precision scale at our facility.",
-      priceLabel: `$${effectivePoundRate.toFixed(2)} / lb (${minLbs} lbs min)`,
+      priceLabel: `$${poundPrice.toFixed(2)} / lb (${minLbs} lbs min)`,
       icon: Scale,
     },
     {

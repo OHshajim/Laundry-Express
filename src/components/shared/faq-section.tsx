@@ -4,11 +4,15 @@ import * as React from "react";
 import { ChevronDown, HelpCircle, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_CONFIG } from "@/lib/constants";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 export function FaqSection() {
   const [openIndex, setOpenIndex] = React.useState<number | null>(0);
   const [faqList, setFaqList] = React.useState<{ q: string; a: string }[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
 
   React.useEffect(() => {
     fetch("/api/content?type=faqs")
@@ -79,7 +83,7 @@ export function FaqSection() {
         ) : (
           <div className="text-center py-10 px-6 rounded-3xl bg-white border border-slate-200/80 space-y-3">
             <p className="text-sm font-semibold text-slate-700">Have questions about pickups, delivery, or custom detergents?</p>
-            <p className="text-xs text-slate-500">Our customer support team is available daily from 8:00 AM to 6:00 PM.</p>
+            <p className="text-xs text-slate-500">Our customer support team is available daily from {slot1} and {slot2}.</p>
             <a
               href={`tel:${APP_CONFIG.supportPhone}`}
               className="inline-flex items-center gap-2 py-2.5 px-5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-dark transition-all"

@@ -70,7 +70,7 @@ export function HowItWorksStep({
       >
         {/* Top Indicator Row */}
         <div>
-          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div className="flex flex-col items-start gap-2 mb-4">
             <span
               className={`text-xs font-black px-2.5 py-1 rounded-full border transition-colors shrink-0 ${
                 isActive
@@ -85,7 +85,7 @@ export function HowItWorksStep({
 
             <Badge
               variant={isActive ? "hero" : "secondary"}
-              className="text-[10px] uppercase tracking-wider font-extrabold shrink-0"
+              className="max-w-full whitespace-normal break-words text-left text-[10px] leading-tight uppercase tracking-wider font-extrabold"
             >
               {step.badge}
             </Badge>

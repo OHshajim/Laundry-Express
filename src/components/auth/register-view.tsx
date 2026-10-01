@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { UserPlus, Eye, EyeOff, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
+import { EmailVerificationField } from "@/components/auth/email-verification-field";
 
 /**
  * RegisterView Component
@@ -29,6 +30,7 @@ export function RegisterView() {
   const [phone, setPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [verificationCode, setVerificationCode] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -44,12 +46,16 @@ export function RegisterView() {
     e.preventDefault();
     setErrorMsg("");
 
-    if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters long.");
+    if (password.length < 8) {
+      setErrorMsg("Password must be at least 8 characters long.");
       return;
     }
     if (password !== confirmPassword) {
       setErrorMsg("Passwords do not match. Please verify.");
+      return;
+    }
+    if (verificationCode.trim().length !== 6) {
+      setErrorMsg("Enter the six-digit code sent to your email.");
       return;
     }
 
@@ -59,6 +65,7 @@ export function RegisterView() {
         fullName: fullName.trim() || "Valued Customer",
         email: email.trim().toLowerCase(),
         password,
+        verificationCode: verificationCode.trim(),
         phone: phone.trim() || undefined,
       });
 
@@ -157,6 +164,11 @@ export function RegisterView() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          />
+          <EmailVerificationField
+            email={email}
+            onCodeChange={setVerificationCode}
+            disabled={isSubmitting || isGoogleLoading}
           />
         </div>
 

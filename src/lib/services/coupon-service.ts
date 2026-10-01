@@ -16,30 +16,23 @@ export interface CouponItem {
 const isUuid = (val?: string): boolean =>
   Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
-let cachedCoupons: CouponItem[] = [];
-
 export class CouponService {
   static async getCoupons(): Promise<CouponItem[]> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
-      if (!error && data && data.length > 0) {
-        cachedCoupons = data.map((d) => ({
-          id: d.id,
-          code: d.code,
-          title: d.title || "",
-          discount_type: d.discount_type,
-          discount_value: Number(d.discount_value ?? 0),
-          min_order_amount: Number(d.min_order_amount ?? 0),
-          max_uses: d.max_uses ? Number(d.max_uses) : undefined,
-          expires_at: d.expires_at || undefined,
-          is_active: d.is_active ?? true,
-        }));
-      } else if (!error && data && data.length === 0) {
-        cachedCoupons = [];
-      }
-    } catch {}
-    return cachedCoupons;
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
+    if (error) throw new Error(`Unable to load coupons: ${error.message}`);
+    return (data ?? []).map((item) => ({
+      id: item.id,
+      code: item.code,
+      title: item.title || "",
+      discount_type: item.discount_type,
+      discount_value: Number(item.discount_value ?? 0),
+      min_order_amount: Number(item.min_order_amount ?? 0),
+      max_uses: item.max_uses == null ? undefined : Number(item.max_uses),
+      used_count: Number(item.used_count ?? 0),
+      expires_at: item.expires_at || undefined,
+      is_active: item.is_active ?? true,
+    }));
   }
 
   static async validateCoupon(code: string, subtotal: number): Promise<{ valid: boolean; coupon?: CouponItem; error?: string }> {
@@ -49,6 +42,9 @@ export class CouponService {
 
     if (!found) return { valid: false, error: "Invalid coupon code." };
     if (!found.is_active) return { valid: false, error: "This coupon is no longer active." };
+    if (found.max_uses != null && (found.used_count || 0) >= found.max_uses) {
+      return { valid: false, error: "This coupon has reached its usage limit." };
+    }
     if (found.expires_at && new Date(found.expires_at).getTime() < Date.now()) {
       return { valid: false, error: "This promo code has expired." };
     }
@@ -60,72 +56,56 @@ export class CouponService {
   }
 
   static async saveCoupon(coupon: Partial<CouponItem>): Promise<CouponItem> {
-    const code = (coupon.code || "PROMO").trim().toUpperCase();
-    const title = (coupon.title || "Special Offer").trim();
-    const discount_type = coupon.discount_type || "fixed_amount";
-    const discount_value = Number(coupon.discount_value ?? 5);
+    const code = coupon.code?.trim().toUpperCase() ?? "";
+    const title = coupon.title?.trim() ?? "";
+    const discount_type = coupon.discount_type;
+    const discount_value = Number(coupon.discount_value);
     const min_order_amount = Number(coupon.min_order_amount ?? 0);
-    const max_uses = coupon.max_uses ? Number(coupon.max_uses) : undefined;
+    const max_uses = coupon.max_uses == null ? undefined : Number(coupon.max_uses);
     const expires_at = coupon.expires_at || undefined;
     const is_active = coupon.is_active ?? true;
-
-    let finalId = isUuid(coupon.id) ? coupon.id! : "";
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      const dbPayload: Record<string, unknown> = {
-        code,
-        title,
-        discount_type,
-        discount_value,
-        min_order_amount,
-        max_uses: max_uses ?? null,
-        expires_at: expires_at ?? null,
-        is_active,
-      };
-
-      if (finalId) dbPayload.id = finalId;
-
-      const { data, error } = await supabase
-        .from("coupons")
-        .upsert(dbPayload, { onConflict: "code" })
-        .select()
-        .single();
-
-      if (!error && data?.id) {
-        finalId = data.id;
-      }
-    } catch {}
-
-    const full: CouponItem = {
-      id: finalId || coupon.id || `cp-${Date.now()}`,
+    if (!code || !title || !discount_type || !Number.isFinite(discount_value) || discount_value <= 0 ||
+      !Number.isFinite(min_order_amount) || min_order_amount < 0 ||
+      (max_uses !== undefined && (!Number.isInteger(max_uses) || max_uses <= 0))) {
+      throw new Error("Enter a code, title, valid discount, and valid usage limits.");
+    }
+    if (discount_type === "percentage" && discount_value > 100) {
+      throw new Error("Percentage discounts cannot exceed 100.");
+    }
+    const dbPayload: Record<string, unknown> = {
       code,
       title,
       discount_type,
       discount_value,
       min_order_amount,
-      max_uses,
-      expires_at,
+      max_uses: max_uses ?? null,
+      expires_at: expires_at ?? null,
       is_active,
     };
-
-    const idx = cachedCoupons.findIndex((c) => (finalId && c.id === finalId) || c.code === code);
-    if (idx >= 0) cachedCoupons[idx] = full;
-    else cachedCoupons.unshift(full);
-
-    return full;
+    if (isUuid(coupon.id)) dbPayload.id = coupon.id;
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("coupons")
+      .upsert(dbPayload, { onConflict: "code" }).select().single();
+    if (error || !data) throw new Error(`Unable to save coupon: ${error?.message || "No coupon returned."}`);
+    return {
+      id: data.id,
+      code: data.code,
+      title: data.title || "",
+      discount_type: data.discount_type,
+      discount_value: Number(data.discount_value),
+      min_order_amount: Number(data.min_order_amount),
+      max_uses: data.max_uses == null ? undefined : Number(data.max_uses),
+      used_count: Number(data.used_count ?? 0),
+      expires_at: data.expires_at || undefined,
+      is_active: data.is_active ?? true,
+    };
   }
 
   static async deleteCoupon(id: string): Promise<boolean> {
-    cachedCoupons = cachedCoupons.filter((c) => c.id !== id && c.code !== id);
-    try {
-      const supabase = createAdminSupabaseClient();
-      if (isUuid(id)) {
-        await supabase.from("coupons").delete().eq("id", id);
-      } else {
-        await supabase.from("coupons").delete().eq("code", id);
-      }
-    } catch {}
+    const supabase = createAdminSupabaseClient();
+    const query = supabase.from("coupons").delete();
+    const { error } = isUuid(id) ? await query.eq("id", id) : await query.eq("code", id.toUpperCase());
+    if (error) throw new Error(`Unable to delete coupon: ${error.message}`);
     return true;
   }
 }

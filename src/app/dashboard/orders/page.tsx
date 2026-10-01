@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Camera, RotateCcw, X, Filter } from "lucide-react";
+import { Camera, RotateCcw, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layout";
 import { OrderPipeline } from "@/components/admin/order-pipeline";
+import { CustomerOrderDetailModal } from "@/components/dashboard/customer-order-detail-modal";
 import type { Order, OrderStatus } from "@/types";
 
 export default function OrdersUnifiedPage() {
@@ -18,32 +18,102 @@ export default function OrdersUnifiedPage() {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [isLoading, setIsLoading] = React.useState(true);
+  const [ordersError, setOrdersError] = React.useState("");
+  const [checkoutStatus, setCheckoutStatus] = React.useState<"pending" | "confirmed" | "failed" | "cancelled" | null>(null);
 
   React.useEffect(() => {
-    fetch("/api/orders")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.orders)) setOrders(data.orders);
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const params = new URLSearchParams(window.location.search);
+    const isCheckoutReturn = params.get("checkout") === "complete";
+    const orderNumber = params.get("order_id");
+    let attempts = 0;
+
+    const loadOrders = async () => {
+      try {
+        const response = await fetch("/api/orders", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok || !data?.success || !Array.isArray(data.orders)) {
+          throw new Error(data?.error || "Unable to load orders.");
+        }
+        if (!active) return;
+        setOrders(data.orders);
+        setOrdersError("");
         setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
+
+        if (isCheckoutReturn) {
+          const order = data.orders.find((item: Order) => item.order_number === orderNumber);
+          if (order?.order_status === "cancelled") {
+            setCheckoutStatus("cancelled");
+          } else if (order?.payment_status === "paid") {
+            setCheckoutStatus("confirmed");
+          } else if (order?.payment_status === "failed") {
+            setCheckoutStatus("failed");
+          } else if (attempts < 30) {
+            setCheckoutStatus("pending");
+            attempts += 1;
+            timer = setTimeout(loadOrders, 2000);
+          } else {
+            setCheckoutStatus("pending");
+          }
+        }
+      } catch (error) {
+        if (!active) return;
+        setOrdersError(error instanceof Error ? error.message : "Unable to load orders.");
+        setIsLoading(false);
+        if (isCheckoutReturn && attempts < 30) {
+          attempts += 1;
+          timer = setTimeout(loadOrders, 2000);
+        }
+      }
+    };
+
+    if (isCheckoutReturn) setCheckoutStatus("pending");
+    void loadOrders();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, []);
 
-  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus } : o)));
+  const updateOrder = async (payload: Record<string, unknown>) => {
     try {
-      await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, status: newStatus }) });
-    } catch {}
+      const response = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) throw new Error(data?.error || "Unable to update order.");
+      setOrdersError("");
+      return {
+        success: true,
+        paymentStatus: typeof data.order?.payment_status === "string" ? data.order.payment_status : undefined,
+      };
+    } catch (error) {
+      setOrdersError(error instanceof Error ? error.message : "Unable to update order.");
+      return { success: false };
+    }
+  };
+
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+    const result = await updateOrder({ orderId, status: newStatus });
+    if (!result.success) return false;
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? {
+      ...o,
+      order_status: newStatus,
+      ...(result.paymentStatus ? { payment_status: result.paymentStatus } : {}),
+    } : o)));
+    return true;
   };
 
   const handleUpdateFinalWeight = async (orderId: string, finalWeight: number) => {
+    if (!(await updateOrder({ orderId, finalWeight })).success) return;
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, final_weight_lbs: finalWeight } : o)));
-    try {
-      await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, finalWeight, finalWeightLbs: finalWeight }) });
-    } catch {}
   };
 
   const handleUploadProof = async (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
+    if (!(await updateOrder({ orderId, proofType, imageUrl, notes })).success) return false;
     setOrders((prev) => prev.map((o) => {
       if (o.id !== orderId) return o;
       return {
@@ -51,9 +121,7 @@ export default function OrdersUnifiedPage() {
         proofs: [...(o.proofs || []), { id: `prf-${Date.now()}`, order_id: orderId, proof_type: proofType, image_url: imageUrl, notes, uploaded_by: "operations-admin", created_at: new Date().toISOString() }],
       };
     }));
-    try {
-      await fetch("/api/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, proofType, imageUrl, notes }) });
-    } catch {}
+    return true;
   };
 
   const filteredOrders = React.useMemo(() => {
@@ -67,6 +135,22 @@ export default function OrdersUnifiedPage() {
       title={isAdmin ? "Orders & Fulfillment Management" : "My Orders & Timeline Tracking"}
       subtitle={isAdmin ? "Track laundry dispatches, upload proof photos, and update wash status" : "Inspect your real-time 4-stage order journey and verified photo proofs"}
     >
+      {ordersError && <p role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{ordersError}</p>}
+      {checkoutStatus && (
+        <div role="status" className={`mb-4 rounded-xl border p-3 text-sm ${
+          checkoutStatus === "confirmed" ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+            : checkoutStatus === "failed" || checkoutStatus === "cancelled" ? "border-rose-200 bg-rose-50 text-rose-800"
+              : "border-amber-200 bg-amber-50 text-amber-900"
+        }`}>
+          {checkoutStatus === "cancelled"
+            ? "Your order was cancelled. Cancellation does not automatically refund a completed payment; contact the admin to discuss a refund."
+            : checkoutStatus === "confirmed"
+            ? "Payment confirmed. Your order is now confirmed and the invoice is available in its details."
+            : checkoutStatus === "failed"
+              ? "Payment was not confirmed. The order remains visible below; contact support if you believe this is an error."
+              : "Payment is being verified. Your order will remain pending until Stripe confirms payment."}
+        </div>
+      )}
       {isAdmin ? (
         <OrderPipeline
           orders={orders}
@@ -87,6 +171,7 @@ export default function OrdersUnifiedPage() {
                 className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 bg-white cursor-pointer"
               >
                 <option value="all">All Orders ({orders.length})</option>
+                <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="driver_assigned">Driver Assigned</option>
                 <option value="picked_up">Picked Up</option>
@@ -131,50 +216,30 @@ export default function OrdersUnifiedPage() {
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
                     <span>Pickup: {order.pickup_date} ({order.pickup_slot})</span>
                     <span>•</span>
-                    <span>{order.bag_count} Bag(s)</span>
+                    <span>
+                      {order.pricing_mode === "per_bag"
+                        ? `${order.bag_count || 1} Bag(s)`
+                        : order.pricing_mode === "package"
+                        ? "Package Credits"
+                        : `${order.final_weight_lbs || order.estimated_weight_lbs || 15} lbs`}
+                    </span>
                     <span>•</span>
                     <span>Total: <strong className="text-slate-900 font-bold">{formatCurrency(order.total_amount)}</strong></span>
                   </div>
                 </div>
 
                 <Button size="sm" variant="outline" className="border-pink-200 text-primary hover:bg-pink-50 text-xs self-start md:self-auto">
-                  View Timeline &amp; Proofs
+                  View Details &amp; Proofs
                 </Button>
               </div>
             ))}
           </div>
 
-          {selectedOrder && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white w-full max-w-lg rounded-3xl p-6 space-y-4 shadow-2xl relative border border-pink-100 max-h-[90vh] overflow-y-auto text-xs">
-                <button type="button" onClick={() => setSelectedOrder(null)} className="absolute top-5 right-5 p-1 rounded-full text-slate-400 hover:text-slate-800">
-                  <X className="h-5 w-5" />
-                </button>
-                <h3 className="text-lg font-black text-slate-900">Order #{selectedOrder.order_number} Details</h3>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="flex justify-between font-bold"><span>Status:</span><span className="capitalize text-primary">{selectedOrder.order_status.replace(/_/g, " ")}</span></div>
-                  <div className="flex justify-between"><span>Scheduled Slot:</span><span>{selectedOrder.pickup_date} ({selectedOrder.pickup_slot})</span></div>
-                  <div className="flex justify-between"><span>Doorstep Address:</span><span>{selectedOrder.pickup_address}</span></div>
-                  <div className="flex justify-between font-black pt-1 border-t border-slate-200"><span>Total Paid:</span><span>{formatCurrency(selectedOrder.total_amount)}</span></div>
-                </div>
-                {selectedOrder.proofs && selectedOrder.proofs.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="font-bold text-slate-900 block">Verified Driver Photos</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {selectedOrder.proofs.map((prf) => (
-                        <div key={prf.id} className="relative h-28 rounded-lg overflow-hidden border border-slate-200">
-                          <Image src={prf.image_url} alt="Proof" fill className="object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="flex justify-end pt-2">
-                  <Button onClick={() => setSelectedOrder(null)} className="bg-slate-900 text-white text-xs">Close</Button>
-                </div>
-              </div>
-            </div>
-          )}
+          <CustomerOrderDetailModal
+            order={selectedOrder}
+            isOpen={!!selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+          />
         </div>
       )}
     </DashboardPageLayout>

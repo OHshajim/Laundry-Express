@@ -59,11 +59,11 @@ export function OrderCard({
       {/* Customer Info & Badges */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-900">{order.user?.full_name || "Customer"}</span>
+          <span className="font-bold text-slate-900">{order.customer_name || order.user?.full_name || "Customer"}</span>
           <span className="font-black text-slate-900 text-sm">{formatCurrency(order.total_amount)}</span>
         </div>
         <p className="text-[11px] text-slate-500 line-clamp-1">
-          {order.customer_notes || "Doorstep Address"}
+          {[order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address"}
         </p>
 
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
@@ -133,6 +133,18 @@ export function OrderCard({
           </Button>
         )}
 
+        {order.order_status === "pending" && order.payment_method === "cash_on_delivery" && (
+          <Button
+            variant="hero"
+            size="sm"
+            className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => onUpdateStatus(order.id, "driver_assigned")}
+          >
+            <Send className="h-3.5 w-3.5 mr-1 shrink-0" />
+            Accept Order
+          </Button>
+        )}
+
         {order.order_status === "driver_assigned" && (
           <Button
             variant="primary"
@@ -180,15 +192,10 @@ export function OrderCard({
         )}
 
         {order.order_status === "completed" && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-8 px-2.5 text-xs text-emerald-800 bg-emerald-50 border-emerald-200"
-            onClick={() => onOpenProofModal(order, "dropoff")}
-          >
-            <Check className="h-3.5 w-3.5 mr-1 text-emerald-600 shrink-0" />
-            Proofs ({order.proofs?.length || 0})
-          </Button>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <Check className="h-3 w-3 text-emerald-600 shrink-0" />
+            Completed
+          </span>
         )}
       </div>
     </div>

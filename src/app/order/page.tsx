@@ -7,6 +7,7 @@ import { OrderFlow } from "@/components/order/order-flow";
 import { Sparkles, ShieldCheck, Truck } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
+import { SlotChip } from "@/components/order/slot-chip";
 
 export const metadata: Metadata = {
   title: "Book Laundry Pickup & Pay — Fast Checkout",
@@ -83,7 +84,7 @@ export default async function OrderPage() {
                 <ShieldCheck className="h-3.5 w-3.5" /> Photo Proof Guaranteed
               </span>
               <span>•</span>
-              <span className="text-slate-600">Daily Slots: 8am-12pm &amp; 1pm-6pm</span>
+              <SlotChip />
             </div>
           </div>
 

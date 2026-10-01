@@ -22,6 +22,7 @@ export interface RegisterPayload {
   fullName: string;
   email: string;
   password: string;
+  verificationCode: string;
   phone?: string;
 }
 
@@ -85,38 +86,11 @@ class AuthService {
   }
 
   /**
-   * Continue with Google OAuth
-   */
-  async loginWithGoogle(): Promise<AuthResponse> {
-    try {
-      const res = await fetch(`${this.baseUrl}/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return {
-          success: false,
-          error: data.error || "Google authentication failed.",
-        };
-      }
-
-      return data;
-    } catch {
-      return {
-        success: false,
-        error: "Google authentication service temporarily unreachable.",
-      };
-    }
-  }
-
-  /**
    * Request 6-digit email OTP for password change or reset
    */
   async sendOtp(
     email: string,
-    purpose: "change_password" | "reset_password"
+    purpose: "change_password" | "reset_password" | "register_email"
   ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const res = await fetch(`${this.baseUrl}/otp/send`, {

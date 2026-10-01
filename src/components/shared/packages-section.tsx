@@ -1,9 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { Package, Check, Zap, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 export function PackagesSection() {
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
   const packages = [
     {
       id: "pkg-1",
@@ -34,7 +40,7 @@ export function PackagesSection() {
         "60 lbs monthly laundry allowance",
         "Precision scale weight verification",
         "Everyday wash, towels, and clothing included",
-        "Flexible 8am-12pm or 1pm-6pm scheduling",
+        `Flexible ${slot1} or ${slot2} scheduling`,
         "Unused lbs roll over for 30 days",
       ],
       isFeatured: false,

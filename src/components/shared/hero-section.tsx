@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FloatingBubbles } from "./floating-bubbles";
 import { HeroMascot } from "./hero-mascot";
 import { OrderTrackingSummary } from "@/components/home/order-tracking-summary";
+import { useSettings } from "@/hooks/use-settings";
 
 /**
  * HeroSection Component
@@ -22,14 +23,15 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ initialBagPrice }: HeroSectionProps) {
-  const [bagPrice, setBagPrice] = React.useState<number>(() => Number(initialBagPrice ?? 32.50));
+  const [bagPrice, setBagPrice] = React.useState<number | null>(() => initialBagPrice ?? null);
+  const { deliveryZones } = useSettings();
 
   React.useEffect(() => {
     fetch("/api/pricing")
       .then((res) => res.json())
       .then((data) => {
         if (data?.pricing) {
-          const price = Number(data.pricing.bag_price ?? data.pricing.base_bag_price);
+          const price = Number(data.pricing.bag_price);
           if (price > 0) setBagPrice(price);
         }
       })
@@ -55,7 +57,7 @@ export function HeroSection({ initialBagPrice }: HeroSectionProps) {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
               </span>
               <p className="font-bold text-slate-900">
-                Lake in the Hills &amp; Surrounding (30-Mile Radius)
+                {deliveryZones.length ? deliveryZones.join(", ") : "Service areas configured by Laundry Express"}
               </p>
             </div>
 
@@ -75,15 +77,15 @@ export function HeroSection({ initialBagPrice }: HeroSectionProps) {
                 More Time For What Matters.
               </p>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-                Only <strong className="text-slate-900 font-black">${bagPrice.toFixed(2)} per 13-gallon bag</strong> (about 2 loads). Professional wash, dry, and crisp fold returned fresh to your doorstep within 24 hours. Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin &amp; Schaumburg (30-mile radius).
+                {bagPrice !== null && <>Only <strong className="text-slate-900 font-black">${bagPrice.toFixed(2)} per 13-gallon bag</strong> (about 2 loads). </>}Professional wash, dry, and crisp fold returned fresh to your doorstep within 24 hours.
               </p>
             </div>
 
             {/* Core Perks */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 max-w-lg mx-auto lg:mx-0 text-xs">
               <div className="p-3 rounded-xl bg-white border border-primary-pale shadow-2xs text-center sm:text-left">
-                <span className="font-bold text-slate-900 block text-sm">${bagPrice.toFixed(2)} / Bag</span>
-                <span className="text-slate-500 font-medium">About 2 Loads (13-Gal)</span>
+                <span className="font-bold text-slate-900 block text-sm">{bagPrice !== null ? `$${bagPrice.toFixed(2)} / Bag` : "Rates set by Laundry Express"}</span>
+                <span className="text-slate-500 font-medium">{bagPrice !== null ? "About 2 Loads (13-Gal)" : "View current plans"}</span>
               </div>
               <div className="p-3 rounded-xl bg-white border border-primary-pale shadow-2xs text-center sm:text-left">
                 <span className="font-bold text-slate-900 block text-sm">24h Express</span>

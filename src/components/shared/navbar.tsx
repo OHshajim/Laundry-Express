@@ -66,7 +66,7 @@ export function Navbar() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold">
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -85,7 +85,7 @@ export function Navbar() {
             })}
           </nav>
 
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             {!mounted || !isAuthenticated ? (
               <Link href="/login">
                 <Button
@@ -182,7 +182,7 @@ export function Navbar() {
             </Link>
           </div>
 
-          <div className="flex sm:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2">
             <Link href="/order">
               <Button variant="hero" size="sm" className={scrolled ? "bg-white text-primary text-xs" : "text-xs"}>
                 Book
@@ -192,6 +192,8 @@ export function Navbar() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`p-2 rounded-lg ${scrolled ? "text-white hover:bg-white/10" : "text-slate-800 hover:bg-slate-100"}`}
               aria-label="Toggle Menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="site-mobile-menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -200,7 +202,7 @@ export function Navbar() {
       </div>
 
       {mobileMenuOpen && (
-        <div className={`sm:hidden px-5 pt-3 pb-6 space-y-3 ${scrolled ? "bg-primary text-white" : "bg-white text-slate-800 shadow-xl"}`}>
+        <div id="site-mobile-menu" className={`lg:hidden px-5 pt-3 pb-6 space-y-3 ${scrolled ? "bg-primary text-white" : "bg-white text-slate-800 shadow-xl"}`}>
           <div className="flex flex-col gap-2.5 font-semibold text-sm">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className={`py-1.5 ${scrolled ? "text-pink-100" : "text-slate-700"}`}>

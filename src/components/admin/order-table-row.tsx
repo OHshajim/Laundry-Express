@@ -43,10 +43,10 @@ export function OrderTableRow({
 
       <td className="p-3.5">
         <span className="font-semibold text-slate-800 block">
-          {order.user?.full_name || "Customer"}
+          {order.customer_name || order.user?.full_name || "Customer"}
         </span>
-        <span className="text-[11px] text-slate-500 block max-w-xs truncate">
-          {order.customer_notes || "Doorstep Address"}
+        <span className="text-[11px] text-slate-500 block max-w-xs truncate" title={[order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address"}>
+          {[order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address"}
         </span>
 
         {/* Status Callout Badges */}
@@ -138,6 +138,21 @@ export function OrderTableRow({
           </Button>
         )}
 
+        {order.order_status === "pending" && order.payment_method === "cash_on_delivery" && (
+          <Button
+            variant="hero"
+            size="sm"
+            className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdateStatus(order.id, "driver_assigned");
+            }}
+          >
+            <Send className="h-3.5 w-3.5 mr-1 shrink-0" />
+            Accept Order
+          </Button>
+        )}
+
         {order.order_status === "driver_assigned" && (
           <Button
             variant="primary"
@@ -202,19 +217,10 @@ export function OrderTableRow({
         )}
 
         {order.order_status === "completed" && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-8 px-2.5 text-xs text-emerald-800 bg-emerald-50 border-emerald-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenProofModal(order, "dropoff");
-            }}
-            title="View verified delivery proof"
-          >
-            <Check className="h-3.5 w-3.5 mr-1 text-emerald-600 shrink-0" />
-            Proofs ({order.proofs?.length || 0})
-          </Button>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <Check className="h-3 w-3 text-emerald-600 shrink-0" />
+            Completed
+          </span>
         )}
       </td>
     </tr>

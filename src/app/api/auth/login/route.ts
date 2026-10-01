@@ -1,28 +1,6 @@
 import { NextResponse } from "next/server";
-import type { User } from "@/types";
 import { UserDbService } from "@/lib/services/user-db-service";
-
-// In-memory rate limiting tracker (5 requests per 60 seconds per IP)
-const rateLimitMap = new Map<string, { count: number; expiresAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 5;
-
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.expiresAt) {
-    rateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
-  entry.count += 1;
-  return true;
-}
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/auth/login
@@ -35,8 +13,7 @@ function checkRateLimit(ip: string): boolean {
  */
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (!checkRateLimit(ip)) {
+    if (!await consumeRateLimit(req, "auth_login", 5, 60)) {
       return NextResponse.json(
         {
           success: false,

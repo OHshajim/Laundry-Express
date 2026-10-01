@@ -1,14 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Order, OrderStatus, PricingConfig, User } from "@/types";
+import type { Order, OrderStatus, PricingConfig } from "@/types";
 
 /**
- * Creates an administrative Supabase client equipped with the service role key.
- * If only publishable key is configured, gracefully uses publishable key.
+ * Creates an administrative Supabase client with the service role key.
  * Strictly adheres to the 100-250 lines architectural rule.
  */
 export function createAdminSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const apiKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+  const apiKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !apiKey) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.");
+  }
 
   return createClient(supabaseUrl, apiKey, {
     auth: {

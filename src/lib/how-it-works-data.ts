@@ -26,18 +26,18 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
     id: "bag",
     label: "By the Bag (13 Gal)",
     badge: "Most Popular Wash & Fold",
-    price: "$32.50 / bag (about 2 loads)",
+    price: "Admin-managed bag pricing",
     icon: Shirt,
     steps: [
       {
         id: 1,
         numberStr: "01",
         shortLabel: "Schedule Pickup",
-        badge: "Morning or Afternoon",
+        badge: "Choose a pickup window",
         icon: CalendarClock,
         actionText: "Select your 13-gallon bag count",
-        detail: "Pick convenient morning (8am–12pm) or afternoon (1pm–6pm) window.",
-        helperNote: "2+ Bags = 100% Free Delivery",
+        detail: "Choose an available pickup window during checkout.",
+        helperNote: "Delivery threshold is set by the administrator.",
       },
       {
         id: 2,
@@ -56,7 +56,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         badge: "Premium Detergent",
         icon: Camera,
         actionText: "Washed, fluffed & neatly folded",
-        detail: "Sorted by darks/lights and washed with Tide Pods cold water care.",
+        detail: "Laundry is washed and dried according to the selected service.",
         helperNote: "Zero color bleeding or shrinkage",
       },
       {
@@ -74,8 +74,8 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
   pound: {
     id: "pound",
     label: "By-the-Pound (lb)",
-    badge: "$1.99 / lb Bulk",
-    price: "$1.99 / lb",
+    badge: "Bulk laundry",
+    price: "Admin-managed per-pound pricing",
     icon: Scale,
     steps: [
       {
@@ -86,7 +86,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         icon: CalendarClock,
         actionText: "Book by estimated volume",
         detail: "Select pickup day and slot. Ideal for bulk, family, or Airbnb laundry.",
-        helperNote: "10 lbs minimum per pickup",
+        helperNote: "Minimum order weight is set by the administrator.",
       },
       {
         id: 2,
@@ -116,7 +116,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
         icon: Sparkles,
         actionText: "Freshly folded & returned",
         detail: "Delivered back to your door folded crisp within 24 hours.",
-        helperNote: "Free delivery over 30 lbs",
+        helperNote: "Free delivery threshold is set by the administrator.",
       },
     ],
   },
@@ -124,7 +124,7 @@ export const SERVICES_DATA: Record<ServiceKey, ServiceConfig> = {
     id: "package",
     label: "Saver Packages",
     badge: "Save Up to 20%",
-    price: "Pre-paid Bundle Credits",
+    price: "Admin-managed package plans",
     icon: Package,
     steps: [
       {

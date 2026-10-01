@@ -13,7 +13,7 @@ interface CustomerTxn {
   id: string;
   order_number: string;
   amount: number;
-  status: "succeeded" | "pending" | "refunded";
+  status: "succeeded" | "pending" | "failed" | "refunded";
   date: string;
   method: string;
   card_last4: string;
@@ -42,7 +42,9 @@ export default function TransactionsUnifiedPage() {
       id: `txn-${o.id}`,
       order_number: o.order_number,
       amount: o.total_amount,
-      status: o.order_status === "cancelled" ? ("refunded" as const) : (o.payment_status === "paid" || o.order_status === "completed" ? ("succeeded" as const) : ("pending" as const)),
+      status: o.payment_status === "paid" ? "succeeded"
+        : o.payment_status === "refunded" ? "refunded"
+          : o.payment_status === "failed" ? "failed" : "pending",
       date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Today",
       method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Payment",
       card_last4: o.payment_method === "card" ? "Online" : "",
@@ -105,6 +107,7 @@ export default function TransactionsUnifiedPage() {
                 <option value="all">All Payments</option>
                 <option value="succeeded">Succeeded</option>
                 <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
                 <option value="refunded">Refunded</option>
               </select>
             </div>
@@ -126,7 +129,7 @@ export default function TransactionsUnifiedPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-black text-slate-900 text-xs sm:text-sm">#{txn.order_number}</span>
-                          <Badge variant="success" className="text-[10px] uppercase font-bold">{txn.status}</Badge>
+                          <Badge variant={txn.status === "succeeded" ? "success" : txn.status === "pending" ? "warning" : "danger"} className="text-[10px] uppercase font-bold">{txn.status}</Badge>
                         </div>
                         <span className="text-[11px] text-slate-500 block">{txn.date} • {txn.method}</span>
                       </div>

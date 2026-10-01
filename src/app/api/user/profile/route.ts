@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { UserDbService } from "@/lib/services/user-db-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 /**
  * POST /api/user/profile
@@ -11,20 +9,21 @@ const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-
  */
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Please sign in." },
         { status: 401 }
       );
     }
+    const { user } = verified;
 
     const body = await req.json();
     const { fullName, phone, address, userId } = body;
-    const targetUserId = (userId as string) || token.id;
+    const targetUserId = (userId as string) || user.id;
 
     // Prevent IDOR: customers can only edit their own profile
-    if (token.role !== "admin" && targetUserId !== token.id) {
+    if (user.role !== "admin" && targetUserId !== user.id) {
       return NextResponse.json(
         { success: false, error: "Forbidden. You cannot edit another user's profile." },
         { status: 403 }
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
       updates.address = address.trim();
     }
 
-    const updated = await UserDbService.updateProfile(targetUserId, updates, token.email || undefined);
+    const updated = await UserDbService.updateProfile(targetUserId, updates, user.email || undefined);
     if (!updated) {
       return NextResponse.json(
         { success: false, error: "Failed to update profile in database." },
@@ -72,18 +71,13 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token?.email) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await UserDbService.getUserByEmail(token.email);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "User profile not found" }, { status: 404 });
-    }
-
     return NextResponse.json(
-      { success: true, user },
+      { success: true, user: verified.user },
       { status: 200, headers: { "Cache-Control": "no-store, max-age=0" } }
     );
   } catch (error: unknown) {
@@ -91,4 +85,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
-

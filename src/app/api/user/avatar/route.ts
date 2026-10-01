@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { ImageStorageService } from "@/lib/services/image-storage-service";
-import { UserDbService } from "@/lib/services/user-db-service";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 /**
  * POST /api/user/avatar
@@ -16,28 +15,20 @@ import { UserDbService } from "@/lib/services/user-db-service";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
-
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Please sign in to update your avatar." },
         { status: 401 }
       );
     }
+    const { user } = verified;
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const requestedUserId = (formData.get("userId") as string | null) || token.id;
-
-    if (requestedUserId !== token.id) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden. You cannot modify another user's avatar." },
-        { status: 403 }
-      );
-    }
+    const requestedUserId = user.id;
 
     if (!file) {
       return NextResponse.json(
@@ -77,21 +68,11 @@ export async function POST(req: NextRequest) {
     );
 
     if (!uploadResult.success || !uploadResult.url) {
-      const base64Data = buffer.toString("base64");
-      const dataUrl = `data:${file.type};base64,${base64Data}`;
-      await UserDbService.updateAvatar(requestedUserId, dataUrl);
-
       return NextResponse.json(
-        {
-          success: true,
-          url: dataUrl,
-          message: "Profile avatar successfully updated in database.",
-        },
-        { status: 200 }
+        { success: false, error: "Unable to store the profile image." },
+        { status: 503 }
       );
     }
-
-    await UserDbService.updateAvatar(requestedUserId, uploadResult.url, token.email || undefined);
 
     return NextResponse.json(
       {

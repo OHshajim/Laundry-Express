@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
+import { getVerifiedUser } from "@/lib/auth-request";
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const plans = await PricingPlanService.getPlans();
+    const verified = await getVerifiedUser(req);
+    const allPlans = await PricingPlanService.getPlans();
+    const plans = verified?.user.role === "admin" ? allPlans : allPlans.filter((plan) => plan.is_active);
     return NextResponse.json({ success: true, plans }, { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load packages";
@@ -16,8 +16,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token || token.role !== "admin") {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
       return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
     }
     const body = await req.json();
@@ -33,10 +33,25 @@ export async function PUT(req: NextRequest) {
   return POST(req);
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
+      return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
+    }
+    const body = await req.json();
+    const updated = await PricingPlanService.updatePlan(body);
+    return NextResponse.json({ success: true, plan: updated }, { status: 200 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Failed to update package";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token || token.role !== "admin") {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
       return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
     }
     const id = req.nextUrl.searchParams.get("id");

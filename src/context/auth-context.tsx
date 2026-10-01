@@ -14,7 +14,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: (callbackUrl?: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterPayload) => Promise<{ success: boolean; error?: string }>;
-  sendOtp: (email: string, purpose: "change_password" | "reset_password") => Promise<{ success: boolean; message?: string; error?: string }>;
+  sendOtp: (email: string, purpose: "change_password" | "reset_password" | "register_email") => Promise<{ success: boolean; message?: string; error?: string }>;
   changePasswordWithOtp: (email: string, otp: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
   resetPasswordWithOtp: (email: string, otp: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
   updateAvatar: (avatarUrl: string) => void;
@@ -23,97 +23,98 @@ export interface AuthContextType {
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
-const LOCAL_STORAGE_USER_KEY = "lx_auth_session_user";
+const PROFILE_CHECK_INTERVAL_MS = 60_000;
+const PROFILE_CHECK_TIMEOUT_MS = 10_000;
 
 function AuthStateBridge({ children }: { children: React.ReactNode }) {
   const { data: session, status, update: updateSession } = useSession();
-  const [localUser, setLocalUser] = React.useState<User | null>(null);
-
-  // Restore cached session on mount without causing hydration mismatch
-  React.useEffect(() => {
-    try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-      if (stored) {
-        setLocalUser(JSON.parse(stored));
-      }
-    } catch {}
-  }, []);
-
-  // Dynamically sync complete profile from database (source of truth)
-  React.useEffect(() => {
-    if (session?.user?.email) {
-      fetch("/api/user/profile")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.success && data?.user) {
-            const db = data.user;
-            setLocalUser((prev) => {
-              const updated: User = {
-                id: db.id || prev?.id || session.user.id || `u-${Date.now()}`,
-                email: db.email || session.user.email || "",
-                full_name: db.full_name || prev?.full_name || session.user.name || "Customer",
-                avatar_url: db.avatar_url || prev?.avatar_url || session.user.image,
-                phone: db.phone || prev?.phone,
-                address: db.address || prev?.address,
-                role: db.role || prev?.role || (session.user as { role?: "admin" | "customer" }).role || "customer",
-                is_active: db.is_active ?? true,
-                created_at: db.created_at || prev?.created_at,
-                updated_at: db.updated_at || new Date().toISOString(),
-              };
-              try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
-              return updated;
-            });
-          }
-        })
-        .catch(() => {});
-    }
-  }, [session?.user?.email]);
+  const [verifiedProfile, setVerifiedProfile] = React.useState<{
+    user: User;
+    sessionId: string;
+    expires: string;
+  } | null>(null);
+  const [profileFailure, setProfileFailure] = React.useState<{
+    sessionId: string;
+    expires: string;
+    message: string;
+  } | null>(null);
+  const [profileRetry, setProfileRetry] = React.useState(0);
 
   React.useEffect(() => {
-    if (session?.user) {
-      const userEmail = session.user.email || "";
-      const sessionRole = (session.user as { role?: "admin" | "customer" }).role;
-      const role = sessionRole || "customer";
+    if (status !== "authenticated") return;
 
-      setLocalUser((prev) => {
-        const resolvedName = prev?.full_name || session.user.name || "Customer";
-        const resolvedAvatar = prev?.avatar_url || session.user.image || (session.user as { avatar_url?: string }).avatar_url || undefined;
-        const activeUser: User = {
-          id: session.user.id || prev?.id || `u-${Date.now()}`,
-          email: userEmail,
-          full_name: resolvedName,
-          avatar_url: resolvedAvatar,
-          phone: prev?.phone || (session.user as { phone?: string }).phone,
-          address: prev?.address,
-          role,
-          is_active: true,
-          created_at: prev?.created_at || new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        if (
-          prev?.id === activeUser.id &&
-          prev?.email === activeUser.email &&
-          prev?.role === activeUser.role &&
-          prev?.avatar_url === activeUser.avatar_url &&
-          prev?.full_name === activeUser.full_name &&
-          prev?.phone === activeUser.phone
-        ) {
-          return prev;
+    let disposed = false;
+    let checking = false;
+    const sessionId = session?.user?.id ?? "";
+    const expires = session?.expires ?? "";
+    if (!sessionId || !expires) return;
+    const validateProfile = async () => {
+      if (checking || disposed) return;
+      checking = true;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), PROFILE_CHECK_TIMEOUT_MS);
+      try {
+        const response = await fetch("/api/user/profile", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (response.status === 401) {
+          setVerifiedProfile(null);
+          setProfileFailure(null);
+          await signOut({ callbackUrl: "/login" });
+          return;
         }
-        try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(activeUser)); } catch {}
-        return activeUser;
-      });
-    } else if (status === "unauthenticated") {
-      setLocalUser((prev) => {
-        if (!prev) return null;
-        try { localStorage.removeItem(LOCAL_STORAGE_USER_KEY); } catch {}
-        return null;
-      });
-    }
-  }, [session, status]);
+        if (!response.ok) {
+          throw new Error("Unable to verify account.");
+        }
+        const result = await response.json();
+        if (!result?.success || !result.user || disposed) {
+          throw new Error("Unable to verify account.");
+        }
+        const dbUser = result.user as User;
+        if (!dbUser.is_active) {
+          throw new Error("Account is no longer active.");
+        }
+        setVerifiedProfile((previous) => {
+          const unchanged = previous &&
+            previous.sessionId === sessionId &&
+            previous.expires === expires &&
+            previous.user.id === dbUser.id &&
+            previous.user.email === dbUser.email &&
+            previous.user.full_name === dbUser.full_name &&
+            previous.user.avatar_url === dbUser.avatar_url &&
+            previous.user.phone === dbUser.phone &&
+            previous.user.address === dbUser.address &&
+            previous.user.role === dbUser.role &&
+            previous.user.is_active === dbUser.is_active &&
+            previous.user.updated_at === dbUser.updated_at;
+          return unchanged ? previous : { user: dbUser, sessionId, expires };
+        });
+        setProfileFailure(null);
+      } catch {
+        if (disposed) return;
+        setProfileFailure({
+          sessionId,
+          expires,
+          message: "We couldn't verify your account right now. Please retry or sign out.",
+        });
+      } finally {
+        window.clearTimeout(timeout);
+        checking = false;
+      }
+    };
 
-  const login = async (email: string, password: string) => {
+    void validateProfile();
+    const timer = window.setInterval(validateProfile, PROFILE_CHECK_INTERVAL_MS);
+    window.addEventListener("focus", validateProfile);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", validateProfile);
+    };
+  }, [session?.user?.id, session?.expires, status, profileRetry]);
+
+  const login = React.useCallback(async (email: string, password: string) => {
     try {
       const res = await signIn("credentials", {
         redirect: false,
@@ -125,96 +126,146 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
         return { success: false, error: res?.error || "Invalid email or password." };
       }
 
+      const refreshedSession = await updateSession();
+      if (!refreshedSession?.user?.id || !refreshedSession.expires) {
+        return {
+          success: false,
+          error: "Sign-in completed, but we couldn't establish your session. Please try again.",
+        };
+      }
+
       return { success: true };
     } catch (err: unknown) {
       return { success: false, error: err instanceof Error ? err.message : "Authentication failed." };
     }
-  };
+  }, [updateSession]);
 
-  const loginWithGoogle = async (callbackUrl: string = "/dashboard") => {
+  const loginWithGoogle = React.useCallback(async (callbackUrl: string = "/dashboard") => {
     try {
       await signIn("google", { callbackUrl });
       return { success: true };
     } catch {
       return { success: false, error: "Google authentication failed. Please try again." };
     }
-  };
+  }, []);
 
-  const register = async (data: RegisterPayload) => {
+  const register = React.useCallback(async (data: RegisterPayload) => {
     const res = await authService.register(data);
     if (!res.success) return { success: false, error: res.error || "Registration failed." };
 
     return login(data.email, data.password);
-  };
+  }, [login]);
 
-  const sendOtp = (email: string, purpose: "change_password" | "reset_password") =>
-    authService.sendOtp(email, purpose);
+  const sendOtp = React.useCallback(
+    (email: string, purpose: "change_password" | "reset_password" | "register_email") =>
+      authService.sendOtp(email, purpose),
+    []
+  );
 
-  const changePasswordWithOtp = (email: string, otp: string, newPass: string) =>
-    authService.changePasswordWithOtp(email, otp, newPass);
+  const changePasswordWithOtp = React.useCallback(
+    (email: string, otp: string, newPass: string) =>
+      authService.changePasswordWithOtp(email, otp, newPass),
+    []
+  );
 
-  const resetPasswordWithOtp = (email: string, otp: string, newPass: string) =>
-    authService.resetPasswordWithOtp(email, otp, newPass);
+  const resetPasswordWithOtp = React.useCallback(
+    (email: string, otp: string, newPass: string) =>
+      authService.resetPasswordWithOtp(email, otp, newPass),
+    []
+  );
 
-  const updateAvatar = (avatarUrl: string) => {
-    setLocalUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, avatar_url: avatarUrl };
-      try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
-      return updated;
-    });
+  const updateAvatar = React.useCallback((avatarUrl: string) => {
+    setVerifiedProfile((prev) => prev ? {
+      ...prev,
+      user: { ...prev.user, avatar_url: avatarUrl },
+    } : null);
     if (updateSession) {
       updateSession({ image: avatarUrl, avatar_url: avatarUrl });
     }
-  };
+  }, [updateSession]);
 
-  const updateUserProfile = (updates: Partial<Pick<User, "full_name" | "phone" | "address">>) => {
-    setLocalUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, ...updates };
-      try { localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated)); } catch {}
-      return updated;
-    });
+  const updateUserProfile = React.useCallback((updates: Partial<Pick<User, "full_name" | "phone" | "address">>) => {
+    setVerifiedProfile((prev) => prev ? {
+      ...prev,
+      user: { ...prev.user, ...updates },
+    } : null);
     if (updateSession && updates.full_name) {
       updateSession({ name: updates.full_name });
     }
-  };
+  }, [updateSession]);
 
-  const logout = () => {
-    setLocalUser(null);
-    try { localStorage.removeItem(LOCAL_STORAGE_USER_KEY); } catch {}
+  const logout = React.useCallback(() => {
     signOut({ callbackUrl: "/login" });
-  };
+  }, []);
 
-  const activeUser = localUser || null;
+  const sessionId = session?.user?.id;
+  const sessionExpires = session?.expires;
+  const activeUser = status === "authenticated" &&
+    verifiedProfile !== null &&
+    verifiedProfile.sessionId === sessionId &&
+    verifiedProfile.expires === sessionExpires
+    ? verifiedProfile.user
+    : null;
+  const profileError = profileFailure !== null &&
+    profileFailure.sessionId === (sessionId ?? "") &&
+    profileFailure.expires === (sessionExpires ?? "")
+    ? profileFailure.message
+    : status === "authenticated" && (!sessionId || !sessionExpires)
+      ? "We couldn't establish your sign-in session. Please retry or sign out."
+      : null;
+  const contextValue = React.useMemo<AuthContextType>(() => ({
+    user: activeUser,
+    isAuthenticated: !!activeUser,
+    isAdmin: activeUser?.role === "admin",
+    isCustomer: activeUser?.role === "customer",
+    isLoading: status === "loading" || (status === "authenticated" && !activeUser && !profileError),
+    login,
+    loginWithGoogle,
+    register,
+    sendOtp,
+    changePasswordWithOtp,
+    resetPasswordWithOtp,
+    updateAvatar,
+    updateUserProfile,
+    logout,
+  }), [
+    activeUser, status, profileError, login, loginWithGoogle, register, sendOtp,
+    changePasswordWithOtp, resetPasswordWithOtp, updateAvatar, updateUserProfile, logout,
+  ]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user: activeUser,
-        isAuthenticated: !!activeUser,
-        isAdmin: activeUser?.role === "admin",
-        isCustomer: activeUser?.role === "customer",
-        isLoading: status === "loading",
-        login,
-        loginWithGoogle,
-        register,
-        sendOtp,
-        changePasswordWithOtp,
-        resetPasswordWithOtp,
-        updateAvatar,
-        updateUserProfile,
-        logout,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={contextValue}>
+      {status === "authenticated" && profileError ? (
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5">
+          <section className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h1 className="text-lg font-semibold text-slate-900">Account verification unavailable</h1>
+            <p className="mt-2 text-sm text-slate-600">{profileError}</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                onClick={() => setProfileRetry((retry) => retry + 1)}
+                type="button"
+              >
+                Retry
+              </button>
+              <button
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                onClick={logout}
+                type="button"
+              >
+                Sign out
+              </button>
+            </div>
+          </section>
+        </main>
+      ) : children}
     </AuthContext.Provider>
   );
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
+    <SessionProvider refetchInterval={0} refetchOnWindowFocus={true}>
       <AuthStateBridge>{children}</AuthStateBridge>
     </SessionProvider>
   );

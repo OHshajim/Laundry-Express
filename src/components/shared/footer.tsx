@@ -1,24 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { Phone, Mail, ExternalLink, ShieldCheck } from "lucide-react";
 import { APP_CONFIG } from "@/lib/constants";
 import { MascotBadge } from "@/components/shared/mascot-badge";
 import { FloatingBubbles } from "./floating-bubbles";
+import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
-/**
- * Footer Component
- *
- * Semantic, SEO-rich pure black footer featuring:
- * - Ambient low-density floating bubbles (count=8)
- * - Operating windows and transparent pricing overview
- * - Service area coverage (without exact GPS per privacy review)
- * - Direct links to Terms & Guarantee Policy and Customer Dashboard
- * - Strict adherence to CSS variables and theme tokens (--primary, --primary-light)
- * - Strict adherence to the 100-250 lines rule
- */
 export function Footer() {
+  const settings = useSettings();
+  const slot1 = useSlot1Label(settings);
+  const slot2 = useSlot2Label(settings);
+
   return (
     <footer className="relative bg-black text-slate-300 border-t border-neutral-900 pt-16 overflow-hidden">
-      {/* Ambient Bubble Background Effect (Lower-density count={8}) */}
       <FloatingBubbles variant="footer" count={8} className="opacity-40" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -38,7 +33,7 @@ export function Footer() {
             </Link>
           </div>
 
-          {/* Operating Windows */}
+          {/* Operating Windows — dynamic from admin settings */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white tracking-wide uppercase">
               Pickup &amp; Delivery Windows
@@ -46,22 +41,22 @@ export function Footer() {
             <ul className="space-y-2 text-xs text-neutral-400">
               <li className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800/80">
                 <span className="font-bold text-white block">Morning Window</span>
-                8:00 AM – 12:00 PM (Daily)
+                {slot1}
               </li>
               <li className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800/80">
                 <span className="font-bold text-white block">Afternoon Window</span>
-                1:00 PM – 6:00 PM (Daily)
+                {slot2}
               </li>
             </ul>
           </div>
 
-          {/* Service Area & Direct Contact (GPS removed per privacy review) */}
+          {/* Service Area & Contact */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white tracking-wide uppercase">
-              Service Area (30-Mile Radius)
+              Service Areas
             </h4>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, Schaumburg &amp; Northwest Suburbs.
+              {settings.deliveryZones.length ? settings.deliveryZones.join(", ") : "Service areas configured by Laundry Express"}
             </p>
             <div className="pt-1 space-y-1.5 text-xs">
               <a
@@ -96,21 +91,11 @@ export function Footer() {
         <div className="py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
           <p>&copy; {new Date().getFullYear()} Laundry Express. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <Link href="/" className="hover:text-primary transition-colors">
-              Home
-            </Link>
-            <Link href="/pricing" className="hover:text-primary transition-colors">
-              Plans &amp; Bags
-            </Link>
-            <Link href="/terms" className="hover:text-primary transition-colors">
-              Terms &amp; Guarantees
-            </Link>
-            <Link href="/contact" className="hover:text-primary transition-colors">
-              Contact Us
-            </Link>
-            <Link href="/#faq" className="hover:text-primary transition-colors">
-              FAQ
-            </Link>
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link href="/pricing" className="hover:text-primary transition-colors">Plans &amp; Bags</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms &amp; Guarantees</Link>
+            <Link href="/contact" className="hover:text-primary transition-colors">Contact Us</Link>
+            <Link href="/#faq" className="hover:text-primary transition-colors">FAQ</Link>
           </div>
           <p className="text-[11px] text-neutral-500">
             Powered by{" "}
@@ -129,6 +114,5 @@ export function Footer() {
   );
 }
 
-// Backward compatibility alias for any existing references
 export const SiteFooter = Footer;
 export default Footer;

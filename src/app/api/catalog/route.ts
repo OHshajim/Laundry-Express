@@ -1,20 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { CatalogService } from "@/lib/services/catalog-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 const requireAdmin = async (req: NextRequest) => {
-  const token = await getToken({ req, secret: AUTH_SECRET });
-  if (!token) return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
-  if (token.role !== "admin") return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const verified = await getVerifiedUser(req);
+  if (!verified) return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+  if (verified.user.role !== "admin") return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
   return null;
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const catalog = await CatalogService.getCatalog();
-    return NextResponse.json({ success: true, ...catalog }, { status: 200 });
+    const verified = await getVerifiedUser(req);
+    const detergents = verified?.user.role === "admin"
+      ? catalog.detergents
+      : catalog.detergents.filter((item) => item.is_active);
+    return NextResponse.json({ success: true, detergents }, { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load catalog";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

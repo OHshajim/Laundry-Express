@@ -98,7 +98,7 @@ export interface Order {
   pricing_mode: PricingMode;
   package_id?: string | null;
   detergent_id: string;
-  wash_temperature?: string;
+  detergent_name?: string;
   bag_count: number;
   estimated_weight_lbs?: number | null;
   final_weight_lbs?: number | null;
@@ -107,7 +107,9 @@ export interface Order {
   delivery_date?: string | null;
   delivery_slot?: string | null;
   subtotal: number;
+  detergent_fee?: number;
   discount_amount: number;
+  coupon_code?: string | null;
   promotion_id?: string | null;
   delivery_fee: number;
   tax_amount: number;
@@ -124,9 +126,11 @@ export interface Order {
   state?: string;
   zip_code?: string;
   customer_notes?: string;
+  special_instructions?: string;
   admin_notes?: string;
   payment_method?: string;
   payment_status?: string;
+  invoice_email_sent_at?: string | null;
   order_status: OrderStatus;
   stripe_customer_id?: string;
   stripe_payment_method_id?: string;
@@ -235,6 +239,6 @@ export interface AdminPaymentTransaction {
   amount: number;
   method: string;
   card_last4: string;
-  status: "succeeded" | "pending" | "refunded";
+  status: "succeeded" | "pending" | "failed" | "refunded";
   stripe_payment_intent: string;
 }

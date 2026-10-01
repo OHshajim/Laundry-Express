@@ -19,14 +19,13 @@ interface StepSlotPickerProps {
   onSelectSlot: (slot: "8am-12pm" | "1pm-6pm") => void;
   dropoffDate?: string;
   onSelectDropoffDate?: (date: string) => void;
-  slot1Start?: string;
-  slot1End?: string;
-  slot2Start?: string;
-  slot2End?: string;
+  slot1Start: string;
+  slot1End: string;
+  slot2Start: string;
+  slot2End: string;
 }
 
-function parseHour(t?: string): number {
-  if (!t) return 8;
+function parseHour(t: string): number {
   const [h] = t.split(":").map(Number);
   return h;
 }
@@ -46,10 +45,10 @@ export function StepSlotPicker({
   onSelectSlot,
   dropoffDate = "",
   onSelectDropoffDate,
-  slot1Start = "08:00",
-  slot1End = "12:00",
-  slot2Start = "13:00",
-  slot2End = "18:00",
+  slot1Start,
+  slot1End,
+  slot2Start,
+  slot2End,
 }: StepSlotPickerProps) {
   const todayStr = React.useMemo(() => new Date().toISOString().split("T")[0], []);
   const nowHour = new Date().getHours();
@@ -84,15 +83,22 @@ export function StepSlotPicker({
       return { isoDate, dayName, monthDay };
     }), []);
 
+  const isAllTodaySlotsDisabled = isToday && slots.every((s) => isSlotDisabled(s));
+
   React.useEffect(() => {
     if (isToday) {
       const morning = slots[0];
       const afternoon = slots[1];
-      if (isSlotDisabled(morning) && !isSlotDisabled(afternoon) && selectedSlot === "8am-12pm") {
+      if (isSlotDisabled(morning) && isSlotDisabled(afternoon)) {
+        const tomorrow = availableDates[1]?.isoDate;
+        if (tomorrow && selectedDate === todayStr) {
+          onSelectDate(tomorrow);
+        }
+      } else if (isSlotDisabled(morning) && !isSlotDisabled(afternoon) && selectedSlot === "8am-12pm") {
         onSelectSlot("1pm-6pm");
       }
     }
-  }, [selectedDate]);
+  }, [selectedDate, isToday]);
 
   return (
     <div className="space-y-6 p-5 sm:p-6 rounded-2xl bg-white border border-slate-200">

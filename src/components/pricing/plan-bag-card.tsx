@@ -15,9 +15,9 @@ interface PlanBagCardProps {
 
 export function PlanBagCard({ bagCount, onBagCountChange, initialRates }: PlanBagCardProps) {
   const [rates, setRates] = React.useState({
-    baseBagPrice: Number(initialRates?.bag_price ?? 32.50),
-    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 10.0),
-    freeDeliveryThreshold: Number(initialRates?.free_delivery_threshold ?? 2),
+    baseBagPrice: Number(initialRates?.bag_price ?? 0),
+    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 0),
+    freeDeliveryThreshold: Number(initialRates?.free_delivery_threshold ?? 0),
   });
 
   React.useEffect(() => {
@@ -26,9 +26,9 @@ export function PlanBagCard({ bagCount, onBagCountChange, initialRates }: PlanBa
       .then((d) => {
         if (d?.pricing) {
           setRates({
-            baseBagPrice: Number(d.pricing.bag_price ?? d.pricing.base_bag_price ?? 32.50),
-            deliveryFee: Number(d.pricing.standard_delivery_fee ?? d.pricing.one_bag_delivery_fee ?? 10.0),
-            freeDeliveryThreshold: Number(d.pricing.free_delivery_threshold ?? 2),
+            baseBagPrice: Number(d.pricing.bag_price),
+            deliveryFee: Number(d.pricing.standard_delivery_fee),
+            freeDeliveryThreshold: Number(d.pricing.free_delivery_threshold),
           });
         }
       })

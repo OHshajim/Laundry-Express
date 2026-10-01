@@ -1,13 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { CouponService } from "@/lib/services/coupon-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 const requireAdmin = async (req: NextRequest) => {
-  const token = await getToken({ req, secret: AUTH_SECRET });
-  if (!token) return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
-  if (token.role !== "admin") return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const verified = await getVerifiedUser(req);
+  if (!verified) return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+  if (verified.user.role !== "admin") return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
   return null;
 };
 

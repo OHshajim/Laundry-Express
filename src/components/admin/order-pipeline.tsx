@@ -1,20 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Camera, AlertTriangle, Check, Bell, Filter } from "lucide-react";
+import { Bell, Filter } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import { OrderTableRow } from "./order-table-row";
 import { OrderCard } from "./order-card";
 import { OrderDetailModal } from "./order-detail-modal";
+import { OrderProofModal } from "./order-proof-modal";
 
 interface OrderPipelineProps {
   orders: Order[];
-  onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
+  onUpdateStatus: (orderId: string, newStatus: OrderStatus) => Promise<boolean>;
   onUpdateFinalWeight: (orderId: string, finalWeight: number) => void;
-  onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => void;
+  onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => Promise<boolean>;
 }
 
 export function OrderPipeline({
@@ -27,7 +26,6 @@ export function OrderPipeline({
   const [detailOrderId, setDetailOrderId] = React.useState<string | null>(null);
   const [weightInput, setWeightInput] = React.useState<string>("");
   const [proofType, setProofType] = React.useState<"pickup" | "dropoff" | "damage">("pickup");
-  const [damageNotes, setDamageNotes] = React.useState<string>("");
   const [proofModalOpen, setProofModalOpen] = React.useState<boolean>(false);
   const [systemAlert, setSystemAlert] = React.useState<string | null>(null);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
@@ -44,36 +42,50 @@ export function OrderPipeline({
     setTimeout(() => setSystemAlert(null), 4000);
   };
 
-  const handleStatusChangeWithNotification = (orderId: string, newStatus: OrderStatus) => {
-    onUpdateStatus(orderId, newStatus);
+  const handleStatusChangeWithNotification = async (orderId: string, newStatus: OrderStatus) => {
+    if (!await onUpdateStatus(orderId, newStatus)) return false;
     const ord = orders.find((o) => o.id === orderId);
     if (newStatus === "driver_assigned") {
-      triggerAlert(`Order ${ord?.order_number || ""} accepted! Automated pickup window email dispatched.`);
+      triggerAlert(`Order ${ord?.order_number || ""} accepted and ready for dispatch.`);
     } else if (newStatus === "out_for_delivery") {
       triggerAlert(`Order ${ord?.order_number || ""} marked Out for Delivery.`);
+    } else if (newStatus === "cancelled") {
+      triggerAlert(`Order ${ord?.order_number || ""} cancelled. No refund was issued.`);
     }
+    return true;
   };
 
   const handleOpenProofModal = (order: Order, type: "pickup" | "dropoff" | "damage") => {
     setSelectedOrder(order);
     setProofType(type);
-    setDamageNotes(order.damage_notes || "");
     setProofModalOpen(true);
   };
 
-  const handleSaveProof = () => {
-    if (!selectedOrder) return;
-    onUploadProof(selectedOrder.id, proofType, "/brand/logo-badge.jpg", damageNotes);
-    if (proofType === "pickup") {
-      onUpdateStatus(selectedOrder.id, "in_wash");
-      triggerAlert(`Pickup proof saved for ${selectedOrder.order_number}! Moved to Wash & Dry cycle.`);
-    } else if (proofType === "dropoff") {
-      onUpdateStatus(selectedOrder.id, "completed");
-      triggerAlert(`Delivery photo verified for ${selectedOrder.order_number}! Completed.`);
-    } else if (proofType === "damage") {
-      triggerAlert(`Pre-existing flaw logged! Customer alerted.`);
+  const handleSkipProof = async (orderId: string, type: "pickup" | "dropoff" | "damage") => {
+    const ord = orders.find((o) => o.id === orderId);
+    if (type === "pickup") {
+      if (!await onUpdateStatus(orderId, "in_wash")) return;
+      triggerAlert(`${ord?.order_number || ""} picked up (no photo). Moved to Wash & Dry.`);
+    } else if (type === "dropoff") {
+      if (!await onUpdateStatus(orderId, "completed")) return;
+      triggerAlert(`${ord?.order_number || ""} marked delivered (no photo). Completed.`);
+    } else {
+      triggerAlert(`Flaw log skipped for ${ord?.order_number || ""}.`);
     }
-    setProofModalOpen(false);
+  };
+
+  const handleSaveProof = async (orderId: string, type: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
+    if (!await onUploadProof(orderId, type, imageUrl, notes)) return;
+    const ord = orders.find((o) => o.id === orderId);
+    if (type === "pickup") {
+      if (!await onUpdateStatus(orderId, "in_wash")) return;
+      triggerAlert(`Pickup photo saved for ${ord?.order_number || ""}! In Wash & Dry.`);
+    } else if (type === "dropoff") {
+      if (!await onUpdateStatus(orderId, "completed")) return;
+      triggerAlert(`Delivery photo verified for ${ord?.order_number || ""}! Completed.`);
+    } else if (type === "damage") {
+      triggerAlert(`Pre-existing garment flaw logged for ${ord?.order_number || ""}! Customer alerted.`);
+    }
   };
 
   const totalRevenue = orders.reduce((acc, o) => acc + o.total_amount, 0);
@@ -132,6 +144,7 @@ export function OrderPipeline({
             className="font-bold px-3 py-1.5 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer text-xs"
           >
             <option value="all">All Statuses ({orders.length})</option>
+            <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="driver_assigned">Driver Assigned</option>
             <option value="picked_up">Picked Up</option>
@@ -186,28 +199,14 @@ export function OrderPipeline({
         ))}
       </div>
 
-      {proofModalOpen && selectedOrder && (
-        <Dialog
-          open={proofModalOpen}
-          onOpenChange={() => setProofModalOpen(false)}
-          title={proofType === "damage" ? `Report Flaw: ${selectedOrder.order_number}` : proofType === "dropoff" ? `Upload Delivery Proof: ${selectedOrder.order_number}` : `Upload Pickup Proof: ${selectedOrder.order_number}`}
-          description={proofType === "damage" ? "Document existing damage before wash." : "Photo proof viewable by customer."}
-        >
-          <div className="space-y-4 text-xs">
-            {proofType === "damage" && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Damage Description</label>
-                <input type="text" value={damageNotes} onChange={(e) => setDamageNotes(e.target.value)} placeholder="e.g. Small tear near collar" className="w-full px-3 py-2 rounded-xl border border-slate-300 font-medium" />
-              </div>
-            )}
-            <div className="p-6 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-2">
-              <Camera className="h-8 w-8 text-primary mx-auto shrink-0" />
-              <p className="font-bold text-slate-800">{proofType === "damage" ? "Capture Damaged Photo" : `Simulate Snapshot (${proofType})`}</p>
-              <Button variant="hero" size="sm" onClick={handleSaveProof}>{proofType === "dropoff" ? "Complete Delivery With Photo" : "Upload & Save Proof"}</Button>
-            </div>
-          </div>
-        </Dialog>
-      )}
+      <OrderProofModal
+        order={selectedOrder}
+        proofType={proofType}
+        isOpen={proofModalOpen}
+        onClose={() => setProofModalOpen(false)}
+        onSaveProof={handleSaveProof}
+        onSkip={handleSkipProof}
+      />
 
       <OrderDetailModal order={detailOrder} isOpen={!!detailOrder} onClose={() => setDetailOrderId(null)} onUpdateStatus={handleStatusChangeWithNotification} onOpenProofModal={handleOpenProofModal} allOrders={orders} />
     </div>

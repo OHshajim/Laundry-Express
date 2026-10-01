@@ -11,7 +11,7 @@ import { Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 export const metadata: Metadata = {
   title: "Plans & Pricing — Transparent Laundry Rates",
   description:
-    "Honest doorstep laundry pricing. 1 Bag = $10.00 delivery fee; 2+ Bags = FREE ($0.00) delivery fee! Weighed laundry by the pound and discounted saver passes available.",
+    "View current doorstep laundry rates, weight-based services, and administrator-managed packages.",
   keywords: [
     "laundry pricing",
     "wash and fold cost",
@@ -48,7 +48,7 @@ import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function PricingPage() {
-  const pricing = await PricingPlanService.getPricing();
+  const pricing = await PricingPlanService.getPricing().catch(() => null);
 
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-clip pt-8 md:pt-10">
@@ -78,7 +78,7 @@ export default async function PricingPage() {
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-600">
               <span className="inline-flex items-center gap-1.5 font-bold">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                {formatCurrency(pricing.bag_price)} Flat 13-Gal Bag Rate
+                {pricing ? `${formatCurrency(pricing.bag_price)} Flat 13-Gal Bag Rate` : "Current rates managed by Laundry Express"}
               </span>
               <span>•</span>
               <span className="inline-flex items-center gap-1.5 font-bold">
@@ -94,10 +94,16 @@ export default async function PricingPage() {
           </div>
 
           {/* Interactive Plan Selector: Bags vs Pounds vs Packages */}
-          <PlanSelector initialRates={pricing} />
-
-          {/* Side-by-Side Comparison Matrix */}
-          <PlanComparison initialRates={pricing} />
+          {pricing ? (
+            <>
+              <PlanSelector initialRates={pricing} />
+              <PlanComparison initialRates={pricing} />
+            </>
+          ) : (
+            <p className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-600">
+              Current prices are being configured. Please check back shortly.
+            </p>
+          )}
 
           {/* Common Pricing Questions */}
           <FaqSection />

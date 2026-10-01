@@ -28,13 +28,13 @@ export const metadata: Metadata = {
     template: "%s | Laundry Express",
   },
   description:
-    "Laundry Piling Up? Pick Up • Wash • Fold • Deliver — More Time For What Matters. $32.50 per 13-gallon bag (about 2 loads). $10 pickup & delivery, FREE on 2+ bags! Serving Lake in the Hills & 30-mile radius.",
+    "Laundry Express offers doorstep laundry pickup, washing, folding, and delivery. Explore current services and schedule a pickup. Serving Lake in the Hills & 30-mile radius.",
   keywords: [
     "laundry express",
     "doorstep laundry service",
     "wash and fold pickup",
     "free laundry delivery",
-    "same day laundry",
+    "In 24h laundry delivery",
     "commercial laundry by pound",
   ],
   applicationName: "Laundry Express",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Laundry Express",
     title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
-    description: "$32.50 per 13-gallon bag (about 2 loads). 1 Bag = $10.00 fee; 2+ Bags = FREE delivery! 100% photo proof guarantee.",
+    description: "Doorstep laundry pickup, wash, fold, and delivery with photo-confirmed service.",
     images: [
       {
         url: "/brand/mascot-bubble-hero.jpg",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
-    description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Photo proof guarantee.",
+    description: "Explore laundry pickup, wash, fold, and delivery services from Laundry Express.",
     images: ["/brand/mascot-bubble-hero.jpg"],
   },
 };

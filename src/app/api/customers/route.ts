@@ -1,13 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { CustomerService } from "@/lib/services/customer-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "laundry-express-auth-secret-key-32-chars-minimum-prod";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 export async function GET(req: NextRequest) {
-  const token = await getToken({ req, secret: AUTH_SECRET });
-  if (!token) return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
-  if (token.role !== "admin") return NextResponse.json({ success: false, error: "Forbidden. Admin access required." }, { status: 403 });
+  const verified = await getVerifiedUser(req);
+  if (!verified) return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+  if (verified.user.role !== "admin") return NextResponse.json({ success: false, error: "Forbidden. Admin access required." }, { status: 403 });
 
   try {
     const customers = await CustomerService.getCustomers();

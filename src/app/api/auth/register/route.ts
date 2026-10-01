@@ -1,43 +1,20 @@
 import { NextResponse } from "next/server";
-import type { User } from "@/types";
-import { CustomUserStore } from "@/lib/services/custom-user-store";
 import { UserDbService } from "@/lib/services/user-db-service";
-
-// In-memory rate limiting tracker (5 registrations per minute per IP)
-const registrationRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
-
-function checkRegistrationRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 5;
-
-  const entry = registrationRateLimitMap.get(ip);
-  if (!entry || now > entry.expiresAt) {
-    registrationRateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
-  entry.count += 1;
-  return true;
-}
+import { OtpService } from "@/lib/security/otp-service";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/auth/register
  *
  * Production endpoint for customer account registration:
  * - Rate limiting protection (5 registrations/min)
- * - Strict full name and password complexity checks (min 6 characters)
- * - Persists profile in CustomUserStore for NextAuth credentials access
+ * - Strict full name and password complexity checks (min 8 characters)
+ * - Creates a new database account without modifying existing accounts
  * - Strictly adheres to 100-250 lines rule
  */
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (!checkRegistrationRateLimit(ip)) {
+    if (!await consumeRateLimit(req, "registration", 5, 60)) {
       return NextResponse.json(
         {
           success: false,
@@ -54,7 +31,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { fullName, email, password, phone } = body;
+    const fullName = body.fullName || body.full_name || body.name;
+    const { email, password, phone, verificationCode } = body;
 
     if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
       return NextResponse.json(
@@ -79,52 +57,59 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    if (!password || typeof password !== "string" || password.length < 8) {
       return NextResponse.json(
-        { success: false, error: "Password must be at least 6 characters." },
+        { success: false, error: "Password must be at least 8 characters." },
         { status: 400 }
       );
     }
 
-    // Register user inside CustomUserStore for immediate NextAuth authorization
-    const storedUser = CustomUserStore.createCustomer({
-      email: normalizedEmail,
-      fullName: fullName.trim(),
-      phone: phone?.trim(),
-      password,
-    });
-
-    // Synchronize newly registered user into Supabase public.users
-    let dbUser: User = storedUser;
-    try {
-      dbUser = await UserDbService.syncUser({
-        id: storedUser.id,
-        email: storedUser.email,
-        name: storedUser.full_name,
-        phone: storedUser.phone,
-        role: "customer",
-        password,
-      });
-    } catch (err: any) {
-      console.warn("⚠️ Register API: Could not sync user to database:", err?.message);
+    if (typeof verificationCode !== "string" || verificationCode.trim().length !== 6) {
+      return NextResponse.json(
+        { success: false, error: "A valid email verification code is required." },
+        { status: 400 }
+      );
     }
 
-    const publicUser: User = {
-      id: dbUser.id || storedUser.id,
-      email: dbUser.email || storedUser.email,
-      full_name: dbUser.full_name || storedUser.full_name,
-      phone: dbUser.phone || storedUser.phone,
-      address: dbUser.address || storedUser.address,
-      role: dbUser.role || storedUser.role,
-      is_active: dbUser.is_active ?? storedUser.is_active,
-      created_at: dbUser.created_at || storedUser.created_at,
-      updated_at: dbUser.updated_at || storedUser.updated_at,
-    };
+    if (await UserDbService.getUserByEmail(normalizedEmail)) {
+      return NextResponse.json(
+        { success: false, error: "An account with this email already exists." },
+        { status: 409 }
+      );
+    }
+
+    const verification = await OtpService.verifyAndConsumeOtp(
+      normalizedEmail,
+      verificationCode,
+      "register_email"
+    );
+    if (!verification.success) {
+      return NextResponse.json(
+        { success: false, error: verification.error || "Email verification failed." },
+        { status: 400 }
+      );
+    }
+
+    const dbUser = await UserDbService.registerCustomer({
+      email: normalizedEmail,
+      name: fullName.trim(),
+      phone: typeof phone === "string" ? phone : undefined,
+      password,
+    });
 
     return NextResponse.json(
       {
         success: true,
-        user: publicUser,
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          full_name: dbUser.full_name,
+          phone: dbUser.phone,
+          role: dbUser.role,
+          is_active: dbUser.is_active,
+          created_at: dbUser.created_at,
+          updated_at: dbUser.updated_at,
+        },
         message: "Customer account created successfully.",
       },
       {
@@ -136,6 +121,12 @@ export async function POST(req: Request) {
       }
     );
   } catch (error) {
+    if (error instanceof Error && error.message === "An account with this email already exists.") {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: "Registration service error." },
       { status: 500 }
