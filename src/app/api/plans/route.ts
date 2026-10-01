@@ -4,9 +4,11 @@ import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 
 const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const plans = await PricingPlanService.getPlans();
+    const token = await getToken({ req, secret: AUTH_SECRET });
+    const allPlans = await PricingPlanService.getPlans();
+    const plans = token?.role === "admin" ? allPlans : allPlans.filter((plan) => plan.is_active);
     return NextResponse.json({ success: true, plans }, { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load packages";
@@ -31,6 +33,21 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   return POST(req);
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const token = await getToken({ req, secret: AUTH_SECRET });
+    if (!token || token.role !== "admin") {
+      return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
+    }
+    const body = await req.json();
+    const updated = await PricingPlanService.updatePlan(body);
+    return NextResponse.json({ success: true, plan: updated }, { status: 200 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Failed to update package";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: NextRequest) {

@@ -125,11 +125,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     const settings = await ContentService.getSettings();
-    const slotLabel = finalOrder.pickup_slot === "8am-12pm" || finalOrder.pickup_slot === "1pm-6pm"
+    const slotLabel = settings?.slot1_start && settings.slot1_end && settings.slot2_start && settings.slot2_end &&
+      (finalOrder.pickup_slot === "8am-12pm" || finalOrder.pickup_slot === "1pm-6pm")
       ? formatSlotLabel(
           finalOrder.pickup_slot as "8am-12pm" | "1pm-6pm",
-          settings.slot1_start || "08:00", settings.slot1_end || "12:00",
-          settings.slot2_start || "13:00", settings.slot2_end || "18:00"
+          settings.slot1_start || "", settings.slot1_end || "",
+          settings.slot2_start || "", settings.slot2_end || ""
         )
       : finalOrder.pickup_slot || "Scheduled Window";
 
@@ -146,7 +147,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       quantity: finalOrder.pricing_mode === "per_bag"
         ? `${finalOrder.bag_count} Bag(s)`
         : `${finalOrder.final_weight_lbs || finalOrder.estimated_weight_lbs || 0} lbs`,
-      detergent: resolveDetergentName(finalOrder.detergent_id),
+      detergent: finalOrder.detergent_name || resolveDetergentName(finalOrder.detergent_id),
       subtotal: Number(finalOrder.subtotal || 0),
       deliveryFee: Number(finalOrder.delivery_fee || 0),
       discountAmount: Number(finalOrder.discount_amount || 0),

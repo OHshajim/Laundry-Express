@@ -45,11 +45,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
     }
 
-    const slotLabel = order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm"
+    const slotLabel = settings?.slot1_start && settings.slot1_end && settings.slot2_start && settings.slot2_end &&
+      (order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm")
       ? formatSlotLabel(
           order.pickup_slot as "8am-12pm" | "1pm-6pm",
-          settings.slot1_start || "08:00", settings.slot1_end || "12:00",
-          settings.slot2_start || "13:00", settings.slot2_end || "18:00"
+          settings.slot1_start || "", settings.slot1_end || "",
+          settings.slot2_start || "", settings.slot2_end || ""
         )
       : order.pickup_slot || "Scheduled Window";
 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
       quantity: order.pricing_mode === "per_bag"
         ? `${order.bag_count} Bag(s)`
         : `${order.final_weight_lbs || order.estimated_weight_lbs || 0} lbs`,
-      detergent: resolveDetergentName(order.detergent_id),
+      detergent: order.detergent_name || resolveDetergentName(order.detergent_id),
       subtotal: Number(order.subtotal || 0),
       deliveryFee: Number(order.delivery_fee || 0),
       discountAmount: Number(order.discount_amount || 0),

@@ -1,4 +1,3 @@
-import { APP_CONFIG } from "@/lib/constants";
 import type { PricingMode } from "@/types";
 
 export interface CalculatePriceInput {
@@ -8,13 +7,15 @@ export interface CalculatePriceInput {
   detergent_id?: string;
   detergent_fee?: number;
   promo_code?: string;
-  base_bag_price?: number;
-  base_pound_price?: number;
-  min_lbs?: number;
-  max_lbs?: number;
-  free_delivery_lbs?: number;
-  one_bag_delivery_fee?: number;
-  free_delivery_threshold?: number;
+  base_bag_price: number;
+  base_pound_price: number;
+  min_bags: number;
+  max_bags: number;
+  min_lbs: number;
+  max_lbs: number;
+  free_delivery_lbs: number;
+  one_bag_delivery_fee: number;
+  free_delivery_threshold: number;
 }
 
 export interface CalculatedPriceResult {
@@ -43,18 +44,21 @@ export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPrice
   let unitCount = 0;
   let unitName = "bags";
 
-  const bagPrice = input.base_bag_price ?? APP_CONFIG.pricing.baseBagPrice;
-  const poundPrice = input.base_pound_price ?? APP_CONFIG.pricing.basePoundPrice;
-  const stdDeliveryFee = input.one_bag_delivery_fee ?? APP_CONFIG.pricing.oneBagDeliveryFee;
-  const freeBagThreshold = input.free_delivery_threshold ?? APP_CONFIG.pricing.freeDeliveryThresholdBags;
-  const freePoundThreshold = input.free_delivery_lbs ?? APP_CONFIG.pricing.freePoundDeliveryThreshold;
-  const minLbs = input.min_lbs ?? APP_CONFIG.pricing.minPoundOrder;
+  const bagPrice = input.base_bag_price;
+  const poundPrice = input.base_pound_price;
+  const stdDeliveryFee = input.one_bag_delivery_fee;
+  const freeBagThreshold = input.free_delivery_threshold;
+  const freePoundThreshold = input.free_delivery_lbs;
+  const minLbs = input.min_lbs;
 
   let unitRate: number = bagPrice;
 
   // 1. Base cost calculation by mode
   if (input.pricing_mode === "per_bag") {
-    unitCount = Math.max(1, Math.floor(input.bag_count || 1));
+    unitCount = Math.floor(input.bag_count || input.min_bags);
+    if (unitCount < input.min_bags || unitCount > input.max_bags) {
+      throw new Error(`Bag quantity must be between ${input.min_bags} and ${input.max_bags}.`);
+    }
     unitName = "bags";
     unitRate = bagPrice;
     subtotal = Math.round(unitCount * unitRate * 100) / 100;
@@ -62,7 +66,10 @@ export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPrice
     deliveryFee = unitCount >= freeBagThreshold ? 0 : stdDeliveryFee;
   } else if (input.pricing_mode === "per_lb") {
     const rawWeight = Number(input.estimated_weight_lbs ?? minLbs);
-    unitCount = Math.max(minLbs, rawWeight);
+    if (rawWeight < minLbs || rawWeight > input.max_lbs) {
+      throw new Error(`Laundry weight must be between ${minLbs} and ${input.max_lbs} lbs.`);
+    }
+    unitCount = rawWeight;
     unitName = "lbs";
     unitRate = poundPrice;
     subtotal = Math.round(unitCount * unitRate * 100) / 100;

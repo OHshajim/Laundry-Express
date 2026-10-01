@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const pricing = await PricingPlanService.getPricing();
     return NextResponse.json(
-      { success: true, pricing },
+      { success: true, configured: pricing !== null, pricing },
       { status: 200, headers: { "Cache-Control": "no-store, max-age=0" } }
     );
   } catch (error: unknown) {

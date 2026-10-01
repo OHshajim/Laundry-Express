@@ -4,17 +4,15 @@ import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { ContactView } from "@/components/contact/contact-view";
 import { APP_CONFIG } from "@/lib/constants";
-import { Phone, Mail, Clock, ShieldCheck } from "lucide-react";
+import { Phone } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact Us & Operations Hub — Laundry Express",
   description:
-    "Get in touch with Laundry Express. Located in McHenry Co., Lake in the Hills, IL (42.1903, -88.383743). Call 815-575-9536 for doorstep pickup & delivery.",
+    "Contact Laundry Express for customer support, service coverage, and pickup scheduling.",
   keywords: [
     "contact laundry express",
     "laundry express location",
-    "lake in the hills laundry service",
-    "mchenry county wash and fold",
     "customer support laundry",
     "doorstep laundry pickup",
   ],
@@ -23,7 +21,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Contact Laundry Express — Doorstep Laundry Heroes",
-    description: "Lake in the Hills facility, operating pickup windows, and direct telephone support.",
+    description: "Customer support, service coverage, and pickup scheduling.",
     url: `${APP_CONFIG.url}/contact`,
     siteName: "Laundry Express",
     images: [{ url: "/brand/logo-badge.jpg", width: 1200, height: 630, alt: "Laundry Express Contact" }],
@@ -32,17 +30,6 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * ContactPage
- *
- * Dedicated operations & contact showcase page.
- * Implements the 2-column layout requested by the client:
- * Left: Physical address with directions, direct tap-to-call phone (815-575-9536),
- *       support email, and daily operating windows (8am-6pm).
- * Right: High-resolution interactive Google Map centered on Lake in the Hills, IL.
- * Static navigation header ensures natural scrolling experience.
- * Strict adherence to the 100-250 lines rule.
- */
 export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/60 overflow-x-clip pt-8 md:pt-10">
@@ -54,7 +41,7 @@ export default function ContactPage() {
           {/* Header Title & Hero Positioning */}
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="inline-block px-3.5 py-1 rounded-full bg-pink-50 text-primary text-xs font-black border border-pink-200 uppercase tracking-wider shadow-xs">
-              Doorstep Service 7 Days a Week • 8am – 6pm
+              Laundry Express Customer Support
             </span>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
@@ -65,8 +52,7 @@ export default function ContactPage() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              Ready for clean clothes delivered fresh to your door? View our central facility, operating
-              hours, or connect with our customer care dispatchers directly.
+              Questions about service or an order? Contact our customer care team.
             </p>
 
             {/* Quick Contact Micro-Badges */}
@@ -74,14 +60,6 @@ export default function ContactPage() {
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
                 <Phone className="h-3.5 w-3.5 text-primary" />
                 <span>815-575-9536</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
-                <Clock className="h-3.5 w-3.5 text-primary" />
-                <span>8:00 AM – 6:00 PM Daily</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                <span>30-Mile Service Territory</span>
               </span>
             </div>
           </div>

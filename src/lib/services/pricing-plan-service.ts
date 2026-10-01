@@ -27,155 +27,157 @@ export interface PricingConfig {
   one_bag_delivery_fee: number;
 }
 
-let cachedPlans: PackagePlan[] = [];
-let cachedPricing: PricingConfig = {
-  bag_price: 32.5,
-  min_bags: 1,
-  max_bags: 10,
-  pound_price: 1.99,
-  min_lbs: 10,
-  max_lbs: 100,
-  free_delivery_lbs: 30,
-  free_delivery_threshold: 2,
-  standard_delivery_fee: 10,
-  base_bag_price: 32.5,
-  base_pound_price: 1.99,
-  one_bag_delivery_fee: 10,
-};
-
 export class PricingPlanService {
   static async getPlans(): Promise<PackagePlan[]> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("plans").select("*").order("created_at", { ascending: true });
-      if (!error && data && data.length > 0) {
-        cachedPlans = data.map((d) => ({
-          id: d.id,
-          name: d.title || d.name,
-          description: d.description || "",
-          unit_type: (d.package_type === "weight_tier" ? "lb" : "bag") as "bag" | "lb",
-          capacity: Number(d.included_bags || d.included_lbs || d.capacity || 1),
-          original_price: Number(d.original_price || d.price || 0),
-          discounted_price: Number(d.price || d.discounted_price || 0),
-          key_points: Array.isArray(d.key_points) ? d.key_points : [],
-          is_active: d.is_active ?? true,
-        }));
-      } else if (!error && data && data.length === 0) {
-        cachedPlans = [];
-      }
-    } catch {}
-    return cachedPlans;
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("plans").select("*").order("created_at", { ascending: true });
+    if (error) throw new Error(`Unable to load packages: ${error.message}`);
+    return (data ?? []).map((item) => ({
+      id: item.id,
+      name: item.title,
+      description: item.description || "",
+      unit_type: item.package_type === "weight_tier" ? "lb" : "bag",
+      capacity: Number(item.package_type === "weight_tier" ? item.included_lbs : item.included_bags),
+      original_price: Number(item.price),
+      discounted_price: Number(item.price),
+      key_points: Array.isArray(item.key_points) ? item.key_points : [],
+      is_active: item.is_active ?? true,
+    }));
   }
 
   static async savePlan(plan: Partial<PackagePlan>): Promise<PackagePlan> {
     const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
-    const name = (plan.name || "Custom Laundry Pass").trim();
+    const name = plan.name?.trim() ?? "";
+    const capacity = Number(plan.capacity);
+    const price = Number(plan.discounted_price ?? plan.original_price);
+    if (!name || !Number.isFinite(capacity) || capacity <= 0 || !Number.isFinite(price) || price <= 0) {
+      throw new Error("Enter a package name, positive capacity, and valid price.");
+    }
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    let finalId = isUuid(plan.id) ? plan.id! : "";
+    const finalId = isUuid(plan.id) ? plan.id! : "";
 
     const dbPayload: Record<string, unknown> = {
       title: name,
       slug,
-      description: plan.description || "",
+      description: plan.description?.trim() ?? "",
       package_type: plan.unit_type === "lb" ? "weight_tier" : "bag_bundle",
-      included_bags: plan.unit_type === "bag" ? (plan.capacity || 1) : 0,
-      included_kg: plan.unit_type === "lb" ? (plan.capacity || 1) : 0,
-      price: plan.discounted_price || plan.original_price || 0,
-      key_points: plan.key_points || [],
+      included_bags: plan.unit_type === "lb" ? 0 : capacity,
+      included_lbs: plan.unit_type === "lb" ? capacity : 0,
+      price,
+      key_points: plan.key_points ?? [],
       is_active: plan.is_active ?? true,
       updated_at: new Date().toISOString(),
     };
     if (finalId) dbPayload.id = finalId;
 
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("plans").upsert(dbPayload, { onConflict: "slug" }).select().single();
-      if (!error && data?.id) {
-        finalId = data.id;
-      }
-    } catch {}
-
-    const fullPlan: PackagePlan = {
-      id: finalId || plan.id || `pkg-${Date.now()}`,
-      name,
-      description: plan.description || "",
-      unit_type: plan.unit_type || "bag",
-      capacity: plan.capacity || 1,
-      original_price: plan.original_price || 0,
-      discounted_price: plan.discounted_price || 0,
-      key_points: plan.key_points || [],
-      is_active: plan.is_active ?? true,
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("plans").upsert(dbPayload, { onConflict: "slug" }).select().single();
+    if (error || !data) throw new Error(`Unable to save package: ${error?.message || "No package returned."}`);
+    return {
+      id: data.id,
+      name: data.title,
+      description: data.description || "",
+      unit_type: data.package_type === "weight_tier" ? "lb" : "bag",
+      capacity: Number(data.package_type === "weight_tier" ? data.included_lbs : data.included_bags),
+      original_price: Number(data.price),
+      discounted_price: Number(data.price),
+      key_points: Array.isArray(data.key_points) ? data.key_points : [],
+      is_active: data.is_active ?? true,
     };
-
-    const idx = cachedPlans.findIndex((p) => (finalId && p.id === finalId) || p.name === name);
-    if (idx >= 0) cachedPlans[idx] = fullPlan;
-    else cachedPlans.push(fullPlan);
-
-    return fullPlan;
   }
 
   static async deletePlan(id: string): Promise<boolean> {
     const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
-    cachedPlans = cachedPlans.filter((p) => p.id !== id);
-    try {
-      const supabase = createAdminSupabaseClient();
-      if (isUuid(id)) {
-        await supabase.from("plans").delete().eq("id", id);
-      } else {
-        await supabase.from("plans").delete().eq("slug", id.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
-      }
-    } catch {}
+    const supabase = createAdminSupabaseClient();
+    const query = supabase.from("plans").delete();
+    const { error } = isUuid(id)
+      ? await query.eq("id", id)
+      : await query.eq("slug", id.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+    if (error) throw new Error(`Unable to delete package: ${error.message}`);
     return true;
   }
 
-  static async getPricing(): Promise<PricingConfig> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("pricing_configs").select("*");
-      if (!error && data && data.length > 0) {
-        const bagRow = data.find((r) => r.pricing_type === "per_bag");
-        const lbRow = data.find((r) => r.pricing_type === "per_lb");
-        const bPrice = Number(bagRow?.unit_price ?? 32.5);
-        const pPrice = Number(lbRow?.unit_price ?? 1.99);
-        const dFee = Number(bagRow?.standard_delivery_fee ?? 10);
-        const minLbs = Number(lbRow?.min_order_quantity ?? 10);
-        const maxLbs = Number(lbRow?.max_orders_per_slot ?? 100);
-        const freeDeliveryLbs = Number(lbRow?.free_delivery_threshold ?? 30);
-        const freeDeliveryBags = Number(bagRow?.free_delivery_threshold ?? 2);
-
-        cachedPricing = {
-          bag_price: bPrice,
-          min_bags: Number(bagRow?.min_order_quantity ?? 1),
-          max_bags: Number(bagRow?.max_orders_per_slot ?? 15),
-          pound_price: pPrice,
-          min_lbs: minLbs,
-          max_lbs: maxLbs,
-          free_delivery_lbs: freeDeliveryLbs,
-          free_delivery_threshold: freeDeliveryBags,
-          standard_delivery_fee: dFee,
-          base_bag_price: bPrice,
-          base_pound_price: pPrice,
-          one_bag_delivery_fee: dFee,
-        };
-      }
-    } catch {}
-    return cachedPricing;
+  static async updatePlan(updates: Partial<PackagePlan>): Promise<PackagePlan> {
+    if (!updates.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updates.id)) {
+      throw new Error("A valid package ID is required.");
+    }
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("plans").select("*").eq("id", updates.id).single();
+    if (error || !data) throw new Error(`Unable to load package for update: ${error?.message || "Package not found."}`);
+    return this.savePlan({
+      id: data.id,
+      name: updates.name ?? data.title,
+      description: updates.description ?? data.description ?? "",
+      unit_type: updates.unit_type ?? (data.package_type === "weight_tier" ? "lb" : "bag"),
+      capacity: updates.capacity ?? Number(data.package_type === "weight_tier" ? data.included_lbs : data.included_bags),
+      original_price: updates.original_price ?? Number(data.price),
+      discounted_price: updates.discounted_price ?? Number(data.price),
+      key_points: updates.key_points ?? (Array.isArray(data.key_points) ? data.key_points : []),
+      is_active: updates.is_active ?? data.is_active ?? true,
+    });
   }
 
-  static async updatePricing(updates: Partial<PricingConfig> & Record<string, any>): Promise<PricingConfig> {
-    const bPrice = Number(updates.bag_price ?? updates.base_bag_price ?? cachedPricing.bag_price);
-    const pPrice = Number(updates.pound_price ?? updates.base_pound_price ?? cachedPricing.pound_price);
-    const dFee = Number(updates.standard_delivery_fee ?? updates.one_bag_delivery_fee ?? cachedPricing.standard_delivery_fee);
-    const freeDeliveryBags = Number(updates.free_delivery_threshold ?? cachedPricing.free_delivery_threshold);
-    const freeDeliveryLbs = Number(updates.free_delivery_lbs ?? cachedPricing.free_delivery_lbs);
-    const minBags = Number(updates.min_bags ?? cachedPricing.min_bags);
-    const minLbs = Number(updates.min_lbs ?? cachedPricing.min_lbs);
-    const maxLbs = Number(updates.max_lbs ?? cachedPricing.max_lbs);
+  static async getPricing(): Promise<PricingConfig | null> {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("pricing_configs")
+      .select("*")
+      .eq("is_active", true);
+    if (error) throw new Error(`Unable to load pricing: ${error.message}`);
+    const bagRow = data?.find((row) => row.pricing_type === "per_bag");
+    const lbRow = data?.find((row) => row.pricing_type === "per_lb");
+    if (!bagRow || !lbRow) return null;
 
-    cachedPricing = {
+    const bPrice = Number(bagRow.unit_price);
+    const pPrice = Number(lbRow.unit_price);
+    const dFee = Number(bagRow.standard_delivery_fee);
+    const minLbs = Number(lbRow.min_order_quantity);
+    const maxLbs = Number(lbRow.max_orders_per_slot);
+    const freeDeliveryLbs = Number(lbRow.free_delivery_threshold);
+    const freeDeliveryBags = Number(bagRow.free_delivery_threshold);
+    const minBags = Number(bagRow.min_order_quantity);
+    const maxBags = Number(bagRow.max_orders_per_slot);
+    const values = [bPrice, pPrice, dFee, minLbs, maxLbs, freeDeliveryLbs, freeDeliveryBags, minBags, maxBags];
+    if (values.some((value) => !Number.isFinite(value))) {
+      throw new Error("Pricing settings contain invalid values.");
+    }
+
+    return {
       bag_price: bPrice,
       min_bags: minBags,
-      max_bags: Number(updates.max_bags ?? cachedPricing.max_bags),
+      max_bags: maxBags,
+      pound_price: pPrice,
+      min_lbs: minLbs,
+      max_lbs: maxLbs,
+      free_delivery_lbs: freeDeliveryLbs,
+      free_delivery_threshold: freeDeliveryBags,
+      standard_delivery_fee: dFee,
+      base_bag_price: bPrice,
+      base_pound_price: pPrice,
+      one_bag_delivery_fee: dFee,
+    };
+  }
+
+  static async updatePricing(updates: Partial<PricingConfig>): Promise<PricingConfig> {
+    const bPrice = Number(updates.bag_price ?? updates.base_bag_price);
+    const pPrice = Number(updates.pound_price ?? updates.base_pound_price);
+    const dFee = Number(updates.standard_delivery_fee ?? updates.one_bag_delivery_fee);
+    const freeDeliveryBags = Number(updates.free_delivery_threshold);
+    const freeDeliveryLbs = Number(updates.free_delivery_lbs);
+    const minBags = Number(updates.min_bags);
+    const maxBags = Number(updates.max_bags);
+    const minLbs = Number(updates.min_lbs);
+    const maxLbs = Number(updates.max_lbs);
+    const values = [bPrice, pPrice, dFee, freeDeliveryBags, freeDeliveryLbs, minBags, maxBags, minLbs, maxLbs];
+    if (values.some((value) => !Number.isFinite(value) || value < 0) ||
+      bPrice === 0 || pPrice === 0 || minBags === 0 || maxBags < minBags || minLbs === 0 || maxLbs < minLbs) {
+      throw new Error("Enter valid prices and order limits before saving.");
+    }
+
+    const pricing: PricingConfig = {
+      bag_price: bPrice,
+      min_bags: minBags,
+      max_bags: maxBags,
       pound_price: pPrice,
       min_lbs: minLbs,
       max_lbs: maxLbs,
@@ -187,13 +189,13 @@ export class PricingPlanService {
       one_bag_delivery_fee: dFee,
     };
 
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("pricing_configs").upsert([
+    const supabase = createAdminSupabaseClient();
+    const { error } = await supabase.from("pricing_configs").upsert([
         {
           pricing_type: "per_bag",
           unit_price: bPrice,
           min_order_quantity: minBags,
+          max_orders_per_slot: maxBags,
           free_delivery_threshold: freeDeliveryBags,
           standard_delivery_fee: dFee,
           is_active: true,
@@ -210,7 +212,7 @@ export class PricingPlanService {
           updated_at: new Date().toISOString(),
         },
       ], { onConflict: "pricing_type" });
-    } catch {}
-    return cachedPricing;
+    if (error) throw new Error(`Unable to save pricing: ${error.message}`);
+    return pricing;
   }
 }

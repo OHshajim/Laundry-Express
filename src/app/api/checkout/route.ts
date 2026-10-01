@@ -11,7 +11,10 @@ import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
 
 const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
 const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" as any }) : null;
+const stripe = stripeKey ? new Stripe(stripeKey, {
+  // @ts-expect-error -- Keep the API version pinned for the existing Stripe integration.
+  apiVersion: "2024-12-18.acacia",
+}) : null;
 
 /**
  * GET /api/checkout?order_id=...&session_id=...
@@ -56,8 +59,20 @@ export async function POST(req: NextRequest) {
 
     // 1. Server-side zero-trust price calculation & validation
     const pricingConfig = await PricingPlanService.getPricing();
+    if (!pricingConfig) {
+      return NextResponse.json(
+        { success: false, error: "Pricing has not been configured. Please try again later." },
+        { status: 503 }
+      );
+    }
     const { detergents } = await CatalogService.getCatalog();
     const detergent = detergents.find((d) => d.id === body.detergent_id);
+    if (!detergent?.is_active) {
+      return NextResponse.json(
+        { success: false, error: "Choose an available detergent before checkout." },
+        { status: 400 }
+      );
+    }
     const detergentFee = detergent ? detergent.price : 0;
 
     let validatedPromoCode: string | undefined;
@@ -69,6 +84,8 @@ export async function POST(req: NextRequest) {
         detergent_fee: detergentFee,
         base_bag_price: pricingConfig.base_bag_price,
         base_pound_price: pricingConfig.base_pound_price,
+        min_bags: pricingConfig.min_bags,
+        max_bags: pricingConfig.max_bags,
         min_lbs: pricingConfig.min_lbs,
         max_lbs: pricingConfig.max_lbs,
         free_delivery_lbs: pricingConfig.free_delivery_lbs,
@@ -90,6 +107,8 @@ export async function POST(req: NextRequest) {
       promo_code: validatedPromoCode,
       base_bag_price: pricingConfig.base_bag_price,
       base_pound_price: pricingConfig.base_pound_price,
+      min_bags: pricingConfig.min_bags,
+      max_bags: pricingConfig.max_bags,
       min_lbs: pricingConfig.min_lbs,
       max_lbs: pricingConfig.max_lbs,
       free_delivery_lbs: pricingConfig.free_delivery_lbs,
@@ -100,10 +119,11 @@ export async function POST(req: NextRequest) {
     // 2. Create the order with verified server prices and PENDING_PAYMENT status
     const createdOrder = await OrderService.createOrder({
       ...body,
+      detergent_name: detergent.name,
       user_id: token?.id || body.user_id || "guest-customer",
       customer_name: body.customer_name || token?.name || "Customer",
       customer_email: token?.email || body.customer_email || "",
-      customer_phone: body.customer_phone || (token as any)?.phone || "",
+      customer_phone: body.customer_phone || token?.phone || "",
       subtotal: serverPrice.subtotal,
       delivery_fee: serverPrice.delivery_fee,
       discount_amount: serverPrice.discount_amount,
@@ -128,9 +148,9 @@ export async function POST(req: NextRequest) {
             label: body.address_label || "Home",
             street_address: body.street_address,
             apt_unit: body.apt_unit || "",
-            city: body.city || "Lake in the Hills",
-            state: body.state || "IL",
-            zip_code: body.zip_code || "60156",
+            city: body.city || "",
+            state: body.state || "",
+            zip_code: body.zip_code || "",
             is_default: true,
           });
         } catch {}

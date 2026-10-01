@@ -11,10 +11,14 @@ const requireAdmin = async (req: NextRequest) => {
   return null;
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const catalog = await CatalogService.getCatalog();
-    return NextResponse.json({ success: true, ...catalog }, { status: 200 });
+    const token = await getToken({ req, secret: AUTH_SECRET });
+    const detergents = token?.role === "admin"
+      ? catalog.detergents
+      : catalog.detergents.filter((item) => item.is_active);
+    return NextResponse.json({ success: true, detergents }, { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load catalog";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_CONFIG.url),
   title: "Laundry Express — Pick Up • Wash • Fold • Deliver | More Time For What Matters",
   description:
-    "Laundry Piling Up? $32.50 per 13-gallon bag (about 2 loads). $10 pickup & delivery, or FREE on 2+ bags! Serving Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin & Schaumburg (30-mile radius).",
+    "Professional doorstep laundry pickup, wash, fold, and delivery. View current plans, service areas, and pickup windows.",
   keywords: [
     "laundry pickup and delivery",
     "wash and fold service",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
-    description: "Laundry Piling Up? $32.50 per 13-gal bag (about 2 loads). FREE pickup & delivery on 2+ bags! Serving Lake in the Hills & 30-mile radius.",
+    description: "Professional doorstep laundry pickup, wash, fold, and delivery. View available service plans.",
     url: APP_CONFIG.url,
     siteName: "Laundry Express",
     images: [{ url: "/brand/logo-badge.jpg", width: 1200, height: 630, alt: "Laundry Express Logo" }],
@@ -38,17 +38,22 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
-    description: "More Time For What Matters. $32.50 per 13-gallon bag. FREE delivery on 2+ bags. Daily slots: 8am–12pm & 1pm–6pm.",
+    description: "Laundry pickup and delivery with clear service plans and convenient booking.",
     images: ["/brand/logo-badge.jpg"],
   },
 };
 
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
+import { ContentService } from "@/lib/services/content-service";
 
 export default async function HomePage() {
-  const localBusinessJsonLd = getLocalBusinessSchema();
-  const faqJsonLd = getFaqSchema();
-  const pricing = await PricingPlanService.getPricing();
+  const [pricing, settings, faqs] = await Promise.all([
+    PricingPlanService.getPricing().catch(() => null),
+    ContentService.getSettings().catch(() => null),
+    ContentService.getFaqs(),
+  ]);
+  const localBusinessJsonLd = getLocalBusinessSchema(pricing, settings);
+  const faqJsonLd = getFaqSchema(faqs);
 
   /**
    * HomePage Shell
@@ -74,7 +79,7 @@ export default async function HomePage() {
       {/* Main Content Sections — Streamlined & Useful */}
       <main className="flex-1">
         {/* Superhero Mascot & Core Proposition Hero */}
-        <HeroSection initialBagPrice={pricing.bag_price} />
+        <HeroSection initialBagPrice={pricing?.bag_price} />
 
         {/* Unified Interactive Services & Process Journey */}
         <div id="services">

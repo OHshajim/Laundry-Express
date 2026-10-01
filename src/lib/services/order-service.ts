@@ -1,4 +1,5 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 import type { Order, OrderStatus } from "@/types";
 
 const ORDERS_MEMORY_STORE = new Map<string, Order>();
@@ -6,7 +7,7 @@ const ORDERS_MEMORY_STORE = new Map<string, Order>();
 function mapOrderRecord(item: Record<string, any>): Order {
   const rawMode = item.plan_type || item.pricing_mode || "per_bag";
   const pricingMode = rawMode === "per_kg" || rawMode === "per_lb" ? "per_lb" : rawMode;
-  const fullAddress = item.pickup_address || (item.street_address ? `${item.street_address}${item.apt_unit ? `, Apt ${item.apt_unit}` : ""}, ${item.city || "Lake in the Hills"}, ${item.state || "IL"} ${item.zip_code || "60156"}` : "");
+  const fullAddress = item.pickup_address || (item.street_address ? `${item.street_address}${item.apt_unit ? `, Apt ${item.apt_unit}` : ""}, ${item.city || ""}, ${item.state || ""} ${item.zip_code || ""}`.trim() : "");
   const rawProofs = item.proofs || item.order_proofs || [];
   const mappedProofs = rawProofs.map((p: any) => ({
     id: p.id || `prf-${Date.now()}`,
@@ -81,6 +82,7 @@ export class OrderService {
   }
 
   static async createOrder(orderPayload: Partial<Order>): Promise<Order> {
+    if (!orderPayload.detergent_id) throw new Error("A detergent selection is required.");
     const randomSeq = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `LX-${new Date().getFullYear()}-${randomSeq}`;
     const now = new Date().toISOString();
@@ -95,17 +97,18 @@ export class OrderService {
       pricing_mode: orderPayload.pricing_mode || "per_bag",
       bag_count: orderPayload.bag_count || 1,
       estimated_weight_lbs: Number(orderPayload.estimated_weight_lbs ?? 0),
-      detergent_id: orderPayload.detergent_id || "det-tide-pods",
+      detergent_id: orderPayload.detergent_id,
+      detergent_name: orderPayload.detergent_name || "",
       pickup_date: orderPayload.pickup_date || now.split("T")[0],
       pickup_slot: orderPayload.pickup_slot || "8am-12pm",
       delivery_date: orderPayload.delivery_date || now.split("T")[0],
       delivery_slot: orderPayload.delivery_slot || "8am-12pm",
       street_address: orderPayload.street_address || "",
       apt_unit: orderPayload.apt_unit || "",
-      city: orderPayload.city || "Lake in the Hills",
-      state: orderPayload.state || "IL",
-      zip_code: orderPayload.zip_code || "60156",
-      pickup_address: (orderPayload.street_address ? `${orderPayload.street_address}${orderPayload.apt_unit ? `, Apt ${orderPayload.apt_unit}` : ""}, ${orderPayload.city || "Lake in the Hills"}, ${orderPayload.state || "IL"} ${orderPayload.zip_code || "60156"}` : "") || orderPayload.pickup_address || "",
+      city: orderPayload.city || "",
+      state: orderPayload.state || "",
+      zip_code: orderPayload.zip_code || "",
+      pickup_address: (orderPayload.street_address ? `${orderPayload.street_address}${orderPayload.apt_unit ? `, Apt ${orderPayload.apt_unit}` : ""}, ${orderPayload.city || ""}, ${orderPayload.state || ""} ${orderPayload.zip_code || ""}` : "") || orderPayload.pickup_address || "",
       customer_notes: (orderPayload as any).customer_notes || (orderPayload as any).special_instructions || (orderPayload as any).notes || "",
       is_out_of_home: !!orderPayload.is_out_of_home,
       bag_outside_door_confirmed: !!orderPayload.bag_outside_door_confirmed,
@@ -136,6 +139,7 @@ export class OrderService {
         bag_count: newOrder.bag_count,
         weight_kg: newOrder.estimated_weight_lbs,
         detergent_id: newOrder.detergent_id,
+        detergent_name: newOrder.detergent_name,
         pickup_date: newOrder.pickup_date,
         pickup_window: newOrder.pickup_slot,
         dropoff_date: newOrder.delivery_date,
@@ -245,12 +249,14 @@ export class OrderService {
   }
 
   static async updateFinalWeight(orderId: string, weightLbs: number): Promise<boolean> {
-    const existing = ORDERS_MEMORY_STORE.get(orderId);
+    const existing = ORDERS_MEMORY_STORE.get(orderId) || await this.getOrderByNumber(orderId);
+    const pricing = await PricingPlanService.getPricing();
+    if (!pricing) throw new Error("Pricing is not configured.");
     const unitRate = existing?.estimated_weight_lbs && existing?.subtotal
       ? Math.round((existing.subtotal / existing.estimated_weight_lbs) * 100) / 100
-      : 1.99;
+      : pricing.pound_price;
     const subtotal = Math.round(weightLbs * unitRate * 100) / 100;
-    const deliveryFee = weightLbs >= 30 ? 0 : 10;
+    const deliveryFee = weightLbs >= pricing.free_delivery_lbs ? 0 : pricing.standard_delivery_fee;
     const total = subtotal + deliveryFee;
 
     if (existing) {

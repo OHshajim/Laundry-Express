@@ -24,11 +24,11 @@ function SuccessContent() {
   const [emailSent, setEmailSent] = React.useState(false);
   const [paid, setPaid] = React.useState(true);
   const autoEmailSentRef = React.useRef(false);
-  const [slotTimes, setSlotTimes] = React.useState({ s1: "08:00", e1: "12:00", s2: "13:00", e2: "18:00" });
+  const [slotTimes, setSlotTimes] = React.useState({ s1: "", e1: "", s2: "", e2: "" });
 
   React.useEffect(() => {
     fetch("/api/content?type=settings").then((r) => r.json()).then((d) => {
-      if (d?.settings) setSlotTimes({ s1: d.settings.slot1_start || "08:00", e1: d.settings.slot1_end || "12:00", s2: d.settings.slot2_start || "13:00", e2: d.settings.slot2_end || "18:00" });
+      if (d?.settings) setSlotTimes({ s1: d.settings.slot1_start || "", e1: d.settings.slot1_end || "", s2: d.settings.slot2_start || "", e2: d.settings.slot2_end || "" });
     }).catch(() => {});
   }, []);
 
@@ -71,7 +71,7 @@ function SuccessContent() {
   const customerName = order.customer_name || "Valued Customer";
   const customerEmail = order.customer_email || "";
   const fullAddress = [order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address";
-  const slotLabel = order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm"
+  const slotLabel = slotTimes.s1 && slotTimes.e1 && slotTimes.s2 && slotTimes.e2 && (order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm")
     ? formatSlotLabel(order.pickup_slot as "8am-12pm" | "1pm-6pm", slotTimes.s1, slotTimes.e1, slotTimes.s2, slotTimes.e2)
     : order.pickup_slot || "Scheduled Window";
 
@@ -93,7 +93,7 @@ function SuccessContent() {
     orderDetails: {
       planName: order.pricing_mode === "per_bag" ? "By The Bag Wash & Fold (13 Gal)" : order.pricing_mode === "package" ? "Saver Package Credit" : "By The Pound (lb) Wash & Fold",
       quantity: order.pricing_mode === "per_bag" ? `${order.bag_count || 1} Bag(s)` : `${order.final_weight_lbs || order.estimated_weight_lbs || 15} lbs`,
-      detergent: resolveDetergentName(order.detergent_id),
+      detergent: order.detergent_name || resolveDetergentName(order.detergent_id),
       specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell",
     },
   });
