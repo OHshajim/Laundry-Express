@@ -10,12 +10,13 @@ import { ORDER_STATUSES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { OrderCancelButton } from "./order-cancel-button";
 
 interface OrderDetailModalProps {
   order: Order | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateStatus?: (orderId: string, newStatus: OrderStatus) => void;
+  onUpdateStatus?: (orderId: string, newStatus: OrderStatus) => Promise<boolean>;
   onOpenProofModal?: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
   allOrders?: Order[];
 }
@@ -28,6 +29,8 @@ export function OrderDetailModal({
   onOpenProofModal,
   allOrders = [],
 }: OrderDetailModalProps) {
+  const [isUpdatingStatus, setIsUpdatingStatus] = React.useState(false);
+  const [statusError, setStatusError] = React.useState("");
   if (!order) return null;
 
   const statusMeta = ORDER_STATUSES[order.order_status] || ORDER_STATUSES.pending;
@@ -36,6 +39,21 @@ export function OrderDetailModal({
   const prevOrdersCount = userPastOrders.filter((o) => o.id !== order.id).length;
   const lifetimeSpent = userPastOrders.reduce((sum, o) => sum + o.total_amount, 0) || order.total_amount;
   const fullOrderAddress = [order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || order.user?.address || "Address pending";
+  const acceptOrder = async () => {
+    if (!onUpdateStatus) return;
+    setIsUpdatingStatus(true);
+    setStatusError("");
+    const updated = await onUpdateStatus(order.id, "driver_assigned");
+    setIsUpdatingStatus(false);
+    if (updated) onClose();
+    else setStatusError("The order was not updated. Please review the error and try again.");
+  };
+  const cancelOrder = async () => {
+    if (!onUpdateStatus) return false;
+    const updated = await onUpdateStatus(order.id, "cancelled");
+    if (updated) onClose();
+    return updated;
+  };
 
   return (
     <Dialog
@@ -158,12 +176,12 @@ export function OrderDetailModal({
                   <span>Delivery: {order.delivery_fee === 0 ? "FREE ($0.00)" : formatCurrency(order.delivery_fee)}</span>
                 </div>
                 <div className="flex justify-between font-black text-sm text-slate-900 pt-1 border-t border-slate-100">
-                  <span>Total Paid:</span>
+                  <span>{order.payment_status === "paid" ? "Total Paid:" : "Order Total:"}</span>
                   <span className="text-primary">{formatCurrency(order.total_amount)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold pt-1">
                   <CreditCard className="h-3.5 w-3.5 shrink-0" />
-                  <span>Stripe Upfront Payment Verified</span>
+                  <span>{order.payment_status === "paid" ? "Payment verified" : `Payment ${order.payment_status || "pending"}`}</span>
                 </div>
               </div>
             </div>
@@ -228,13 +246,17 @@ export function OrderDetailModal({
             )}
 
             {onUpdateStatus && order.order_status === "confirmed" && (
-              <Button variant="hero" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { onUpdateStatus(order.id, "driver_assigned"); onClose(); }}>
+              <Button variant="hero" size="sm" disabled={isUpdatingStatus} className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { void acceptOrder(); }}>
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1 shrink-0" />
-                Accept Order
+                {isUpdatingStatus ? "Updating..." : "Accept Order"}
               </Button>
+            )}
+            {onUpdateStatus && order.order_status !== "completed" && order.order_status !== "cancelled" && (
+              <OrderCancelButton order={order} disabled={isUpdatingStatus} onCancel={cancelOrder} />
             )}
           </div>
         </div>
+        {statusError && <p role="alert" className="text-xs text-rose-700">{statusError}</p>}
       </div>
     </Dialog>
   );

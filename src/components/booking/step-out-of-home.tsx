@@ -51,7 +51,7 @@ export function StepOutOfHome({
   const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([]);
   const [selectedSavedId, setSelectedSavedId] = React.useState<string | null>(null);
   const [editingAddress, setEditingAddress] = React.useState<UserAddress | null>(null);
-  const [isAddingNew, setIsAddingNew] = React.useState(false);
+  const [isAddingNew, setIsAddingNew] = React.useState(() => !currentUser?.id);
 
   const [street, setStreet] = React.useState(addressDetails?.street ?? "");
   const [apt, setApt] = React.useState(addressDetails?.apt ?? "");
@@ -72,7 +72,6 @@ export function StepOutOfHome({
   React.useEffect(() => {
     const userId = currentUser?.id || currentUser?.email;
     if (!userId) {
-      setIsAddingNew(true);
       return;
     }
 
@@ -185,6 +184,7 @@ export function StepOutOfHome({
 
         {(isAddingNew || savedAddresses.length === 0) && (
           <NewAddressForm
+            key={editingAddress?.id || "new-address"}
             currentUser={currentUser}
             street={street}
             onStreetChange={(v) => { setStreet(v); push(v, apt, city, zip); }}

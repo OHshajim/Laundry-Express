@@ -86,33 +86,6 @@ class AuthService {
   }
 
   /**
-   * Continue with Google OAuth
-   */
-  async loginWithGoogle(): Promise<AuthResponse> {
-    try {
-      const res = await fetch(`${this.baseUrl}/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return {
-          success: false,
-          error: data.error || "Google authentication failed.",
-        };
-      }
-
-      return data;
-    } catch {
-      return {
-        success: false,
-        error: "Google authentication service temporarily unreachable.",
-      };
-    }
-  }
-
-  /**
    * Request 6-digit email OTP for password change or reset
    */
   async sendOtp(

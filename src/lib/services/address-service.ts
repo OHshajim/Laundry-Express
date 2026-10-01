@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export interface UserAddress {
@@ -12,8 +13,6 @@ export interface UserAddress {
   is_default: boolean;
   created_at?: string;
 }
-
-let cachedAddresses: UserAddress[] = [];
 
 export class AddressService {
   static async getAddresses(userId: string): Promise<UserAddress[]> {
@@ -51,12 +50,16 @@ export class AddressService {
     }
 
     // Check for existing address for this user with same street and zip
-    const existing = cachedAddresses.find(
-      (a) => a.user_id === userId && a.street_address.trim().toLowerCase() === street.toLowerCase() && a.zip_code.trim() === zip
-    );
+    const { data: matches, error: matchError } = await supabase.from("user_addresses")
+      .select("*").eq("user_id", userId).eq("street_address", street).eq("zip_code", zip).limit(1);
+    if (matchError) throw new Error(matchError.message);
+    const existing = (matches?.[0] as UserAddress | undefined) || null;
+    const { count, error: countError } = await supabase.from("user_addresses")
+      .select("id", { count: "exact", head: true }).eq("user_id", userId);
+    if (countError) throw new Error(countError.message);
 
-    const id = addr.id || existing?.id || `addr-${Date.now()}`;
-    const isDefault = addr.is_default ?? (existing ? existing.is_default : cachedAddresses.filter((a) => a.user_id === userId).length === 0);
+    const id = addr.id || existing?.id || `addr-${randomUUID()}`;
+    const isDefault = addr.is_default ?? (existing ? existing.is_default : count === 0);
 
     const full: UserAddress = {
       id,
@@ -78,9 +81,6 @@ export class AddressService {
     const { error } = await supabase.from("user_addresses").upsert(full);
     if (error) throw new Error(error.message);
 
-    cachedAddresses = cachedAddresses.filter((address) => address.id !== id);
-    cachedAddresses.unshift(full);
-
     return full;
   }
 
@@ -95,7 +95,6 @@ export class AddressService {
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!data) return false;
-    cachedAddresses = cachedAddresses.filter((address) => address.id !== id || address.user_id !== userId);
     return true;
   }
 }

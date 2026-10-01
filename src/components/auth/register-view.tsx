@@ -46,8 +46,8 @@ export function RegisterView() {
     e.preventDefault();
     setErrorMsg("");
 
-    if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters long.");
+    if (password.length < 8) {
+      setErrorMsg("Password must be at least 8 characters long.");
       return;
     }
     if (password !== confirmPassword) {

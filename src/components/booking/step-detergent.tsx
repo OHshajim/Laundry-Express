@@ -2,21 +2,25 @@
 
 import { Sparkles, Check, Droplets, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDetergents } from "@/hooks/use-detergents";
+import type { DetergentItem } from "@/lib/services/catalog-service";
 
 interface StepDetergentProps {
   selectedDetergentId: string;
   onSelectDetergent: (id: string) => void;
   showError?: boolean;
+  detergents: DetergentItem[];
+  isLoading: boolean;
+  loadError: string;
 }
 
 export function StepDetergent({
   selectedDetergentId,
   onSelectDetergent,
   showError = false,
+  detergents,
+  isLoading,
+  loadError,
 }: StepDetergentProps) {
-  const { detergents, isLoading, error: loadError } = useDetergents();
-
   const isDetergentMissing = showError && !selectedDetergentId;
 
   return (
@@ -93,7 +97,7 @@ export function StepDetergent({
                       <span className="text-xs font-bold text-slate-900">{detergent.name}</span>
                       {isSelected ? (
                         <div className="h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center">
-                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                          <Check className="h-2.5 w-2.5 stroke-3" />
                         </div>
                       ) : (
                         <div className="h-4 w-4 rounded-full border border-slate-300" />

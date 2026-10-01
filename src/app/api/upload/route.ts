@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import {
   ImageStorageService,
   STORAGE_BUCKETS,
+  hasValidImageSignature,
 } from "@/lib/services/image-storage-service";
+import { OrderService } from "@/lib/services/order-service";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 /**
  * Universal Image Upload Route: POST /api/upload
@@ -24,35 +26,53 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB maximum image ceiling
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
-
 export async function POST(req: NextRequest) {
   try {
-    // 1. Enforce authentication
-    const token = await getToken({
-      req,
-      secret: AUTH_SECRET,
-    });
-
-    if (!token) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Please sign in to upload assets." },
         { status: 401 }
       );
     }
+    const { user } = verified;
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const bucket = (formData.get("bucket") as string) || STORAGE_BUCKETS.AVATARS;
-    const entityId = (formData.get("entityId") as string) || token.id || "general";
+    const requestedEntityId = (formData.get("entityId") as string) || "";
     const subType = (formData.get("subType") as string) || "";
 
-    // 2. Enforce role-based bucket access
-    if (bucket === STORAGE_BUCKETS.ORDER_PROOFS && token.role !== "admin") {
+    if (![STORAGE_BUCKETS.AVATARS, STORAGE_BUCKETS.ORDER_PROOFS, STORAGE_BUCKETS.REVIEW_PHOTOS].includes(bucket as typeof STORAGE_BUCKETS[keyof typeof STORAGE_BUCKETS])) {
+      return NextResponse.json({ success: false, error: "Invalid upload destination." }, { status: 400 });
+    }
+
+    if (bucket === STORAGE_BUCKETS.ORDER_PROOFS && user.role !== "admin") {
       return NextResponse.json(
         { success: false, error: "Forbidden. Order proofs can only be uploaded by operations staff." },
         { status: 403 }
       );
+    }
+
+    let entityId = user.id;
+    if (bucket !== STORAGE_BUCKETS.AVATARS) {
+      if (!requestedEntityId) {
+        return NextResponse.json({ success: false, error: "An order is required for this upload." }, { status: 400 });
+      }
+      const order = await OrderService.getOrderByNumber(requestedEntityId);
+      if (!order) return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+      if (bucket === STORAGE_BUCKETS.REVIEW_PHOTOS) {
+        if (order.user_id !== user.id || order.order_status !== "completed") {
+          return NextResponse.json({ success: false, error: "Review photos are only allowed for your completed orders." }, { status: 403 });
+        }
+        const photoIndex = Number(subType);
+        if (!Number.isInteger(photoIndex) || photoIndex < 1 || photoIndex > 3) {
+          return NextResponse.json({ success: false, error: "Photo number must be between 1 and 3." }, { status: 400 });
+        }
+      } else if (user.role !== "admin") {
+        return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+      }
+      entityId = order.id;
     }
 
     if (!file) {
@@ -84,6 +104,10 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const normalizedMime = file.type === "image/jpg" ? "image/jpeg" : file.type;
+    if (!hasValidImageSignature(buffer, normalizedMime)) {
+      return NextResponse.json({ success: false, error: "The uploaded file is not a valid JPEG, PNG, or WebP image." }, { status: 400 });
+    }
 
     let result;
 
@@ -93,7 +117,7 @@ export async function POST(req: NextRequest) {
         entityId,
         photoIdx,
         buffer,
-        file.type
+        normalizedMime
       );
     } else if (bucket === STORAGE_BUCKETS.ORDER_PROOFS) {
       const proofType = (subType as "pickup" | "dropoff" | "damage") || "pickup";
@@ -101,27 +125,21 @@ export async function POST(req: NextRequest) {
         entityId,
         proofType,
         buffer,
-        file.type
+        normalizedMime
       );
     } else {
       result = await ImageStorageService.uploadAvatar(
         entityId,
         buffer,
-        file.type
+        normalizedMime
       );
     }
 
     if (!result.success || !result.url) {
-      const base64Data = buffer.toString("base64");
-      const fallbackUrl = `data:${file.type};base64,${base64Data}`;
-
+      console.error("[upload] Storage upload failed:", result.error);
       return NextResponse.json(
-        {
-          success: true,
-          url: fallbackUrl,
-          warning: "Storage bucket not yet provisioned in Supabase. Using fallback.",
-        },
-        { status: 200 }
+        { success: false, error: "Unable to store the uploaded image." },
+        { status: 503 }
       );
     }
 

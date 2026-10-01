@@ -1,27 +1,7 @@
 import { NextResponse } from "next/server";
-import { createPasswordResetToken } from "@/lib/security/password";
-
-// Rate limiting map for password reset requests (3 requests per 60 seconds per IP)
-const resetRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
-
-function checkResetRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 3;
-
-  const entry = resetRateLimitMap.get(ip);
-  if (!entry || now > entry.expiresAt) {
-    resetRateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
-  entry.count += 1;
-  return true;
-}
+import { OtpService } from "@/lib/security/otp-service";
+import { UserDbService } from "@/lib/services/user-db-service";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/auth/forgot-password
@@ -29,15 +9,14 @@ function checkResetRateLimit(ip: string): boolean {
  * Initiates the password recovery workflow:
  * - Rate limiting check (3 attempts/min per IP address)
  * - Validates email format with RFC 5322 standard regex
- * - Generates cryptographically secure 15-minute reset token
+ * - Sends a one-time verification code without disclosing account existence
  * - Prevents user enumeration by returning consistent success messages
  * - Dispatches transactional reset notifications
  * - Complies strictly with the 100-250 lines rule
  */
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (!checkResetRateLimit(ip)) {
+    if (!await consumeRateLimit(req, "forgot-password", 3, 60)) {
       return NextResponse.json(
         {
           success: false,
@@ -73,16 +52,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const resetToken = createPasswordResetToken(normalizedEmail);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const user = await UserDbService.getUserByEmail(normalizedEmail);
+    if (user?.is_active) {
+      const result = await OtpService.generateAndSaveOtp(normalizedEmail, "reset_password");
+      if (!result.success) {
+        console.error("[forgot-password] Could not send reset code.");
+      }
+    }
 
     return NextResponse.json(
       {
         success: true,
-        token: resetToken,
-        expiresAt,
         message:
-          "If an account is associated with this email, secure password reset instructions have been dispatched.",
+          "If an active account is associated with this email, a verification code has been sent.",
       },
       {
         status: 200,
@@ -93,7 +75,7 @@ export async function POST(req: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,

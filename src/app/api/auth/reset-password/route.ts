@@ -1,28 +1,7 @@
 import { NextResponse } from "next/server";
 import { OtpService } from "@/lib/security/otp-service";
 import { UserDbService } from "@/lib/services/user-db-service";
-
-// Rate limiting map for reset password execution (5 requests per minute per IP)
-const executeRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
-
-function checkExecuteRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 5;
-
-  const entry = executeRateLimitMap.get(ip);
-  if (!entry || now > entry.expiresAt) {
-    executeRateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
-  entry.count += 1;
-  return true;
-}
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/auth/reset-password
@@ -35,8 +14,7 @@ function checkExecuteRateLimit(ip: string): boolean {
  */
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (!checkExecuteRateLimit(ip)) {
+    if (!await consumeRateLimit(req, "password-reset", 5, 60)) {
       return NextResponse.json(
         {
           success: false,
@@ -70,11 +48,11 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
       return NextResponse.json(
         {
           success: false,
-          error: "New password must be at least 6 characters long.",
+          error: "New password must be at least 8 characters long.",
         },
         { status: 400 }
       );

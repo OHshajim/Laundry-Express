@@ -1,15 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { getAuthSecret } from "@/lib/auth-secret";
+import { getVerifiedUser } from "@/lib/auth-request";
 import { createAdminSignedProofUrl } from "@/lib/supabase/admin";
 import { OrderService } from "@/lib/services/order-service";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: getAuthSecret() });
-    if (!token?.id) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
     }
+    const { user } = verified;
 
     const orderId = req.nextUrl.searchParams.get("orderId");
     const path = req.nextUrl.searchParams.get("path");
@@ -22,9 +22,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
     }
     if (
-      token.role !== "admin" &&
-      order.user_id !== token.id &&
-      (!token.email || order.customer_email?.toLowerCase() !== token.email.toLowerCase())
+      user.role !== "admin" &&
+      order.user_id !== user.id &&
+      order.customer_email?.toLowerCase() !== user.email.toLowerCase()
     ) {
       return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
     }

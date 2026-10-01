@@ -21,6 +21,7 @@ export function ReviewFormDialog({
   const [rating, setRating] = React.useState<number>(5);
   const [comment, setComment] = React.useState<string>("");
   const [photos, setPhotos] = React.useState<string[]>([]);
+  const [photoFiles, setPhotoFiles] = React.useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string>("");
   const [success, setSuccess] = React.useState<boolean>(false);
@@ -50,6 +51,7 @@ export function ReviewFormDialog({
       reader.onload = (uploadEvent) => {
         if (uploadEvent.target?.result) {
           setPhotos((prev) => [...prev, uploadEvent.target!.result as string].slice(0, 3));
+          setPhotoFiles((prev) => [...prev, file].slice(0, 3));
           setError("");
         }
       };
@@ -59,9 +61,10 @@ export function ReviewFormDialog({
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) {
       setError("Please write a brief comment about your laundry service.");
@@ -69,15 +72,41 @@ export function ReviewFormDialog({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setError("");
+    try {
+      const photoUrls: string[] = [];
+      for (const [index, file] of photoFiles.entries()) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("bucket", "review-photos");
+        form.append("entityId", orderNumber);
+        form.append("subType", String(index + 1));
+        const uploadResponse = await fetch("/api/upload", { method: "POST", body: form });
+        const uploadData = await uploadResponse.json();
+        if (!uploadResponse.ok || !uploadData.success || !uploadData.url) {
+          throw new Error(uploadData.error || "Unable to upload a review photo.");
+        }
+        photoUrls.push(uploadData.url);
+      }
+
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: orderNumber, rating, comment: comment.trim(), photoUrls }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Unable to submit your review.");
       setSuccess(true);
-      setTimeout(() => {
+      window.setTimeout(() => {
         setSuccess(false);
         onOpenChange(false);
         onSubmitted();
-      }, 1800);
-    }, 1000);
+      }, 1400);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to submit your review.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

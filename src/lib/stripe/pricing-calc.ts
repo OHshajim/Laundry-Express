@@ -6,7 +6,11 @@ export interface CalculatePriceInput {
   estimated_weight_lbs?: number;
   detergent_id?: string;
   detergent_fee?: number;
-  promo_code?: string;
+  promo?: {
+    code: string;
+    discount_type: "percentage" | "fixed_amount" | "free_delivery";
+    discount_value: number;
+  };
   base_bag_price: number;
   base_pound_price: number;
   min_bags: number;
@@ -91,16 +95,16 @@ export function calculateOrderPrice(input: CalculatePriceInput): CalculatedPrice
   let discountAmount = 0;
   let promoApplied: string | undefined;
 
-  if (input.promo_code) {
-    const code = input.promo_code.trim().toUpperCase();
-    if (code === "HEROFRESH") {
-      discountAmount = Math.round(subtotal * 0.15 * 100) / 100; // 15% off
-      promoApplied = "HEROFRESH (15% off)";
-    } else if (code === "FREESHIP") {
-      discountAmount = deliveryFee; // Waives delivery fee
+  if (input.promo) {
+    const eligibleAmount = subtotal + detergentFee;
+    if (input.promo.discount_type === "percentage") {
+      discountAmount = Math.round(eligibleAmount * Math.min(100, input.promo.discount_value) / 100 * 100) / 100;
+    } else if (input.promo.discount_type === "fixed_amount") {
+      discountAmount = Math.min(eligibleAmount, Math.max(0, input.promo.discount_value));
+    } else if (input.promo.discount_type === "free_delivery") {
       deliveryFee = 0;
-      promoApplied = "FREESHIP (Free Delivery)";
     }
+    promoApplied = input.promo.code;
   }
 
   const taxableAmount = Math.max(0, subtotal + detergentFee + deliveryFee - discountAmount);

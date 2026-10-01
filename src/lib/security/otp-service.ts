@@ -1,172 +1,94 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { getAuthSecret } from "@/lib/auth-secret";
 
-/**
- * Enterprise Database-Backed OTP Service
- * - Persists cryptographically hashed 6-digit verification codes directly in Supabase (public.auth_otps)
- * - Zero sensitive OTP credentials ever leaked to the frontend
- * - 10-minute expiration ceiling and strict 5-attempt brute-force protection
- * - Memory fallback cache if database is temporarily unavailable
- * - Strictly complies with the < 250 lines rule
- */
-
-const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-// In-memory fallback cache when Supabase database is unreachable
-interface MemoryOtpEntry {
-  otpHash: string;
-  expiresAt: number;
-  attempts: number;
-}
-const MEMORY_OTP_CACHE = new Map<string, MemoryOtpEntry>();
-
 function hashOtp(otp: string): string {
-  return crypto.createHash("sha256").update(otp.trim()).digest("hex");
+  return crypto.createHmac("sha256", getAuthSecret()).update(otp.trim()).digest("hex");
+}
+
+function hashesMatch(storedHash: string, inputHash: string): boolean {
+  const stored = Buffer.from(storedHash, "hex");
+  const input = Buffer.from(inputHash, "hex");
+  return stored.length === input.length && crypto.timingSafeEqual(stored, input);
 }
 
 export class OtpService {
-  /**
-   * Generates a 6-digit OTP, securely hashes it, and stores it in public.auth_otps
-   */
   static async generateAndSaveOtp(
     email: string,
     purpose: "change_password" | "reset_password" | "register_email"
   ): Promise<{ success: boolean; error?: string }> {
     const normalized = email.trim().toLowerCase();
     const code = crypto.randomInt(100000, 1000000).toString();
-    const otpHash = hashOtp(code);
-    const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
+    const supabase = createAdminSupabaseClient();
+    const { error: deleteError } = await supabase.from("auth_otps")
+      .delete().eq("email", normalized).eq("purpose", purpose);
+    if (deleteError) throw new Error(`Unable to replace verification code: ${deleteError.message}`);
 
-    // Store in memory cache as resilient fallback
-    const memKey = `${purpose}:${normalized}`;
-    MEMORY_OTP_CACHE.set(memKey, {
-      otpHash,
-      expiresAt: Date.now() + OTP_TTL_MS,
+    const { data, error } = await supabase.from("auth_otps").insert({
+      email: normalized,
+      otp_hash: hashOtp(code),
+      purpose,
       attempts: 0,
-    });
+      expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
+    }).select("id").single();
+    if (error || !data) throw new Error(`Unable to save verification code: ${error?.message || "No record returned."}`);
 
-    try {
-      const supabase = createAdminSupabaseClient();
-
-      // Delete any prior active codes for this user and purpose
-      await supabase
-        .from("auth_otps")
-        .delete()
-        .eq("email", normalized)
-        .eq("purpose", purpose);
-
-      // Insert fresh hashed verification record
-      const { error } = await supabase.from("auth_otps").insert({
-        email: normalized,
-        otp_hash: otpHash,
-        purpose,
-        attempts: 0,
-        expires_at: expiresAt,
-      });
-
-      if (error) {
-        console.warn("⚠️ Could not persist OTP in DB, using memory fallback:", error.message);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Database error";
-      console.warn("⚠️ Exception storing OTP in DB, using memory fallback:", msg);
-    }
-
-    // Dispatch real email via Resend
     try {
       const { sendOtpEmail } = await import("@/lib/services/email-service");
       await sendOtpEmail(normalized, code, purpose);
-    } catch (emailErr: unknown) {
-      const msg = emailErr instanceof Error ? emailErr.message : "Email dispatch failed";
-      console.error("❌ OTP email dispatch error:", msg);
-      MEMORY_OTP_CACHE.delete(memKey);
+    } catch (error) {
+      const { error: deleteError } = await supabase.from("auth_otps").delete().eq("id", data.id);
+      if (deleteError) console.error("[otp] Failed to remove undelivered code:", deleteError.message);
+      console.error("[otp] Email delivery failed:", error);
       return { success: false, error: "Unable to send the verification code. Please retry." };
     }
-
     return { success: true };
   }
 
-  /**
-   * Matches the user-entered 6-digit code against the database record
-   */
   static async verifyAndConsumeOtp(
     email: string,
     inputOtp: string,
     purpose: "change_password" | "reset_password" | "register_email"
   ): Promise<{ success: boolean; error?: string }> {
-    if (!email || !inputOtp || inputOtp.trim().length !== 6) {
+    if (!email || !/^\d{6}$/.test(inputOtp.trim())) {
       return { success: false, error: "A valid 6-digit code is required." };
     }
 
     const normalized = email.trim().toLowerCase();
     const inputHash = hashOtp(inputOtp);
-    const memKey = `${purpose}:${normalized}`;
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("auth_otps")
+      .select("id,otp_hash,attempts,expires_at")
+      .eq("email", normalized).eq("purpose", purpose)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (error) throw new Error(`Unable to verify code: ${error.message}`);
+    if (!data) return { success: false, error: "Verification code has expired or was not requested." };
 
-    try {
-      const supabase = createAdminSupabaseClient();
-
-      const { data, error } = await supabase
-        .from("auth_otps")
-        .select("*")
-        .eq("email", normalized)
-        .eq("purpose", purpose)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!error && data) {
-        const expiresAtTime = new Date(data.expires_at).getTime();
-
-        if (Date.now() > expiresAtTime) {
-          await supabase.from("auth_otps").delete().eq("id", data.id);
-          return { success: false, error: "Verification code has expired. Please request a new code." };
-        }
-
-        if (data.attempts >= MAX_ATTEMPTS) {
-          await supabase.from("auth_otps").delete().eq("id", data.id);
-          return { success: false, error: "Too many incorrect attempts. Please request a new code." };
-        }
-
-        if (data.otp_hash !== inputHash) {
-          await supabase
-            .from("auth_otps")
-            .update({ attempts: data.attempts + 1 })
-            .eq("id", data.id);
-          return { success: false, error: "Incorrect verification code. Please check your email." };
-        }
-
-        // Match success: Consume single-use token from DB immediately
-        await supabase.from("auth_otps").delete().eq("id", data.id);
-        MEMORY_OTP_CACHE.delete(memKey);
-        return { success: true };
-      }
-    } catch {
-      // Continue to memory fallback
-    }
-
-    // Memory cache fallback check
-    const entry = MEMORY_OTP_CACHE.get(memKey);
-    if (!entry) {
-      return { success: false, error: "Verification code has expired or was not requested." };
-    }
-
-    if (Date.now() > entry.expiresAt) {
-      MEMORY_OTP_CACHE.delete(memKey);
+    if (Date.now() > Date.parse(data.expires_at)) {
+      const { error: deleteError } = await supabase.from("auth_otps").delete().eq("id", data.id);
+      if (deleteError) throw new Error(`Unable to remove expired code: ${deleteError.message}`);
       return { success: false, error: "Verification code has expired. Please request a new code." };
     }
-
-    if (entry.attempts >= MAX_ATTEMPTS) {
-      MEMORY_OTP_CACHE.delete(memKey);
-      return { success: false, error: "Too many failed attempts. Please request a new code." };
+    if (data.attempts >= MAX_ATTEMPTS) {
+      return { success: false, error: "Too many incorrect attempts. Please request a new code." };
     }
-
-    if (entry.otpHash !== inputHash) {
-      entry.attempts += 1;
+    if (!hashesMatch(data.otp_hash, inputHash)) {
+      const { data: updated, error: updateError } = await supabase.from("auth_otps")
+        .update({ attempts: data.attempts + 1 })
+        .eq("id", data.id).eq("attempts", data.attempts).select("id").maybeSingle();
+      if (updateError) throw new Error(`Unable to record failed verification: ${updateError.message}`);
+      if (!updated) return { success: false, error: "Verification code has already been used." };
       return { success: false, error: "Incorrect verification code. Please check your email." };
     }
 
-    MEMORY_OTP_CACHE.delete(memKey);
-    return { success: true };
+    const { data: consumed, error: consumeError } = await supabase.from("auth_otps")
+      .delete().eq("id", data.id).eq("otp_hash", inputHash).select("id").maybeSingle();
+    if (consumeError) throw new Error(`Unable to consume verification code: ${consumeError.message}`);
+    return consumed
+      ? { success: true }
+      : { success: false, error: "Verification code has already been used." };
   }
 }

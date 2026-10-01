@@ -23,7 +23,9 @@ export interface BusinessSettings {
   slot2_start?: string;
   slot2_end?: string;
   min_order_bag: number;
+  max_order_bag?: number;
   min_order_lbs: number;
+  max_order_lbs?: number;
   free_delivery_bags: number;
   free_delivery_lbs: number;
   standard_delivery_fee: number;
@@ -128,25 +130,43 @@ export class ContentService {
   }
 
   static async updateSettings(updates: Partial<BusinessSettings>): Promise<BusinessSettings> {
+    const allowedKeys = [
+      "operating_hours", "delivery_zones", "slot1_start", "slot1_end", "slot2_start", "slot2_end",
+      "min_order_bag", "max_order_bag", "min_order_lbs", "max_order_lbs",
+      "free_delivery_bags", "free_delivery_lbs", "standard_delivery_fee",
+    ] as const;
+    if (Object.keys(updates).some((key) => !allowedKeys.includes(key as typeof allowedKeys[number]))) {
+      throw new Error("Unsupported business setting.");
+    }
     const current = await this.getSettings();
     const settings = { ...current, ...updates } as BusinessSettings;
     const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
-    const numericValues = [
-      settings.min_order_bag,
-      settings.min_order_lbs,
-      settings.free_delivery_bags,
-      settings.free_delivery_lbs,
-      settings.standard_delivery_fee,
-    ];
-    if (!settings.operating_hours?.trim() ||
-      !Array.isArray(settings.delivery_zones) ||
-      !settings.delivery_zones.length ||
-      settings.delivery_zones.some((zone) => typeof zone !== "string" || !zone.trim()) ||
-      ![settings.slot1_start, settings.slot1_end, settings.slot2_start, settings.slot2_end].every((time) => typeof time === "string" && timePattern.test(time)) ||
-      numericValues.some((value) => !Number.isFinite(value) || value < 0) ||
-      settings.min_order_bag <= 0 ||
-      settings.min_order_lbs <= 0) {
-      throw new Error("Complete business hours, pickup windows, delivery zones, and valid order thresholds before saving.");
+    if (Object.prototype.hasOwnProperty.call(updates, "operating_hours") && !settings.operating_hours?.trim()) {
+      throw new Error("Enter the business operating days or hours.");
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, "delivery_zones") &&
+      (!Array.isArray(settings.delivery_zones) || !settings.delivery_zones.length ||
+        settings.delivery_zones.some((zone) => typeof zone !== "string" || !zone.trim()))) {
+      throw new Error("Add at least one valid delivery area.");
+    }
+    for (const key of ["slot1_start", "slot1_end", "slot2_start", "slot2_end"] as const) {
+      if (Object.prototype.hasOwnProperty.call(updates, key) &&
+        (typeof settings[key] !== "string" || !timePattern.test(settings[key]))) {
+        throw new Error("Enter a valid time for each pickup window.");
+      }
+    }
+    for (const key of [
+      "min_order_bag", "max_order_bag", "min_order_lbs", "max_order_lbs",
+      "free_delivery_bags", "free_delivery_lbs", "standard_delivery_fee",
+    ] as const) {
+      const value = updates[key];
+      if (value !== undefined && (!Number.isFinite(value) || value < 0)) {
+        throw new Error("Enter valid, non-negative business thresholds.");
+      }
+    }
+    if ((settings.min_order_bag && settings.max_order_bag && settings.max_order_bag < settings.min_order_bag) ||
+      (settings.min_order_lbs && settings.max_order_lbs && settings.max_order_lbs < settings.min_order_lbs)) {
+      throw new Error("Maximum order limits must be greater than or equal to minimum limits.");
     }
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase

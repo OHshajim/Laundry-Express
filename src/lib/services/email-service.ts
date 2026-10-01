@@ -8,19 +8,24 @@ import { createEmailInvoicePdf } from "@/lib/invoice/email-invoice-pdf";
 //   Mailgun, SendGrid, etc. — all standard SMTP
 // ---------------------------------------------------------------------------
 function createTransport() {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) throw new Error("SMTP_HOST, SMTP_USER, and SMTP_PASS must be configured.");
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    host,
     port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER || "",
-      pass: process.env.SMTP_PASS || "",
-    },
+    auth: { user, pass },
   });
 }
 
-const FROM = process.env.EMAIL_FROM || "Laundry Express <noreply@laundryexpress.com>";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@laundryexpress.com";
+function getMailAddresses() {
+  const from = process.env.EMAIL_FROM;
+  const admin = process.env.ADMIN_EMAIL;
+  if (!from || !admin) throw new Error("EMAIL_FROM and ADMIN_EMAIL must be configured.");
+  return { from, admin };
+}
 
 /** Send 6-digit OTP verification email */
 export async function sendOtpEmail(to: string, otp: string, purpose: string): Promise<void> {
@@ -30,8 +35,9 @@ export async function sendOtpEmail(to: string, otp: string, purpose: string): Pr
       ? "Email Verification"
       : "Reset Password";
   const transport = createTransport();
+  const { from } = getMailAddresses();
   await transport.sendMail({
-    from: FROM,
+    from,
     to,
     subject: "Your Laundry Express Verification Code",
     html: `
@@ -66,6 +72,7 @@ export interface InvoiceEmailPayload {
   discountAmount: number;
   totalAmount: number;
   address: string;
+  orderCancelled?: boolean;
 }
 
 function usd(n: number) {
@@ -86,6 +93,8 @@ function escapeHtml(value: string): string {
 }
 
 export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<void> {
+  if (!payload.customerEmail) throw new Error("Customer email is required for invoice delivery.");
+  const { from, admin } = getMailAddresses();
   const safe = {
     ...payload,
     orderNumber: escapeHtml(payload.orderNumber),
@@ -120,8 +129,8 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
               </p>
             </td>
             <td style="text-align:right;vertical-align:middle">
-              <span style="display:inline-block;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:11px;font-weight:800;padding:6px 12px;border-radius:20px">
-                ✔ PAID &amp; CONFIRMED
+              <span style="display:inline-block;background:${payload.orderCancelled ? "#fff7ed" : "#ecfdf5"};border:1px solid ${payload.orderCancelled ? "#fed7aa" : "#a7f3d0"};color:${payload.orderCancelled ? "#c2410c" : "#047857"};font-size:11px;font-weight:800;padding:6px 12px;border-radius:20px">
+                ${payload.orderCancelled ? "PAID — ORDER CANCELLED; NO REFUND ISSUED" : "PAID &amp; CONFIRMED"}
               </span>
               <p style="margin:4px 0 0;color:#94a3b8;font-size:10px;font-family:monospace;font-weight:700">
                 ${safe.orderNumber}
@@ -201,8 +210,8 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
     contentType: "application/pdf",
   };
   const [userResult, adminResult] = await Promise.allSettled([
-    transport.sendMail({ from: FROM, to: payload.customerEmail, subject: `Order Confirmed — ${payload.orderNumber.replace(/[\r\n]/g, " ")} | Laundry Express`, html, attachments: [attachment] }),
-    transport.sendMail({ from: FROM, to: ADMIN_EMAIL, subject: `New Order — ${payload.orderNumber.replace(/[\r\n]/g, " ")} | ${payload.customerName.replace(/[\r\n]/g, " ")}`, html, attachments: [attachment] }),
+    transport.sendMail({ from, to: payload.customerEmail, subject: `${payload.orderCancelled ? "Payment Received — Order Cancelled (No Refund Issued)" : "Order Confirmed"} — ${payload.orderNumber.replace(/[\r\n]/g, " ")} | Laundry Express`, html, attachments: [attachment] }),
+    transport.sendMail({ from, to: admin, subject: `${payload.orderCancelled ? "Payment for Cancelled Order (No Refund Issued)" : "New Order"} — ${payload.orderNumber.replace(/[\r\n]/g, " ")} | ${payload.customerName.replace(/[\r\n]/g, " ")}`, html, attachments: [attachment] }),
   ]);
 
   const errors: string[] = [];

@@ -1,17 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { ReviewService } from "@/lib/services/review-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
+import { getVerifiedUser } from "@/lib/auth-request";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    const isAdmin = token?.role === "admin";
+    const verified = await getVerifiedUser(req);
+    const isAdmin = verified?.user.role === "admin";
     const isPublic = req.nextUrl.searchParams.get("public") === "true";
     const onlyApproved = !isAdmin || isPublic;
-    // Regular users only see their own reviews; admin & public landing see all
-    const userId = !isAdmin && !isPublic && token?.id ? String(token.id) : undefined;
+    const userId = !isAdmin && !isPublic ? verified?.user.id : undefined;
 
     const reviews = await ReviewService.getReviews(onlyApproved, userId);
     return NextResponse.json({ success: true, reviews }, { status: 200 });
@@ -23,16 +20,16 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json({ success: false, error: "Please sign in to leave a review." }, { status: 401 });
     }
 
     const body = await req.json();
     const result = await ReviewService.submitReview({
       ...body,
-      userId: token.id,
-      customerName: token.name || "Customer",
+      userId: verified.user.id,
+      customerName: verified.user.full_name || "Customer",
     });
 
     if (!result.success) {
@@ -48,8 +45,8 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token || token.role !== "admin") {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
       return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
     }
 
@@ -68,8 +65,8 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token || token.role !== "admin") {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
       return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
     }
 

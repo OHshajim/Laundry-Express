@@ -1,5 +1,4 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { CustomUserStore } from "@/lib/services/custom-user-store";
 import { hashPassword, verifyPassword } from "@/lib/security/password";
 import type { User, UserRole } from "@/types";
 
@@ -59,51 +58,35 @@ export class UserDbService {
     const fullName = input.name?.trim() || "Valued Customer";
     const avatarUrl = input.avatar_url || input.image || undefined;
 
-    try {
-      const supabase = createAdminSupabaseClient();
+    const supabase = createAdminSupabaseClient();
+    const { data: existing, error: lookupError } = await supabase
+      .from("users").select("id,email,full_name,avatar_url,phone,role,is_active,created_at,updated_at")
+      .eq("email", normalizedEmail).maybeSingle();
+    if (lookupError) throw new Error(`Unable to verify Google account: ${lookupError.message}`);
+    if (existing && !existing.is_active) throw new Error("This account is inactive.");
 
-      // 1. Query existing user in public.users to preserve dynamic DB role
-      const { data: existingUser, error: queryError } = await supabase.from("users").select("*").eq("email", normalizedEmail).maybeSingle();
-
-      if (!queryError && existingUser) {
-        const resolvedRole: UserRole = input.role || existingUser.role || "customer";
-        const updatePayload: Record<string, unknown> = {
-          full_name: fullName || existingUser.full_name,
-          phone: input.phone || existingUser.phone,
-          avatar_url: avatarUrl || existingUser.avatar_url,
-          role: resolvedRole,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { data: updatedUser } = await supabase.from("users").update(updatePayload).eq("id", existingUser.id).select("*").single();
-        const finalUser = (updatedUser as User) || (existingUser as User);
-        CustomUserStore.handleGoogleProfile({ id: finalUser.id, email: normalizedEmail, name: finalUser.full_name, avatar_url: finalUser.avatar_url, role: finalUser.role });
-        return finalUser;
-      }
-
-      const assignedRole: UserRole = input.role || "customer";
-      const insertPayload: Record<string, unknown> = {
-        email: normalizedEmail,
-        full_name: fullName,
-        avatar_url: avatarUrl || null,
-        phone: input.phone || null,
-        role: assignedRole,
-        is_active: true,
-        created_at: new Date().toISOString(),
+    if (existing) {
+      const { data, error } = await supabase.from("users").update({
+        full_name: fullName || existing.full_name,
+        phone: input.phone || existing.phone,
+        avatar_url: avatarUrl || existing.avatar_url,
         updated_at: new Date().toISOString(),
-      };
-
-      const { data: newUser } = await supabase.from("users").insert(insertPayload).select("*").single();
-      const createdUser = (newUser as User) || {
-        id: `u-${Date.now()}`, email: normalizedEmail, full_name: fullName, avatar_url: avatarUrl,
-        phone: input.phone || "815-575-9536", role: assignedRole, is_active: true,
-        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-      };
-      CustomUserStore.handleGoogleProfile({ id: createdUser.id, email: normalizedEmail, name: createdUser.full_name, avatar_url: createdUser.avatar_url, role: createdUser.role });
-      return createdUser;
-    } catch {
-      return CustomUserStore.handleGoogleProfile({ id: input.id, email: normalizedEmail, name: fullName, avatar_url: avatarUrl, role: input.role || "customer" });
+      }).eq("id", existing.id)
+        .select("id,email,full_name,avatar_url,phone,role,is_active,created_at,updated_at").single();
+      if (error || !data) throw new Error(`Unable to synchronize Google profile: ${error?.message || "User not returned."}`);
+      return data as User;
     }
+
+    const { data, error } = await supabase.from("users").insert({
+      email: normalizedEmail,
+      full_name: fullName,
+      avatar_url: avatarUrl || null,
+      phone: input.phone || null,
+      role: "customer",
+      is_active: true,
+    }).select("id,email,full_name,avatar_url,phone,role,is_active,created_at,updated_at").single();
+    if (error || !data) throw new Error(`Unable to create Google account: ${error?.message || "User not returned."}`);
+    return data as User;
   }
 
   /**
@@ -179,19 +162,19 @@ export class UserDbService {
     newPassword: string
   ): Promise<{ success: boolean; error?: string }> {
     const normalized = email.trim().toLowerCase();
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data: dbUser } = await supabase.from("users").select("password_hash").eq("email", normalized).maybeSingle();
-      if (dbUser?.password_hash && !verifyPassword(currentPassword, dbUser.password_hash)) {
-        return { success: false, error: "Current password does not match database record." };
-      }
-      const hashedPassword = hashPassword(newPassword);
-      await supabase.from("users").update({ password_hash: hashedPassword, updated_at: new Date().toISOString() }).eq("email", normalized);
-      CustomUserStore.updatePassword(normalized, newPassword);
-      return { success: true };
-    } catch {
-      return CustomUserStore.verifyAndUpdatePassword(normalized, currentPassword, newPassword);
+    const supabase = createAdminSupabaseClient();
+    const { data: user, error: lookupError } = await supabase.from("users")
+      .select("id,password_hash").eq("email", normalized).maybeSingle();
+    if (lookupError) throw new Error(`Unable to verify account: ${lookupError.message}`);
+    if (!user) return { success: false, error: "User account not found." };
+    if (!user.password_hash || !verifyPassword(currentPassword, user.password_hash)) {
+      return { success: false, error: "Current password does not match database record." };
     }
+    const { data, error } = await supabase.from("users")
+      .update({ password_hash: hashPassword(newPassword), updated_at: new Date().toISOString() })
+      .eq("id", user.id).select("id").maybeSingle();
+    if (error || !data) throw new Error(`Unable to update password: ${error?.message || "User not found."}`);
+    return { success: true };
   }
 
   /**
@@ -199,14 +182,13 @@ export class UserDbService {
    */
   static async updatePassword(email: string, newPassword: string): Promise<boolean> {
     const normalized = email.trim().toLowerCase();
-    CustomUserStore.updatePassword(normalized, newPassword);
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { error } = await supabase.from("users").update({ password_hash: hashPassword(newPassword), updated_at: new Date().toISOString() }).eq("email", normalized);
-      return !error;
-    } catch {
-      return true;
-    }
+    if (newPassword.length < 8) throw new Error("Password must be at least 8 characters long.");
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("users")
+      .update({ password_hash: hashPassword(newPassword), updated_at: new Date().toISOString() })
+      .eq("email", normalized).eq("is_active", true).select("id").maybeSingle();
+    if (error || !data) throw new Error(`Unable to update password: ${error?.message || "Active account not found."}`);
+    return true;
   }
 
   /**
@@ -245,28 +227,16 @@ export class UserDbService {
     emailHint?: string
   ): Promise<boolean> {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-    let updatedInDb = false;
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      const payload = { ...updates, updated_at: new Date().toISOString() };
-      if (isUUID) {
-        const { error } = await supabase.from("users").update(payload).eq("id", userId);
-        if (!error) updatedInDb = true;
-      } else if (emailHint || userId.includes("@")) {
-        const targetEmail = (emailHint || userId).toLowerCase().trim();
-        const { error } = await supabase.from("users").update(payload).eq("email", targetEmail);
-        if (!error) updatedInDb = true;
-      }
-    } catch {}
-
-    const inMem = CustomUserStore.findById(userId) || (emailHint ? CustomUserStore.findByEmail(emailHint) : null) || (userId.includes("@") ? CustomUserStore.findByEmail(userId) : null);
-    if (inMem) {
-      Object.assign(inMem, updates, { updated_at: new Date().toISOString() });
-      return true;
-    }
-
-    return updatedInDb;
+    const supabase = createAdminSupabaseClient();
+    const payload = { ...updates, updated_at: new Date().toISOString() };
+    let query = supabase.from("users").update(payload);
+    if (isUUID) query = query.eq("id", userId);
+    else if (emailHint || userId.includes("@")) {
+      query = query.eq("email", (emailHint || userId).toLowerCase().trim());
+    } else return false;
+    const { data, error } = await query.select("id").maybeSingle();
+    if (error) throw new Error(`Unable to update user profile: ${error.message}`);
+    return Boolean(data);
   }
 
   /**

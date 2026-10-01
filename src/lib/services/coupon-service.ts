@@ -29,6 +29,7 @@ export class CouponService {
       discount_value: Number(item.discount_value ?? 0),
       min_order_amount: Number(item.min_order_amount ?? 0),
       max_uses: item.max_uses == null ? undefined : Number(item.max_uses),
+      used_count: Number(item.used_count ?? 0),
       expires_at: item.expires_at || undefined,
       is_active: item.is_active ?? true,
     }));
@@ -41,6 +42,9 @@ export class CouponService {
 
     if (!found) return { valid: false, error: "Invalid coupon code." };
     if (!found.is_active) return { valid: false, error: "This coupon is no longer active." };
+    if (found.max_uses != null && (found.used_count || 0) >= found.max_uses) {
+      return { valid: false, error: "This coupon has reached its usage limit." };
+    }
     if (found.expires_at && new Date(found.expires_at).getTime() < Date.now()) {
       return { valid: false, error: "This promo code has expired." };
     }
@@ -91,6 +95,7 @@ export class CouponService {
       discount_value: Number(data.discount_value),
       min_order_amount: Number(data.min_order_amount),
       max_uses: data.max_uses == null ? undefined : Number(data.max_uses),
+      used_count: Number(data.used_count ?? 0),
       expires_at: data.expires_at || undefined,
       is_active: data.is_active ?? true,
     };

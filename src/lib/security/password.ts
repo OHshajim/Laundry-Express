@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { getAuthSecret } from "@/lib/auth-secret";
 
 /**
  * Enterprise Password Security Utilities
@@ -8,7 +7,6 @@ import { getAuthSecret } from "@/lib/auth-secret";
  */
 
 const KEY_LENGTH = 64;
-const TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
  * Hash a plain text password with a cryptographic random salt
@@ -45,55 +43,4 @@ export function verifyPassword(password: string, storedHash: string): boolean {
   }
 
   return false;
-}
-
-/**
- * Generate a cryptographically signed, stateless password reset token
- */
-export function createPasswordResetToken(email: string): string {
-  const normalized = email.trim().toLowerCase();
-  const expiresAt = Date.now() + TOKEN_TTL_MS;
-  const payload = `${normalized}:${expiresAt}`;
-  const signature = crypto
-    .createHmac("sha256", getAuthSecret())
-    .update(payload)
-    .digest("hex");
-  return Buffer.from(`${payload}:${signature}`).toString("base64url");
-}
-
-/**
- * Verify a password reset token and extract the associated email
- */
-export function verifyPasswordResetToken(token: string): { valid: boolean; email?: string } {
-  if (!token) return { valid: false };
-
-  try {
-    const decoded = Buffer.from(token, "base64url").toString("utf8");
-    const parts = decoded.split(":");
-    if (parts.length !== 3) return { valid: false };
-
-    const [email, expiresAtStr, signature] = parts;
-    const expiresAt = parseInt(expiresAtStr, 10);
-
-    if (Number.isNaN(expiresAt) || Date.now() > expiresAt) {
-      return { valid: false }; // Token expired
-    }
-
-    const expectedSignature = crypto
-      .createHmac("sha256", getAuthSecret())
-      .update(`${email}:${expiresAtStr}`)
-      .digest("hex");
-
-    const sigBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expectedSignature);
-
-    if (sigBuffer.length !== expectedBuffer.length) {
-      return { valid: false };
-    }
-
-    const match = crypto.timingSafeEqual(sigBuffer, expectedBuffer);
-    return match ? { valid: true, email } : { valid: false };
-  } catch {
-    return { valid: false };
-  }
 }

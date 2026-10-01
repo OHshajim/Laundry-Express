@@ -29,6 +29,7 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
     ["Quantity", invoice.quantity],
     ["Detergent and care", `${invoice.detergent} - Gentle Cold Wash Care`],
     ["Payment method", invoice.paymentMethod],
+    ...(invoice.orderCancelled ? [["Order status", "Cancelled — refund not issued"] as [string, string]] : []),
   ];
 
   pdf.setDrawColor(226, 232, 240);

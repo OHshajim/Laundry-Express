@@ -11,9 +11,9 @@ import { OrderProofModal } from "./order-proof-modal";
 
 interface OrderPipelineProps {
   orders: Order[];
-  onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
+  onUpdateStatus: (orderId: string, newStatus: OrderStatus) => Promise<boolean>;
   onUpdateFinalWeight: (orderId: string, finalWeight: number) => void;
-  onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => void;
+  onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => Promise<boolean>;
 }
 
 export function OrderPipeline({
@@ -42,14 +42,17 @@ export function OrderPipeline({
     setTimeout(() => setSystemAlert(null), 4000);
   };
 
-  const handleStatusChangeWithNotification = (orderId: string, newStatus: OrderStatus) => {
-    onUpdateStatus(orderId, newStatus);
+  const handleStatusChangeWithNotification = async (orderId: string, newStatus: OrderStatus) => {
+    if (!await onUpdateStatus(orderId, newStatus)) return false;
     const ord = orders.find((o) => o.id === orderId);
     if (newStatus === "driver_assigned") {
-      triggerAlert(`Order ${ord?.order_number || ""} accepted! Automated pickup window email dispatched.`);
+      triggerAlert(`Order ${ord?.order_number || ""} accepted and ready for dispatch.`);
     } else if (newStatus === "out_for_delivery") {
       triggerAlert(`Order ${ord?.order_number || ""} marked Out for Delivery.`);
+    } else if (newStatus === "cancelled") {
+      triggerAlert(`Order ${ord?.order_number || ""} cancelled. No refund was issued.`);
     }
+    return true;
   };
 
   const handleOpenProofModal = (order: Order, type: "pickup" | "dropoff" | "damage") => {
@@ -58,27 +61,27 @@ export function OrderPipeline({
     setProofModalOpen(true);
   };
 
-  const handleSkipProof = (orderId: string, type: "pickup" | "dropoff" | "damage") => {
+  const handleSkipProof = async (orderId: string, type: "pickup" | "dropoff" | "damage") => {
     const ord = orders.find((o) => o.id === orderId);
     if (type === "pickup") {
-      onUpdateStatus(orderId, "in_wash");
+      if (!await onUpdateStatus(orderId, "in_wash")) return;
       triggerAlert(`${ord?.order_number || ""} picked up (no photo). Moved to Wash & Dry.`);
     } else if (type === "dropoff") {
-      onUpdateStatus(orderId, "completed");
+      if (!await onUpdateStatus(orderId, "completed")) return;
       triggerAlert(`${ord?.order_number || ""} marked delivered (no photo). Completed.`);
     } else {
       triggerAlert(`Flaw log skipped for ${ord?.order_number || ""}.`);
     }
   };
 
-  const handleSaveProof = (orderId: string, type: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
-    onUploadProof(orderId, type, imageUrl, notes);
+  const handleSaveProof = async (orderId: string, type: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
+    if (!await onUploadProof(orderId, type, imageUrl, notes)) return;
     const ord = orders.find((o) => o.id === orderId);
     if (type === "pickup") {
-      onUpdateStatus(orderId, "in_wash");
+      if (!await onUpdateStatus(orderId, "in_wash")) return;
       triggerAlert(`Pickup photo saved for ${ord?.order_number || ""}! In Wash & Dry.`);
     } else if (type === "dropoff") {
-      onUpdateStatus(orderId, "completed");
+      if (!await onUpdateStatus(orderId, "completed")) return;
       triggerAlert(`Delivery photo verified for ${ord?.order_number || ""}! Completed.`);
     } else if (type === "damage") {
       triggerAlert(`Pre-existing garment flaw logged for ${ord?.order_number || ""}! Customer alerted.`);
@@ -141,6 +144,7 @@ export function OrderPipeline({
             className="font-bold px-3 py-1.5 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer text-xs"
           >
             <option value="all">All Statuses ({orders.length})</option>
+            <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="driver_assigned">Driver Assigned</option>
             <option value="picked_up">Picked Up</option>

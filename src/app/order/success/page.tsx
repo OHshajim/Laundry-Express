@@ -22,8 +22,10 @@ function SuccessContent() {
   const [isPdfGenerating, setIsPdfGenerating] = React.useState(false);
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [emailSent, setEmailSent] = React.useState(false);
-  const [paid, setPaid] = React.useState(true);
-  const autoEmailSentRef = React.useRef(false);
+  const [paid, setPaid] = React.useState(false);
+  const [isStatusChecked, setIsStatusChecked] = React.useState(false);
+  const [statusError, setStatusError] = React.useState("");
+  const [actionError, setActionError] = React.useState("");
   const [slotTimes, setSlotTimes] = React.useState({ s1: "", e1: "", s2: "", e2: "" });
 
   React.useEffect(() => {
@@ -33,37 +35,63 @@ function SuccessContent() {
   }, []);
 
   React.useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
     let attempts = 0;
     const url = `/api/checkout?order_id=${encodeURIComponent(orderId)}${sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : ""}`;
 
-    const checkStatus = () => {
-      fetch(url)
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.order) {
-            setOrder(d.order);
-            const isOrderPaid = d.order.payment_status === "paid" || d.paid;
-            setPaid(isOrderPaid);
-            // If already confirmed or reached max attempts, stop polling
-            if (isOrderPaid || attempts >= 5) return;
-          }
-          attempts++;
-          if (attempts < 5) {
-            setTimeout(checkStatus, 2000);
-          }
-        })
-        .catch(() => {});
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok || !data?.success || !data.order) {
+          throw new Error(data?.error || "Unable to retrieve this order.");
+        }
+        if (!active) return;
+        setOrder(data.order);
+        const isOrderPaid = data.order.payment_status === "paid";
+        setPaid(isOrderPaid);
+        setStatusError("");
+        if (isOrderPaid || data.order.payment_status === "failed") {
+          setIsStatusChecked(true);
+          return;
+        }
+      } catch (error) {
+        if (!active) return;
+        setStatusError(error instanceof Error ? error.message : "Unable to verify payment.");
+      }
+
+      attempts += 1;
+      if (attempts < 30) {
+        timer = setTimeout(checkStatus, 2000);
+      } else if (active) {
+        setIsStatusChecked(true);
+        setStatusError("Payment is still pending. You can check the latest status in your dashboard.");
+      }
     };
 
-    checkStatus();
+    void checkStatus();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [sessionId, orderId]);
 
-  if (!order) {
+  if (!order && !isStatusChecked) {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center space-y-4">
         <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
-        <h2 className="text-base font-black text-slate-900">Verifying Payment &amp; Retrieving Order...</h2>
-        <p className="text-xs text-slate-500">Connecting securely with Stripe to retrieve your confirmed booking details.</p>
+        <h2 className="text-base font-black text-slate-900">Checking your order status...</h2>
+        <p className="text-xs text-slate-500">Your order will appear in the dashboard as soon as it is available.</p>
+      </div>
+    );
+  }
+  if (!order) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 text-center space-y-4">
+        <h2 className="text-base font-black text-slate-900">Order status unavailable</h2>
+        <p role="alert" className="text-xs text-rose-700">{statusError || "The order could not be retrieved."}</p>
+        <Link href="/dashboard/orders"><Button variant="hero">Open your dashboard</Button></Link>
       </div>
     );
   }
@@ -100,10 +128,11 @@ function SuccessContent() {
 
   const handleDownloadPdf = async () => {
     try {
+      setActionError("");
       setIsPdfGenerating(true);
       await downloadInvoiceAsPdf(getInvoiceData(), `LaundryExpress-Invoice-${order.order_number || orderId}.pdf`);
-    } catch {
-      window.print();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Unable to generate invoice PDF.");
     } finally {
       setIsPdfGenerating(false);
     }
@@ -111,6 +140,7 @@ function SuccessContent() {
 
   const handleSendEmail = async () => {
     try {
+      setActionError("");
       setIsSendingEmail(true);
       const res = await fetch("/api/orders/email-invoice", {
         method: "POST",
@@ -124,12 +154,11 @@ function SuccessContent() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        setEmailSent(true);
-        setTimeout(() => setEmailSent(false), 5000);
-      }
-    } catch {
+      if (!res.ok || !data?.success) throw new Error(data?.error || "Unable to send invoice email.");
       setEmailSent(true);
+      setTimeout(() => setEmailSent(false), 5000);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Unable to send invoice email.");
     } finally {
       setIsSendingEmail(false);
     }
@@ -141,18 +170,27 @@ function SuccessContent() {
         <Image src="/brand/logo-badge.jpg" alt="Laundry Express" width={64} height={64} className="object-contain rounded-xl" priority />
       </div>
 
-      <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/10">
-        <CheckCircle2 className="h-9 w-9" />
+      <div className={`h-16 w-16 mx-auto rounded-full flex items-center justify-center shadow-md ${
+        paid ? "bg-emerald-100 text-emerald-600 shadow-emerald-500/10" : "bg-amber-100 text-amber-700 shadow-amber-500/10"
+      }`}>
+        {paid ? <CheckCircle2 className="h-9 w-9" /> : <Clock className="h-9 w-9" />}
       </div>
 
       <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Payment Confirmed &amp; Booking Scheduled!
+          {order.order_status === "cancelled"
+            ? "Order Cancelled"
+            : paid ? "Payment Confirmed & Booking Scheduled" : "Order Received — Payment Pending"}
         </h1>
         <p className="text-sm text-slate-600 max-w-md mx-auto">
-          Your payment was processed securely via Stripe. Our driver will arrive during your scheduled window.
+          {order.order_status === "cancelled"
+            ? "Cancellation does not automatically refund a completed payment. Contact the admin to discuss any refund."
+            : paid
+            ? "Stripe confirmed your payment. Your invoice is available below."
+            : "We are waiting for Stripe to confirm your payment. The order is not confirmed yet."}
         </p>
       </div>
+      {statusError && <p role="status" className="text-xs text-amber-800">{statusError}</p>}
 
       {/* Real Order Info Card */}
       <OrderSummaryCard
@@ -165,8 +203,8 @@ function SuccessContent() {
         slotLabel={slotLabel}
       />
 
-      {/* Actions: Download Invoice PDF & Send Email */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      {/* Actions are only available after the server confirms payment. */}
+      {paid && <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
         <Button
           type="button" variant="outline" onClick={handleDownloadPdf} disabled={isPdfGenerating}
           className="w-full sm:w-auto cursor-pointer gap-2 border-primary/30 text-primary hover:bg-pink-50 font-bold"
@@ -189,9 +227,15 @@ function SuccessContent() {
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
-      </div>
+      </div>}
+      {!paid && (
+        <Link href="/dashboard/orders" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
+          View pending order in dashboard <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
+      {actionError && <p role="alert" className="text-xs text-rose-700">{actionError}</p>}
 
-      {emailSent && (
+      {emailSent && paid && (
         <p className="text-xs text-emerald-600 font-semibold flex items-center justify-center gap-1">
           <Check className="h-3.5 w-3.5" /> Official tax invoice PDF sent to {customerEmail || "your email"} and admin.
         </p>

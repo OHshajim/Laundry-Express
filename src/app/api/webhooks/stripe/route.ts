@@ -4,36 +4,44 @@ import { OrderService } from "@/lib/services/order-service";
 import { ContentService } from "@/lib/services/content-service";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { formatSlotLabel, resolveDetergentName } from "@/lib/utils";
-
-const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY!;
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
-const stripe = new Stripe(STRIPE_SECRET, { apiVersion: "2024-12-18.acacia" as any });
-
-// In-memory LRU set to ensure idempotent event handling
-const PROCESSED_EVENT_IDS = new Set<string>();
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
+  const stripeSecret = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!stripeSecret || !webhookSecret) {
+    console.error("[stripe-webhook] Stripe secrets are not configured.");
+    return NextResponse.json({ error: "Payment webhook is not configured." }, { status: 503 });
+  }
   const sig = req.headers.get("stripe-signature");
   if (!sig) {
     return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
   }
 
+  const stripe = new Stripe(stripeSecret, {
+    // @ts-expect-error -- Pin the API version used by this integration.
+    apiVersion: "2024-12-18.acacia",
+  });
+
   let event: Stripe.Event;
   try {
     const rawBody = await req.arrayBuffer();
-    event = stripe.webhooks.constructEvent(Buffer.from(rawBody), sig, WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(Buffer.from(rawBody), sig, webhookSecret);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Webhook signature verification failed";
     console.error("[stripe-webhook] signature error:", msg);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  // Idempotency check 1: Event ID already processed
-  if (PROCESSED_EVENT_IDS.has(event.id)) {
-    return NextResponse.json({ received: true, idempotent: true });
-  }
-
   try {
+    const supabase = createAdminSupabaseClient();
+    const { data: claimed, error: claimError } = await supabase.rpc("claim_stripe_webhook_event", {
+        event_id_input: event.id,
+        event_type_input: event.type,
+      });
+    if (claimError) throw new Error(`Unable to claim Stripe event: ${claimError.message}`);
+    if (!claimed) return NextResponse.json({ received: true, idempotent: true });
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -43,28 +51,35 @@ export async function POST(req: NextRequest) {
       case "payment_intent.payment_failed": {
         const pi = event.data.object as Stripe.PaymentIntent;
         console.warn("[stripe-webhook] payment failed for intent:", pi.id, pi.last_payment_error?.message);
-        // Order remains PENDING_PAYMENT per business rules
         break;
       }
       case "checkout.session.expired": {
         const session = event.data.object as Stripe.Checkout.Session;
         console.info("[stripe-webhook] checkout session expired:", session.id);
-        // Order remains PENDING_PAYMENT
+        const orderNumber = session.metadata?.order_number;
+        if (orderNumber) await OrderService.markOrderPaymentFailed(orderNumber);
         break;
       }
       default:
         break;
     }
 
-    // Record processed event ID (capped to 1000 items)
-    if (PROCESSED_EVENT_IDS.size > 1000) {
-      const first = PROCESSED_EVENT_IDS.values().next().value;
-      if (first) PROCESSED_EVENT_IDS.delete(first);
-    }
-    PROCESSED_EVENT_IDS.add(event.id);
+    const { data, error } = await supabase.from("stripe_webhook_events")
+      .update({ status: "completed", updated_at: new Date().toISOString() })
+      .eq("event_id", event.id).select("event_id").maybeSingle();
+    if (error || !data) throw new Error(`Unable to complete Stripe event: ${error?.message || "Event claim missing."}`);
   } catch (handlerErr: unknown) {
     const msg = handlerErr instanceof Error ? handlerErr.message : "Webhook handler error";
     console.error("[stripe-webhook] processing error:", msg);
+    try {
+      const supabase = createAdminSupabaseClient();
+      const { error } = await supabase.from("stripe_webhook_events")
+        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .eq("event_id", event.id);
+      if (error) console.error("[stripe-webhook] could not release failed event:", error.message);
+    } catch (releaseError) {
+      console.error("[stripe-webhook] could not release failed event:", releaseError);
+    }
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
@@ -84,6 +99,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (!order) {
     throw new Error(`Paid order ${identifier} was not found.`);
   }
+  const expectedAmount = Math.round(Number(order.total_amount) * 100);
+  if (session.currency !== "usd" || session.amount_total !== expectedAmount) {
+    throw new Error(`Stripe payment amount does not match order ${identifier}.`);
+  }
+  if (order.payment_status === "paid") {
+    const { error } = await createAdminSupabaseClient().rpc("increment_coupon_usage_for_order", {
+      order_id_input: order.id,
+    });
+    if (error) throw new Error(`Unable to record coupon use: ${error.message}`);
+  }
 
   if (order.payment_status === "paid" && order.invoice_email_sent_at) {
     console.info("[stripe-webhook] paid order invoice already sent:", identifier);
@@ -101,6 +126,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
     if (!updatedOrder) throw new Error(`Could not confirm paid order ${identifier}.`);
     finalOrder = updatedOrder;
+    const { error } = await createAdminSupabaseClient().rpc("increment_coupon_usage_for_order", {
+      order_id_input: order.id,
+    });
+    if (error) throw new Error(`Unable to record coupon use: ${error.message}`);
   }
 
   // 2. Generate and dispatch official invoice email to customer and admin
@@ -153,6 +182,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       discountAmount: Number(finalOrder.discount_amount || 0),
       totalAmount: Number(finalOrder.total_amount || 0),
       address: fullAddress,
+      orderCancelled: finalOrder.order_status === "cancelled",
     });
 
     await OrderService.markInvoiceEmailSent(finalOrder.id);

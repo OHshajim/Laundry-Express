@@ -3,8 +3,7 @@ import { OrderService } from "@/lib/services/order-service";
 import { ContentService } from "@/lib/services/content-service";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { formatSlotLabel, resolveDetergentName } from "@/lib/utils";
-import { getToken } from "next-auth/jwt";
-import { getAuthSecret } from "@/lib/auth-secret";
+import { getVerifiedUser } from "@/lib/auth-request";
 
 /**
  * POST /api/orders/email-invoice
@@ -13,10 +12,11 @@ import { getAuthSecret } from "@/lib/auth-secret";
  */
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: getAuthSecret() });
-    if (!token?.id) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
     }
+    const { user } = verified;
 
     const body = await req.json().catch(() => ({}));
     const { orderId, orderNumber } = body;
@@ -25,7 +25,6 @@ export async function POST(req: NextRequest) {
     if (!identifier) {
       return NextResponse.json({ success: false, error: "Order identifier required" }, { status: 400 });
     }
-
     const [order, settings] = await Promise.all([
       OrderService.getOrderByNumber(identifier),
       ContentService.getSettings(),
@@ -38,11 +37,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Invoice is available after payment is confirmed." }, { status: 409 });
     }
     if (
-      token.role !== "admin" &&
-      order.user_id !== token.id &&
-      (!token.email || order.customer_email?.toLowerCase() !== token.email.toLowerCase())
+      user.role !== "admin" &&
+      order.user_id !== user.id &&
+      order.customer_email?.toLowerCase() !== user.email.toLowerCase()
     ) {
       return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+    }
+    if (order.invoice_email_sent_at) {
+      return NextResponse.json({ success: true, message: "Invoice was already sent.", orderNumber: order.order_number });
     }
 
     const slotLabel = settings?.slot1_start && settings.slot1_end && settings.slot2_start && settings.slot2_end &&
@@ -85,6 +87,7 @@ export async function POST(req: NextRequest) {
       discountAmount: Number(order.discount_amount || 0),
       totalAmount: Number(order.total_amount || 0),
       address: fullAddress,
+      orderCancelled: order.order_status === "cancelled",
     });
     await OrderService.markInvoiceEmailSent(order.id);
 

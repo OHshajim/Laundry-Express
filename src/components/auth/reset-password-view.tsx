@@ -69,8 +69,8 @@ export function ResetPasswordView() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setErrorMessage("New password must be at least 6 characters.");
+    if (newPassword.length < 8) {
+      setErrorMessage("New password must be at least 8 characters.");
       return;
     }
 

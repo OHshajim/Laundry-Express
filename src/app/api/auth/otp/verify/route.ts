@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { OtpService } from "@/lib/security/otp-service";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/auth/otp/verify
@@ -10,6 +11,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { email, otp, purpose } = body;
+    if (typeof email === "string" && !await consumeRateLimit(req, "otp-verify", 10, 60, email)) {
+      return NextResponse.json({ success: false, error: "Too many verification attempts. Please wait." }, { status: 429 });
+    }
 
     if (!email || !otp || !purpose) {
       return NextResponse.json(

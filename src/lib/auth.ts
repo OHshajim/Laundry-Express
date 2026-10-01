@@ -121,18 +121,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user }) {
       if (user?.email) {
-        try {
-          await UserDbService.syncUser({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            phone: user.phone,
-            avatar_url: user.image || undefined,
-          });
-        } catch {
-          // Gracefully continue sign in
-        }
+        const synchronized = await UserDbService.syncUser({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          avatar_url: user.image || undefined,
+        });
+        user.id = synchronized.id;
+        user.role = synchronized.role;
+        user.phone = synchronized.phone;
       }
       return true;
     },
@@ -141,7 +139,22 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role || "customer";
         token.phone = user.phone;
-        token.picture = user.image || (user as any).avatar_url || token.picture;
+        token.picture = user.image || token.picture;
+      }
+      if (token.id) {
+        const activeUser = await UserDbService.getActiveUserById(token.id);
+        if (!activeUser) {
+          token.id = "";
+          token.role = "customer";
+          token.email = undefined;
+        } else {
+          token.id = activeUser.id;
+          token.role = activeUser.role;
+          token.email = activeUser.email;
+          token.name = activeUser.full_name;
+          token.phone = activeUser.phone;
+          token.picture = activeUser.avatar_url || token.picture;
+        }
       }
       if (trigger === "update" && session) {
         if (session.image) token.picture = session.image;

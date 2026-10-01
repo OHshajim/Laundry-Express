@@ -25,7 +25,9 @@ export function TransactionsManager({ orders, onViewOrder }: TransactionsManager
       customer_name: o.customer_name || o.user?.full_name || "Customer",
       customer_email: o.customer_email || "customer@example.com",
       amount: o.total_amount,
-      status: o.order_status === "cancelled" ? ("refunded" as const) : (o.payment_status === "paid" || o.order_status === "completed" ? ("succeeded" as const) : ("pending" as const)),
+      status: o.payment_status === "paid" ? "succeeded"
+        : o.payment_status === "refunded" ? "refunded"
+          : o.payment_status === "failed" ? "failed" : "pending",
       date: o.created_at || new Date().toISOString(),
       method: o.payment_method === "card" ? "Credit Card" : o.payment_method === "apple_pay" ? "Apple Pay" : o.payment_method === "google_pay" ? "Google Pay" : "Doorstep Cash/Card",
       card_last4: o.payment_method === "card" ? "Card" : "",
@@ -147,6 +149,7 @@ export function TransactionsManager({ orders, onViewOrder }: TransactionsManager
                 <option value="all">All Statuses</option>
                 <option value="succeeded">Succeeded</option>
                 <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
                 <option value="refunded">Refunded</option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -196,7 +199,7 @@ export function TransactionsManager({ orders, onViewOrder }: TransactionsManager
                 </td>
                 <td className="py-3.5 px-4 font-black text-slate-900">{formatCurrency(txn.amount)}</td>
                 <td className="py-3.5 px-4">
-                  <Badge variant={txn.status === "succeeded" ? "success" : txn.status === "refunded" ? "danger" : "warning"}>
+                  <Badge variant={txn.status === "succeeded" ? "success" : txn.status === "pending" ? "warning" : "danger"}>
                     {txn.status}
                   </Badge>
                 </td>
@@ -218,7 +221,7 @@ export function TransactionsManager({ orders, onViewOrder }: TransactionsManager
                 <p className="font-bold text-slate-900 text-sm">{txn.customer_name}</p>
                 <p className="text-xs text-slate-500">{new Date(txn.date).toLocaleDateString()}</p>
               </div>
-              <Badge variant={txn.status === "succeeded" ? "success" : txn.status === "refunded" ? "danger" : "warning"}>
+              <Badge variant={txn.status === "succeeded" ? "success" : txn.status === "pending" ? "warning" : "danger"}>
                 {txn.status}
               </Badge>
             </div>

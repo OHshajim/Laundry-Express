@@ -17,6 +17,7 @@ interface CustomerOrderDetailModalProps {
 
 export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrderDetailModalProps) {
   const [isPdfGenerating, setIsPdfGenerating] = React.useState(false);
+  const [pdfError, setPdfError] = React.useState("");
   const [activePhoto, setActivePhoto] = React.useState<string | null>(null);
   const [slotTimes, setSlotTimes] = React.useState({ s1: "", e1: "", s2: "", e2: "" });
 
@@ -37,6 +38,7 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
 
   const handleDownloadPdf = async () => {
     try {
+      setPdfError("");
       setIsPdfGenerating(true);
       const inv: InvoiceData = {
         orderId: order.order_number,
@@ -48,7 +50,9 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
         orderDetails: { planName: planLabel, quantity: quantityLabel,         detergent: order.detergent_name || resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
       };
       await downloadInvoiceAsPdf(inv, `LaundryExpress-Invoice-${order.order_number}.pdf`);
-    } catch { window.print(); } finally { setIsPdfGenerating(false); }
+    } catch {
+      setPdfError("Unable to generate the invoice PDF. Please try again.");
+    } finally { setIsPdfGenerating(false); }
   };
 
   return (
@@ -171,19 +175,22 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
             <div className="flex justify-between text-emerald-600 font-bold"><span>Coupon Discount</span><span>-{formatCurrency(order.discount_amount)}</span></div>
           )}
           <div className="flex justify-between font-black text-sm text-slate-900 pt-1 border-t border-slate-200">
-            <span>Total Paid (Stripe)</span>
+            <span>{order.payment_status === "paid" ? "Total Paid" : "Order Total"}</span>
             <span className="text-primary">{formatCurrency(order.total_amount)}</span>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-2">
-          <Button type="button" variant="outline" onClick={handleDownloadPdf} disabled={isPdfGenerating} className="border-primary/30 text-primary hover:bg-pink-50 font-bold text-xs gap-1.5">
-            <Download className="h-3.5 w-3.5" />
-            {isPdfGenerating ? "Generating PDF..." : "Download Invoice (PDF)"}
-          </Button>
+          {order.payment_status === "paid" ? (
+            <Button type="button" variant="outline" onClick={handleDownloadPdf} disabled={isPdfGenerating} className="border-primary/30 text-primary hover:bg-pink-50 font-bold text-xs gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              {isPdfGenerating ? "Generating PDF..." : "Download Invoice (PDF)"}
+            </Button>
+          ) : <span className="text-[11px] text-slate-500">Invoice available after payment confirmation.</span>}
           <Button onClick={onClose} className="bg-slate-900 text-white text-xs px-5">Close</Button>
         </div>
+        {pdfError && <p role="alert" className="text-xs text-rose-700">{pdfError}</p>}
 
         {/* Full Image Lightbox */}
         {activePhoto && (

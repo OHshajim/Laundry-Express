@@ -1,7 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import Stripe from "stripe";
 import { OrderService } from "@/lib/services/order-service";
-import { getAuthSecret } from "@/lib/auth-secret";
+import { getVerifiedUser } from "@/lib/auth-request";
+import type { OrderStatus } from "@/types";
+
+const ORDER_STATUSES: OrderStatus[] = [
+  "pending", "confirmed", "driver_assigned", "picked_up",
+  "in_wash", "out_for_delivery", "completed", "cancelled",
+];
+const PROOF_TYPES = ["pickup", "dropoff", "damage"] as const;
+
+function isOrderStatus(value: unknown): value is OrderStatus {
+  return typeof value === "string" && ORDER_STATUSES.some((status) => status === value);
+}
+
+function isProofType(value: unknown): value is typeof PROOF_TYPES[number] {
+  return typeof value === "string" && PROOF_TYPES.some((proofType) => proofType === value);
+}
 
 
 /**
@@ -12,13 +27,14 @@ import { getAuthSecret } from "@/lib/auth-secret";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: getAuthSecret() });
-    if (!token) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
     }
-    const isAdmin = token?.role === "admin";
-    const userId = isAdmin ? undefined : token.id;
-    const userEmail = isAdmin ? undefined : token?.email || undefined;
+    const { user } = verified;
+    const isAdmin = user.role === "admin";
+    const userId = isAdmin ? undefined : user.id;
+    const userEmail = isAdmin ? undefined : user.email;
 
     if (!isAdmin && req.nextUrl.searchParams.has("userId")) {
       return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
@@ -32,49 +48,106 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const token = await getToken({ req, secret: getAuthSecret() });
-    if (!token?.id || !token.email) {
-      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
-    }
-    const body = await req.json();
-
-    const createdOrder = await OrderService.createOrder({
-      ...body,
-      user_id: token.id,
-      customer_email: token.email,
-    });
-
-    return NextResponse.json({ success: true, order: createdOrder }, { status: 201 });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Failed to create booking";
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    { success: false, error: "Use the secure checkout endpoint to place an order." },
+    { status: 405, headers: { Allow: "GET, PATCH" } }
+  );
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: getAuthSecret() });
-    if (!token || token.role !== "admin") {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
       return NextResponse.json({ success: false, error: "Forbidden. Admin authorization required." }, { status: 403 });
     }
 
-    const body = await req.json();
-    const { orderId, status, finalWeight, proofType, imageUrl, notes } = body;
+    const body: unknown = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ success: false, error: "A JSON object is required." }, { status: 400 });
+    }
+    const { orderId, status, finalWeight, proofType, imageUrl, notes } = body as Record<string, unknown>;
 
-    if (!orderId) {
+    const validatedStatus = isOrderStatus(status) ? status : undefined;
+    const validatedProofType = isProofType(proofType) ? proofType : undefined;
+    const validImageUrl = typeof imageUrl === "string" ? imageUrl.trim() : "";
+    if (typeof orderId !== "string" || !orderId.trim()) {
       return NextResponse.json({ success: false, error: "Order ID is required." }, { status: 400 });
     }
+    const hasStatus = status !== undefined;
+    const hasWeight = finalWeight !== undefined;
+    const hasProof = proofType !== undefined || imageUrl !== undefined || notes !== undefined;
+    if (
+      (hasStatus && !validatedStatus) ||
+      (hasWeight && (typeof finalWeight !== "number" || !Number.isFinite(finalWeight) || finalWeight <= 0)) ||
+      (hasProof && (!validatedProofType || !validImageUrl ||
+        (notes !== undefined && (typeof notes !== "string" || notes.length > 500)))) ||
+      (!hasStatus && !hasWeight && !hasProof)
+    ) {
+      return NextResponse.json({ success: false, error: "Provide valid order status, final weight, or proof details." }, { status: 400 });
+    }
+    if (validatedStatus === "cancelled" && (hasWeight || hasProof)) {
+      return NextResponse.json({ success: false, error: "Cancel an order separately from other updates." }, { status: 400 });
+    }
+    if (validatedStatus) {
+      if (validatedStatus === "cancelled") {
+        const order = await OrderService.getOrderByNumber(orderId);
+        if (!order) return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+        if (order.order_status === "completed") {
+          return NextResponse.json({ success: false, error: "Completed orders cannot be cancelled." }, { status: 409 });
+        }
 
-    if (status) {
-      await OrderService.updateOrderStatus(orderId, status);
+        const hasStripeCheckout = typeof order.payment_method === "string" &&
+          ["card", "apple_pay"].includes(order.payment_method);
+        if (order.order_status !== "cancelled" && hasStripeCheckout && order.payment_status !== "paid" && order.payment_status !== "refunded") {
+          const checkoutSessionId = await OrderService.getCheckoutSessionId(order.id);
+          if (!checkoutSessionId) {
+            return NextResponse.json({ success: false, error: "This checkout session cannot be verified. Confirm its payment status before cancelling." }, { status: 409 });
+          }
+          const stripeSecret = process.env.STRIPE_SECRET_KEY;
+          if (!stripeSecret) {
+            return NextResponse.json({ success: false, error: "Stripe is not configured to safely cancel this checkout." }, { status: 503 });
+          }
+          const stripe = new Stripe(stripeSecret, {
+            // @ts-expect-error -- Pin the API version used by this integration.
+            apiVersion: "2024-12-18.acacia",
+          });
+          let session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
+          if (session.status === "open") {
+            try {
+              session = await stripe.checkout.sessions.expire(session.id);
+            } catch {
+              session = await stripe.checkout.sessions.retrieve(session.id);
+            }
+          }
+          if (session.status === "complete" && session.payment_status !== "paid") {
+            return NextResponse.json({ success: false, error: "Payment is still processing. Refresh the order before cancelling." }, { status: 409 });
+          }
+          if (session.status !== "expired" && !(session.status === "complete" && session.payment_status === "paid")) {
+            return NextResponse.json({ success: false, error: "Stripe did not confirm that checkout was closed. The order was not cancelled." }, { status: 409 });
+          }
+          if (session.status === "expired") await OrderService.markOrderPaymentFailed(order.id);
+        }
+        await OrderService.updateOrderStatus(order.id, "cancelled");
+        const cancelledOrder = await OrderService.getOrderByNumber(order.id);
+        return NextResponse.json({
+          success: true,
+          message: "Order cancelled. No refund was issued.",
+          order: cancelledOrder,
+        });
+      }
+      await OrderService.updateOrderStatus(orderId, validatedStatus);
     }
     if (typeof finalWeight === "number") {
       await OrderService.updateFinalWeight(orderId, finalWeight);
     }
-    if (proofType && imageUrl) {
-      await OrderService.uploadProof(orderId, proofType, imageUrl, notes);
+    if (hasProof && validatedProofType && validImageUrl) {
+      await OrderService.uploadProof(
+        orderId,
+        validatedProofType,
+        validImageUrl,
+        typeof notes === "string" ? notes : undefined
+      );
     }
 
     return NextResponse.json({ success: true, message: "Order successfully updated." });

@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
+import { getVerifiedUser } from "@/lib/auth-request";
 
 export async function GET() {
   try {
@@ -19,8 +17,8 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token || token.role !== "admin") {
+    const verified = await getVerifiedUser(req);
+    if (!verified || verified.user.role !== "admin") {
       return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
     }
     const body = await req.json();

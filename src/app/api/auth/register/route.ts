@@ -1,43 +1,20 @@
 import { NextResponse } from "next/server";
-import { CustomUserStore } from "@/lib/services/custom-user-store";
 import { UserDbService } from "@/lib/services/user-db-service";
 import { OtpService } from "@/lib/security/otp-service";
-
-// In-memory rate limiting tracker (5 registrations per minute per IP)
-const registrationRateLimitMap = new Map<string, { count: number; expiresAt: number }>();
-
-function checkRegistrationRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 5;
-
-  const entry = registrationRateLimitMap.get(ip);
-  if (!entry || now > entry.expiresAt) {
-    registrationRateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxRequests) {
-    return false;
-  }
-
-  entry.count += 1;
-  return true;
-}
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/auth/register
  *
  * Production endpoint for customer account registration:
  * - Rate limiting protection (5 registrations/min)
- * - Strict full name and password complexity checks (min 6 characters)
+ * - Strict full name and password complexity checks (min 8 characters)
  * - Creates a new database account without modifying existing accounts
  * - Strictly adheres to 100-250 lines rule
  */
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (!checkRegistrationRateLimit(ip)) {
+    if (!await consumeRateLimit(req, "registration", 5, 60)) {
       return NextResponse.json(
         {
           success: false,
@@ -80,9 +57,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    if (!password || typeof password !== "string" || password.length < 8) {
       return NextResponse.json(
-        { success: false, error: "Password must be at least 6 characters." },
+        { success: false, error: "Password must be at least 8 characters." },
         { status: 400 }
       );
     }
@@ -94,7 +71,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (CustomUserStore.findByEmail(normalizedEmail) || await UserDbService.getUserByEmail(normalizedEmail)) {
+    if (await UserDbService.getUserByEmail(normalizedEmail)) {
       return NextResponse.json(
         { success: false, error: "An account with this email already exists." },
         { status: 409 }
@@ -120,19 +97,11 @@ export async function POST(req: Request) {
       password,
     });
 
-    const storedUser = CustomUserStore.createCustomer({
-      id: dbUser.id,
-      email: normalizedEmail,
-      fullName: fullName.trim(),
-      phone: typeof phone === "string" ? phone : undefined,
-      password,
-    });
-
     return NextResponse.json(
       {
         success: true,
         user: {
-          id: dbUser.id || storedUser.id,
+          id: dbUser.id,
           email: dbUser.email,
           full_name: dbUser.full_name,
           phone: dbUser.phone,

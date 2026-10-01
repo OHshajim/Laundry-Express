@@ -45,10 +45,6 @@ export function NewAddressForm({
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [saveError, setSaveError] = React.useState("");
 
-  React.useEffect(() => {
-    if (editingAddress?.label) setAddressLabel(editingAddress.label);
-  }, [editingAddress]);
-
   const isStreetInvalid = showValidationErrors && street.trim().length < 5;
   const isZipInvalid = showValidationErrors && !/^\d{5}(-\d{4})?$/.test(zip.trim());
 

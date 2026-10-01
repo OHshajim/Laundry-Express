@@ -1,9 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { OtpService } from "@/lib/security/otp-service";
 import { UserDbService } from "@/lib/services/user-db-service";
-
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
+import { getVerifiedUser } from "@/lib/auth-request";
 
 /**
  * POST /api/auth/change-password
@@ -12,8 +10,8 @@ const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
  */
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: AUTH_SECRET });
-    if (!token) {
+    const verified = await getVerifiedUser(req);
+    if (!verified) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Please sign in." },
         { status: 401 }
@@ -33,16 +31,16 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.trim().toLowerCase();
 
     // Verify session user matches requested email (or is admin)
-    if (token.email && token.email.toLowerCase() !== normalizedEmail && token.role !== "admin") {
+    if (verified.user.email.toLowerCase() !== normalizedEmail) {
       return NextResponse.json(
         { success: false, error: "Forbidden. You cannot change another user's password." },
         { status: 403 }
       );
     }
 
-    if (typeof newPassword !== "string" || newPassword.length < 6) {
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
       return NextResponse.json(
-        { success: false, error: "New password must be at least 6 characters long." },
+        { success: false, error: "New password must be at least 8 characters long." },
         { status: 400 }
       );
     }

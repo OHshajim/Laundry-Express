@@ -7,41 +7,28 @@ import type { OrderReview } from "@/types";
  * Strictly complies with the < 250 lines architectural rule.
  */
 
-let cachedReviews: OrderReview[] = [];
-
 export class ReviewService {
   /**
    * Returns reviews. If onlyApproved is true, returns public approved reviews for landing page.
    */
   static async getReviews(onlyApproved: boolean = false, userId?: string): Promise<OrderReview[]> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      let q = supabase
-        .from("reviews")
-        .select("*, review_photos(photo_url)")
-        .order("created_at", { ascending: false });
-      if (onlyApproved) q = q.eq("status", "approved");
-      if (userId) q = q.eq("user_id", userId);
-      const { data, error } = await q;
-      if (!error && data) {
-        return data.map((r) => ({
-          id: r.id,
-          order_id: r.order_id,
-          user_id: r.user_id || "",
-          customer_name: r.customer_name || "Verified Customer",
-          rating: Number(r.rating || 5),
-          comment: r.comment || "",
-          status: r.status || "pending",
-          photo_urls: (r.review_photos || []).map((p: { photo_url: string }) => p.photo_url),
-          created_at: r.created_at,
-        }));
-      }
-    } catch {}
-
-    const base = userId
-      ? cachedReviews.filter((r) => r.user_id === userId)
-      : cachedReviews;
-    return onlyApproved ? base.filter((r) => r.status === "approved") : base;
+    const supabase = createAdminSupabaseClient();
+    let q = supabase.from("reviews").select("*").order("created_at", { ascending: false });
+    if (onlyApproved) q = q.eq("status", "approved");
+    if (userId) q = q.eq("user_id", userId);
+    const { data, error } = await q;
+    if (error) throw new Error(`Unable to load reviews: ${error.message}`);
+    return (data || []).map((r) => ({
+      id: r.id,
+      order_id: r.order_id,
+      user_id: r.user_id || "",
+      customer_name: r.customer_name || "Verified Customer",
+      rating: Number(r.rating || 5),
+      comment: r.comment || "",
+      status: r.status || "pending",
+      photo_urls: Array.isArray(r.photos) ? r.photos : [],
+      created_at: r.created_at,
+    }));
   }
 
   /**
@@ -56,35 +43,42 @@ export class ReviewService {
     comment: string;
     photoUrls?: string[];
   }): Promise<{ success: boolean; review?: OrderReview; error?: string }> {
-    if (!input.orderId || !input.comment || !input.rating) {
+    if (!input.orderId || !input.comment?.trim() || !Number.isInteger(input.rating) ||
+      input.rating < 1 || input.rating > 5 || input.comment.length > 2000) {
       return { success: false, error: "Order ID, rating, and review text are required." };
     }
 
     try {
       const supabase = createAdminSupabaseClient();
 
-      // Verify order is completed and belongs to user
-      const { data: order } = await supabase
+      const { data: order, error: orderError } = await supabase
         .from("orders")
         .select("id, order_status, user_id")
-        .eq("id", input.orderId)
-        .single();
+        .eq("order_number", input.orderId)
+        .maybeSingle();
 
+      if (orderError) throw new Error(`Unable to verify order: ${orderError.message}`);
       if (!order) return { success: false, error: "Order not found." };
       if (order.user_id !== input.userId) return { success: false, error: "You can only review your own orders." };
       if (order.order_status !== "completed") return { success: false, error: "You can only review completed orders." };
 
       // Enforce one review per order
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from("reviews")
         .select("id")
         .eq("order_id", input.orderId)
         .eq("user_id", input.userId)
         .maybeSingle();
 
+      if (existingError) throw new Error(`Unable to check existing review: ${existingError.message}`);
       if (existing) return { success: false, error: "You have already submitted a review for this order." };
 
       const photos = (input.photoUrls || []).slice(0, 3);
+      const expectedPrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/review-photos/reviews/${order.id}-photo-`;
+      if (photos.length !== (input.photoUrls || []).length ||
+        photos.some((url) => typeof url !== "string" || !url.startsWith(expectedPrefix) || url.length > 2048)) {
+        return { success: false, error: "Review photos must be uploaded for this order." };
+      }
       const { data: revData, error } = await supabase
         .from("reviews")
         .insert({
@@ -93,18 +87,13 @@ export class ReviewService {
           customer_name: input.customerName || "Customer",
           rating: Math.min(5, Math.max(1, input.rating)),
           comment: input.comment.trim(),
+          photos,
           status: "pending",
         })
         .select()
         .single();
 
       if (error || !revData) throw new Error(error?.message || "Insert failed");
-
-      if (photos.length > 0) {
-        await supabase.from("review_photos").insert(
-          photos.map((url, idx) => ({ review_id: revData.id, photo_url: url, display_order: idx + 1 }))
-        );
-      }
 
       const newRev: OrderReview = {
         id: revData.id,
@@ -117,7 +106,6 @@ export class ReviewService {
         photo_urls: photos,
         created_at: revData.created_at,
       };
-      cachedReviews.unshift(newRev);
       return { success: true, review: newRev };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to submit review.";
@@ -129,16 +117,10 @@ export class ReviewService {
    * Admin updates review status (approve or reject)
    */
   static async updateReviewStatus(reviewId: string, status: "approved" | "rejected" | "pending"): Promise<boolean> {
-    const found = cachedReviews.find((r) => r.id === reviewId);
-    if (found) {
-      found.status = status;
-    }
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("reviews").update({ status, updated_at: new Date().toISOString() }).eq("id", reviewId);
-    } catch {}
-
+    if (!["approved", "rejected", "pending"].includes(status)) throw new Error("Invalid review status.");
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("reviews").update({ status }).eq("id", reviewId).select("id").maybeSingle();
+    if (error || !data) throw new Error(`Unable to update review: ${error?.message || "Review not found."}`);
     return true;
   }
 
@@ -146,11 +128,9 @@ export class ReviewService {
    * Admin deletes spam review
    */
   static async deleteReview(reviewId: string): Promise<boolean> {
-    cachedReviews = cachedReviews.filter((r) => r.id !== reviewId);
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("reviews").delete().eq("id", reviewId);
-    } catch {}
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("reviews").delete().eq("id", reviewId).select("id").maybeSingle();
+    if (error || !data) throw new Error(`Unable to delete review: ${error?.message || "Review not found."}`);
     return true;
   }
 }
