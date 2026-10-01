@@ -28,36 +28,67 @@ export function PackagesManager() {
   const [newPrice, setNewPrice] = React.useState<string>("");
   const [newCapacity, setNewCapacity] = React.useState<string>("");
   const [newUnit, setNewUnit] = React.useState<"bag" | "lb">("bag");
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
-    fetch("/api/plans").then((r) => r.json()).then((d) => {
-      if (d.plans && d.plans.length > 0) setPackages(d.plans);
-    }).catch(() => {});
+    fetch("/api/plans", { cache: "no-store" }).then(async (r) => {
+      const data = await r.json();
+      if (!r.ok || !data.success) throw new Error(data.error || "Unable to load packages.");
+      setPackages(Array.isArray(data.plans) ? data.plans : []);
+    }).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load packages."));
   }, []);
 
   const handleAddPackage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newPrice.trim()) return;
-    const parsedPrice = parseFloat(newPrice) || 0;
-    const parsedCapacity = parseInt(newCapacity, 10) || 1;
-    const newPkg: PackageConfig = {
-      id: `pkg-${Date.now()}`, name: newName.trim(), description: newDesc.trim() || "Discounted prepaid laundry pass.",
-      unit_type: newUnit, capacity: parsedCapacity, original_price: Math.round(parsedPrice * 1.25 * 100) / 100,
-      discounted_price: parsedPrice, is_active: true,
-    };
-    setPackages((prev) => [...prev, newPkg]);
-    setNewName(""); setNewDesc(""); setNewPrice(""); setNewCapacity("");
-    try { await fetch("/api/plans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newPkg) }); } catch {}
+    setError("");
+    const parsedPrice = Number(newPrice);
+    const parsedCapacity = Number(newCapacity);
+    if (!newName.trim() || !Number.isFinite(parsedPrice) || parsedPrice <= 0 ||
+      !Number.isFinite(parsedCapacity) || parsedCapacity <= 0) {
+      setError("Enter a package name, positive capacity, and valid price.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/plans", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newName.trim(), description: newDesc.trim(), unit_type: newUnit, capacity: parsedCapacity,
+          original_price: parsedPrice, discounted_price: parsedPrice, is_active: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to save package.");
+      setPackages((prev) => [...prev, data.plan]);
+      setNewName(""); setNewDesc(""); setNewPrice(""); setNewCapacity("");
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to save package.");
+    }
   };
 
   const handleToggleActive = async (id: string, current: boolean) => {
-    setPackages((prev) => prev.map((p) => (p.id === id ? { ...p, is_active: !current } : p)));
-    try { await fetch("/api/plans", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, is_active: !current }) }); } catch {}
+    setError("");
+    try {
+      const response = await fetch("/api/plans", {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, is_active: !current }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to update package.");
+      setPackages((prev) => prev.map((p) => (p.id === id ? data.plan : p)));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to update package.");
+    }
   };
 
   const handleDelete = async (id: string) => {
-    setPackages((prev) => prev.filter((p) => p.id !== id));
-    try { await fetch(`/api/plans?id=${encodeURIComponent(id)}`, { method: "DELETE" }); } catch {}
+    setError("");
+    try {
+      const response = await fetch(`/api/plans?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to delete package.");
+      setPackages((prev) => prev.filter((p) => p.id !== id));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to delete package.");
+    }
   };
 
   const startEdit = (pkg: PackageConfig) => {
@@ -65,14 +96,29 @@ export function PackagesManager() {
   };
 
   const saveEdit = async (id: string) => {
-    const parsedPrice = parseFloat(editPrice) || 0;
-    setPackages((prev) => prev.map((p) => (p.id === id ? { ...p, name: editName, discounted_price: parsedPrice, description: editDesc } : p)));
-    setEditingId(null);
-    try { await fetch("/api/plans", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: editName, discounted_price: parsedPrice, description: editDesc }) }); } catch {}
+    setError("");
+    const parsedPrice = Number(editPrice);
+    if (!editName.trim() || !Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      setError("Enter a package name and valid price.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/plans", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, name: editName.trim(), discounted_price: parsedPrice, description: editDesc }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to update package.");
+      setPackages((prev) => prev.map((p) => (p.id === id ? data.plan : p)));
+      setEditingId(null);
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to update package.");
+    }
   };
 
   return (
     <div className="space-y-6">
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       <form onSubmit={handleAddPackage} className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-4">
         <div className="flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" />

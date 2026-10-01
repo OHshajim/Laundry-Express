@@ -16,6 +16,7 @@ export interface NewAddressFormProps {
   city: string;
   onCityChange: (v: string) => void;
   state: string;
+  onStateChange: (v: string) => void;
   zip: string;
   onZipChange: (v: string) => void;
   deliveryZones?: { city: string; zip: string }[];
@@ -31,7 +32,7 @@ export function NewAddressForm({
   street, onStreetChange,
   apt, onAptChange,
   city, onCityChange,
-  state, zip, onZipChange,
+  state, onStateChange, zip, onZipChange,
   deliveryZones = [],
   showValidationErrors = false,
   onAddressSaved,
@@ -158,8 +159,8 @@ export function NewAddressForm({
               }}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-primary focus:outline-none text-slate-800"
             >
+              <option value="">Select a service city</option>
               {deliveryZones.map((z) => (<option key={z.zip} value={z.city}>{z.city}</option>))}
-              <option value="Lake in the Hills">Other city…</option>
             </select>
           ) : (
             <input type="text" required value={city} onChange={(e) => onCityChange(e.target.value)}
@@ -169,7 +170,7 @@ export function NewAddressForm({
 
         <div>
           <label className="block text-[11px] font-semibold text-slate-600 mb-1">State</label>
-          <input type="text" readOnly value={state} className="w-full px-3 py-2 rounded-xl border border-slate-100 bg-slate-50 font-bold text-center text-slate-700" />
+          <input type="text" required maxLength={2} value={state} onChange={(e) => onStateChange(e.target.value.toUpperCase())} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-center text-slate-700" />
         </div>
 
         <div>

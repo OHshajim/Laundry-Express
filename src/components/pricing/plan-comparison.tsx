@@ -13,12 +13,12 @@ interface PlanComparisonProps {
 
 export function PlanComparison({ initialRates }: PlanComparisonProps) {
   const [rates, setRates] = React.useState({
-    bagPrice: Number(initialRates?.bag_price ?? 32.50),
-    poundPrice: Number(initialRates?.pound_price ?? 1.99),
-    minLbs: Number(initialRates?.min_lbs ?? 10),
-    freeDeliveryBags: Number(initialRates?.free_delivery_threshold ?? 2),
-    freeDeliveryLbs: Number(initialRates?.free_delivery_lbs ?? 30),
-    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 10),
+    bagPrice: Number(initialRates?.bag_price ?? 0),
+    poundPrice: Number(initialRates?.pound_price ?? 0),
+    minLbs: Number(initialRates?.min_lbs ?? 0),
+    freeDeliveryBags: Number(initialRates?.free_delivery_threshold ?? 0),
+    freeDeliveryLbs: Number(initialRates?.free_delivery_lbs ?? 0),
+    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 0),
   });
   const settings = useSettings();
   const slot1 = useSlot1Label(settings);
@@ -30,12 +30,12 @@ export function PlanComparison({ initialRates }: PlanComparisonProps) {
       .then((d) => {
         if (d?.pricing) {
           setRates({
-            bagPrice: Number(d.pricing.bag_price ?? 32.50),
-            poundPrice: Number(d.pricing.pound_price ?? 1.99),
-            minLbs: Number(d.pricing.min_lbs ?? 10),
-            freeDeliveryBags: Number(d.pricing.free_delivery_threshold ?? 2),
-            freeDeliveryLbs: Number(d.pricing.free_delivery_lbs ?? 30),
-            deliveryFee: Number(d.pricing.standard_delivery_fee ?? 10),
+            bagPrice: Number(d.pricing.bag_price),
+            poundPrice: Number(d.pricing.pound_price),
+            minLbs: Number(d.pricing.min_lbs),
+            freeDeliveryBags: Number(d.pricing.free_delivery_threshold),
+            freeDeliveryLbs: Number(d.pricing.free_delivery_lbs),
+            deliveryFee: Number(d.pricing.standard_delivery_fee),
           });
         }
       })

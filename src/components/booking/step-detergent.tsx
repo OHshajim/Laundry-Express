@@ -1,9 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { Sparkles, Check, Droplets, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { DetergentItem } from "@/lib/services/catalog-service";
+import { useDetergents } from "@/hooks/use-detergents";
 
 interface StepDetergentProps {
   selectedDetergentId: string;
@@ -16,21 +15,7 @@ export function StepDetergent({
   onSelectDetergent,
   showError = false,
 }: StepDetergentProps) {
-  const [detergents, setDetergents] = React.useState<DetergentItem[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    fetch("/api/catalog")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.detergents)) {
-          const activeList = data.detergents.filter((d: DetergentItem) => d.is_active !== false);
-          setDetergents(activeList);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { detergents, isLoading, error: loadError } = useDetergents();
 
   const isDetergentMissing = showError && !selectedDetergentId;
 
@@ -79,9 +64,11 @@ export function StepDetergent({
             <div className="h-20 rounded-xl bg-slate-100" />
             <div className="h-20 rounded-xl bg-slate-100" />
           </div>
+        ) : loadError ? (
+          <p role="alert" className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">{loadError}</p>
         ) : detergents.length === 0 ? (
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">
-            Standard Eco Detergent included automatically.
+            No detergent options are available. Please contact support before placing an order.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

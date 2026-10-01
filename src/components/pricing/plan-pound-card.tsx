@@ -21,11 +21,11 @@ interface PlanPoundCardProps {
  */
 export function PlanPoundCard({ weightLbs, onWeightLbsChange, initialRates }: PlanPoundCardProps) {
   const [rates, setRates] = React.useState({
-    poundPrice: Number(initialRates?.pound_price ?? initialRates?.base_pound_price ?? 1.99),
-    minLbs: Number(initialRates?.min_lbs ?? 10),
-    maxLbs: Number(initialRates?.max_lbs ?? 100),
-    freeDeliveryLbs: Number(initialRates?.free_delivery_lbs ?? 30),
-    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 10.0),
+    poundPrice: Number(initialRates?.pound_price ?? 0),
+    minLbs: Number(initialRates?.min_lbs ?? 0),
+    maxLbs: Number(initialRates?.max_lbs ?? 0),
+    freeDeliveryLbs: Number(initialRates?.free_delivery_lbs ?? 0),
+    deliveryFee: Number(initialRates?.standard_delivery_fee ?? 0),
   });
 
   React.useEffect(() => {
@@ -34,11 +34,11 @@ export function PlanPoundCard({ weightLbs, onWeightLbsChange, initialRates }: Pl
       .then((d) => {
         if (d?.pricing) {
           setRates({
-            poundPrice: Number(d.pricing.pound_price ?? 1.99),
-            minLbs: Number(d.pricing.min_lbs ?? 10),
-            maxLbs: Number(d.pricing.max_lbs ?? 100),
-            freeDeliveryLbs: Number(d.pricing.free_delivery_lbs ?? 30),
-            deliveryFee: Number(d.pricing.standard_delivery_fee ?? 10.0),
+            poundPrice: Number(d.pricing.pound_price),
+            minLbs: Number(d.pricing.min_lbs),
+            maxLbs: Number(d.pricing.max_lbs),
+            freeDeliveryLbs: Number(d.pricing.free_delivery_lbs),
+            deliveryFee: Number(d.pricing.standard_delivery_fee),
           });
         }
       })

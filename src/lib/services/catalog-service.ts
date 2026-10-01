@@ -13,79 +13,66 @@ export interface DetergentItem {
 const isUuid = (val?: string): boolean =>
   Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
-let cachedDetergents: DetergentItem[] = [];
-
 export class CatalogService {
   static async getCatalog(): Promise<{ detergents: DetergentItem[] }> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase
-        .from("catalog_items")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: true });
-
-      if (!error && Array.isArray(data) && data.length > 0) {
-        cachedDetergents = data
-          .filter((d) => d.category === "detergent")
-          .map((d) => ({
-            id: d.id,
-            name: d.name,
-            type: d.item_type || "liquid",
-            brand: d.brand || "Standard",
-            price: Number(d.price ?? 0),
-            description: d.description || "",
-            is_active: d.is_active ?? true,
-          }));
-      }
-    } catch {}
-    return { detergents: cachedDetergents };
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("catalog_items").select("*")
+      .eq("category", "detergent").order("created_at", { ascending: true });
+    if (error) throw new Error(`Unable to load detergents: ${error.message}`);
+    return {
+      detergents: (data ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.item_type as DetergentItem["type"],
+        brand: item.brand || "",
+        price: Number(item.price ?? 0),
+        description: item.description || "",
+        is_active: item.is_active ?? true,
+      })),
+    };
   }
 
   static async saveDetergent(item: Partial<DetergentItem>): Promise<DetergentItem> {
-    const rawId = item.id || `det-${Date.now()}`;
-    const id = isUuid(rawId) ? rawId : crypto.randomUUID();
-
-    const full: DetergentItem = {
-      id,
-      name: item.name || "Eco Detergent",
-      type: item.type || "liquid",
-      brand: item.brand || "Standard",
-      price: Number(item.price ?? 0),
-      description: item.description || "Wash formula",
-      is_active: item.is_active ?? true,
-    };
-
-    const idx = cachedDetergents.findIndex((d) => d.id === full.id);
-    if (idx >= 0) cachedDetergents[idx] = full;
-    else cachedDetergents.push(full);
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("catalog_items").upsert({
-        id: full.id,
+    const name = item.name?.trim() ?? "";
+    const brand = item.brand?.trim() ?? "";
+    const description = item.description?.trim() ?? "";
+    const price = Number(item.price);
+    if (!name || !brand || !description || !Number.isFinite(price) || price < 0 ||
+      !["liquid", "powder", "pods"].includes(item.type ?? "")) {
+      throw new Error("Enter a name, brand, supported detergent type, description, and valid price.");
+    }
+    const payload = {
         category: "detergent",
-        name: full.name,
-        brand: full.brand,
-        item_type: full.type,
-        price: full.price,
-        description: full.description,
-        is_active: full.is_active,
-        in_stock: full.is_active,
-      });
-    } catch {}
-
-    return full;
+        name,
+        brand,
+        item_type: item.type,
+        price,
+        description,
+        is_active: item.is_active ?? true,
+        in_stock: item.is_active ?? true,
+      };
+    const supabase = createAdminSupabaseClient();
+    const query = isUuid(item.id)
+      ? supabase.from("catalog_items").update(payload).eq("id", item.id)
+      : supabase.from("catalog_items").insert(payload);
+    const { data, error } = await query.select().single();
+    if (error || !data) throw new Error(`Unable to save detergent: ${error?.message || "No detergent returned."}`);
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.item_type as DetergentItem["type"],
+      brand: data.brand || "",
+      price: Number(data.price ?? 0),
+      description: data.description || "",
+      is_active: data.is_active ?? true,
+    };
   }
 
   static async deleteItem(id: string): Promise<boolean> {
-    cachedDetergents = cachedDetergents.filter((d) => d.id !== id);
-    try {
-      const supabase = createAdminSupabaseClient();
-      if (isUuid(id)) {
-        await supabase.from("catalog_items").delete().eq("id", id);
-      }
-    } catch {}
+    if (!isUuid(id)) throw new Error("A valid detergent ID is required.");
+    const supabase = createAdminSupabaseClient();
+    const { error } = await supabase.from("catalog_items").delete().eq("id", id).eq("category", "detergent");
+    if (error) throw new Error(`Unable to delete detergent: ${error.message}`);
     return true;
   }
 }

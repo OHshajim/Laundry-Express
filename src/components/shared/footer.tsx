@@ -41,11 +41,11 @@ export function Footer() {
             <ul className="space-y-2 text-xs text-neutral-400">
               <li className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800/80">
                 <span className="font-bold text-white block">Morning Window</span>
-                {slot1} (Daily)
+                {slot1}
               </li>
               <li className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800/80">
                 <span className="font-bold text-white block">Afternoon Window</span>
-                {slot2} (Daily)
+                {slot2}
               </li>
             </ul>
           </div>
@@ -53,10 +53,10 @@ export function Footer() {
           {/* Service Area & Contact */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white tracking-wide uppercase">
-              Service Area (30-Mile Radius)
+              Service Areas
             </h4>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, Schaumburg &amp; Northwest Suburbs.
+              {settings.deliveryZones.length ? settings.deliveryZones.join(", ") : "Service areas configured by Laundry Express"}
             </p>
             <div className="pt-1 space-y-1.5 text-xs">
               <a

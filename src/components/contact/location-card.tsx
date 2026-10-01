@@ -1,6 +1,5 @@
 import { MapPin, Phone, Mail, Clock, ArrowRight, ShieldCheck } from "lucide-react";
-
-// Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
+import { APP_CONFIG } from "@/lib/constants";
 
 export interface ContactLocationInfo {
   id: string;
@@ -14,17 +13,17 @@ export interface ContactLocationInfo {
 
 export const OFFICIAL_LOCATION: ContactLocationInfo = {
   id: "lake-in-the-hills",
-  title: "Lake in the Hills Service Territory",
-  // Address replaced with service-area radius per privacy review — confirm with client whether a specific address should ever be public.
-  address: "Lake in the Hills & 30-Mile Service Territory (McHenry Co., IL)",
+  title: "Laundry Express Main Location",
+  address: `${APP_CONFIG.location.city}, ${APP_CONFIG.location.state}`,
   phone: "815-575-9536",
   email: "customerservice@laundryexpressservices.com",
-  hours: "8:00 AM – 6:00 PM",
-  mapsUrl: "https://maps.google.com/?q=Lake+in+the+Hills,+IL",
+  hours: "",
+  mapsUrl: APP_CONFIG.location.mapsUrl,
 };
 
 interface LocationCardProps {
   location?: ContactLocationInfo;
+  operatingHours?: string;
   slot1?: string;
   slot2?: string;
 }
@@ -39,7 +38,7 @@ interface LocationCardProps {
  * 4. Structured Hours of Operation (8:00 AM – 6:00 PM)
  * 5. Attractive Bubble Pink Call Now button
  */
-export function LocationCard({ location = OFFICIAL_LOCATION, slot1 = "8:00 AM – 12:00 PM", slot2 = "1:00 PM – 6:00 PM" }: LocationCardProps) {
+export function LocationCard({ location = OFFICIAL_LOCATION, operatingHours = "", slot1 = "", slot2 = "" }: LocationCardProps) {
   return (
     <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-pink-200/90 shadow-[0_0_35px_rgba(236,72,153,0.12)] p-6 sm:p-8 space-y-7 transition-all">
       {/* Top Bubble Pink Hub Badge */}
@@ -54,7 +53,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION, slot1 = "8:00 AM �
 
         <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
           <ShieldCheck className="h-4 w-4 text-primary" />
-          30-Mile Radius Service Territory
+          Main Location
         </span>
       </div>
 
@@ -67,7 +66,7 @@ export function LocationCard({ location = OFFICIAL_LOCATION, slot1 = "8:00 AM �
           </div>
           <div className="space-y-1">
             <h4 className="font-black text-slate-900 text-sm uppercase tracking-wider">
-              Service Area
+              Main Location
             </h4>
             <p className="text-sm font-semibold text-slate-700 leading-snug">
               {location.address}
@@ -133,10 +132,12 @@ export function LocationCard({ location = OFFICIAL_LOCATION, slot1 = "8:00 AM �
               Hours of Operation
             </h4>
             <p className="text-sm font-bold text-slate-800">
-              All Week: <span className="text-primary font-black">{slot1} &amp; {slot2}</span>
+              <span className="text-primary font-black">
+                {operatingHours || (slot1 && slot2 ? `${slot1} & ${slot2}` : "Operating hours configured by Laundry Express")}
+              </span>
             </p>
             <span className="text-xs text-slate-400 block font-normal">
-              Morning &amp; Afternoon Pickup Slots
+              Pickup and delivery schedules
             </span>
           </div>
         </div>

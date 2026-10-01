@@ -31,7 +31,7 @@ export function OrderDetailModal({
   if (!order) return null;
 
   const statusMeta = ORDER_STATUSES[order.order_status] || ORDER_STATUSES.pending;
-  const detergentName = order.detergent_id === "det-tide-pods" ? "Tide Original Power Pods" : order.detergent_id === "det-eco-plant" ? "Seventh Generation Eco-Plant" : order.detergent_id === "det-hypoallergenic" ? "All Free & Clear (Hypoallergenic)" : order.detergent_id?.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Standard Eco Detergent";
+  const detergentName = order.detergent_name || order.detergent_id;
   const userPastOrders = allOrders.filter((o) => (order.customer_email && o.customer_email === order.customer_email) || (order.user_id && o.user_id === order.user_id));
   const prevOrdersCount = userPastOrders.filter((o) => o.id !== order.id).length;
   const lifetimeSpent = userPastOrders.reduce((sum, o) => sum + o.total_amount, 0) || order.total_amount;

@@ -19,14 +19,13 @@ interface StepSlotPickerProps {
   onSelectSlot: (slot: "8am-12pm" | "1pm-6pm") => void;
   dropoffDate?: string;
   onSelectDropoffDate?: (date: string) => void;
-  slot1Start?: string;
-  slot1End?: string;
-  slot2Start?: string;
-  slot2End?: string;
+  slot1Start: string;
+  slot1End: string;
+  slot2Start: string;
+  slot2End: string;
 }
 
-function parseHour(t?: string): number {
-  if (!t) return 8;
+function parseHour(t: string): number {
   const [h] = t.split(":").map(Number);
   return h;
 }
@@ -46,10 +45,10 @@ export function StepSlotPicker({
   onSelectSlot,
   dropoffDate = "",
   onSelectDropoffDate,
-  slot1Start = "08:00",
-  slot1End = "12:00",
-  slot2Start = "13:00",
-  slot2End = "18:00",
+  slot1Start,
+  slot1End,
+  slot2Start,
+  slot2End,
 }: StepSlotPickerProps) {
   const todayStr = React.useMemo(() => new Date().toISOString().split("T")[0], []);
   const nowHour = new Date().getHours();

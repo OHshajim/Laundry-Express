@@ -1,9 +1,11 @@
 import { APP_CONFIG } from "@/lib/constants";
+import type { PricingConfig } from "@/lib/services/pricing-plan-service";
+import type { BusinessSettings, FaqItem } from "@/lib/services/content-service";
 
 /**
  * Generates Schema.org JSON-LD for Laundry Express (LocalBusiness / DryCleaningOrLaundryService).
  */
-export function getLocalBusinessSchema() {
+export function getLocalBusinessSchema(pricing?: PricingConfig | null, settings?: BusinessSettings | null) {
   return {
     "@context": "https://schema.org",
     "@type": "DryCleaningOrLaundryService",
@@ -16,112 +18,36 @@ export function getLocalBusinessSchema() {
     priceRange: "$$",
     paymentAccepted: "Credit Card, Apple Pay, Google Pay",
     currenciesAccepted: "USD",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Lake in the Hills",
-      addressLocality: "Lake in the Hills",
-      addressRegion: "IL",
-      addressCountry: "US",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: APP_CONFIG.location.lat,
-      longitude: APP_CONFIG.location.lng,
-    },
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ],
-        opens: APP_CONFIG.operatingHours.slot1.opens,
-        closes: APP_CONFIG.operatingHours.slot1.closes,
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ],
-        opens: APP_CONFIG.operatingHours.slot2.opens,
-        closes: APP_CONFIG.operatingHours.slot2.closes,
-      },
-    ],
-    areaServed: {
-      "@type": "AdministrativeArea",
-      name: "Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, Schaumburg & 30-Mile Radius",
-    },
-    makesOffer: [
+    openingHours: settings?.operating_hours || undefined,
+    areaServed: settings?.delivery_zones?.map((name) => ({ "@type": "Place", name })) || undefined,
+    makesOffer: pricing ? [
       {
         "@type": "Offer",
-        name: "13-Gallon Bag Wash & Fold Service (About 2 Loads)",
-        description:
-          "Full laundry wash, dry, and fold service. $32.50 per 13-gallon bag (about 2 loads). 1 bag delivery fee is $10.00; 2+ bags have FREE delivery.",
-        price: APP_CONFIG.pricing.baseBagPrice,
+        name: "13-Gallon Bag Wash & Fold",
+        price: pricing.bag_price,
         priceCurrency: "USD",
       },
       {
         "@type": "Offer",
-        name: "Per-Pound Commercial & Bulk Laundry",
-        description: "Flexible weight-based laundry wash priced per pound with 10 lbs minimum.",
-        price: APP_CONFIG.pricing.basePoundPrice,
+        name: "Per-Pound Laundry Service",
+        price: pricing.pound_price,
         priceCurrency: "USD",
       },
-    ],
+    ] : undefined,
   };
 }
 
 /**
  * Generates FAQ Schema for common customer questions.
  */
-export function getFaqSchema() {
+export function getFaqSchema(faqs: FaqItem[] = []) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "How much is delivery for laundry pickup and drop-off?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Our standard rate is $32.50 per 13-gallon bag (about 2 loads). If you schedule 1 bag, delivery is $10.00. If you schedule 2 or more bags, delivery is 100% FREE ($0.00).",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What time slots can I choose for laundry pickup?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "We offer two daily operational slots: Morning (8:00 AM – 12:00 PM) and Afternoon (1:00 PM – 6:00 PM).",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What if I am away from home during the pickup window?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Simply select 'Away / Out of Home' when booking and check the box confirming your bags are placed outside your doorstep or porch. Our superhero drivers take a photo proof upon arrival.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "How do I know my laundry was picked up and dropped off safely?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Our drivers snap photo proof upon pickup and drop-off. These photos are immediately viewable in both your customer portal and order timeline.",
-        },
-      },
-    ],
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
   };
 }

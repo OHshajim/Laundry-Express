@@ -59,14 +59,13 @@ export function fmt12h(time: string): string {
 
 /**
  * Builds a human-readable slot label from admin-configured times.
- * Falls back to standard defaults if times are not provided.
  */
 export function formatSlotLabel(
   slotId: "8am-12pm" | "1pm-6pm",
-  slot1Start = "08:00",
-  slot1End = "12:00",
-  slot2Start = "13:00",
-  slot2End = "18:00"
+  slot1Start: string,
+  slot1End: string,
+  slot2Start: string,
+  slot2End: string
 ): string {
   if (slotId === "8am-12pm") {
     return `${fmt12h(slot1Start)} – ${fmt12h(slot1End)}`;

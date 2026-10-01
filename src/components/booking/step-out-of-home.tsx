@@ -47,7 +47,7 @@ export function StepOutOfHome({
   deliveryZones = [],
   showValidationErrors = false,
 }: StepOutOfHomeProps) {
-  const defaultZone = deliveryZones[0] ?? { city: "Lake in the Hills", zip: "60156" };
+  const defaultZone = deliveryZones[0] ?? { city: "", zip: "" };
   const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([]);
   const [selectedSavedId, setSelectedSavedId] = React.useState<string | null>(null);
   const [editingAddress, setEditingAddress] = React.useState<UserAddress | null>(null);
@@ -56,7 +56,7 @@ export function StepOutOfHome({
   const [street, setStreet] = React.useState(addressDetails?.street ?? "");
   const [apt, setApt] = React.useState(addressDetails?.apt ?? "");
   const [city, setCity] = React.useState(addressDetails?.city ?? defaultZone.city);
-  const [state] = React.useState(addressDetails?.state ?? "IL");
+  const [state, setState] = React.useState(addressDetails?.state ?? "");
   const [zip, setZip] = React.useState(addressDetails?.zip ?? defaultZone.zip);
 
   const isInitialFetchDone = React.useRef(false);
@@ -193,6 +193,7 @@ export function StepOutOfHome({
             city={city}
             onCityChange={(v) => { setCity(v); push(street, apt, v, zip); }}
             state={state}
+            onStateChange={setState}
             zip={zip}
             onZipChange={(v) => { setZip(v); push(street, apt, city, v); }}
             deliveryZones={deliveryZones}

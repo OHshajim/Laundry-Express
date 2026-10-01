@@ -32,171 +32,136 @@ export interface BusinessSettings {
 const isUuid = (val?: string): boolean =>
   Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
-let cachedFaqs: FaqItem[] = [];
-let cachedTerms: TermItem[] = [];
-let cachedSettings: BusinessSettings = {
-  operating_hours: "8:00 AM – 6:00 PM Daily",
-  delivery_zones: ["Lake in the Hills", "Algonquin", "Crystal Lake", "Huntley", "Cary", "Elgin", "Schaumburg"],
-  min_order_bag: 1,
-  min_order_lbs: 10,
-  free_delivery_bags: 2,
-  free_delivery_lbs: 30,
-  standard_delivery_fee: 10,
-};
-
 export class ContentService {
   static async getFaqs(): Promise<FaqItem[]> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("faqs_and_terms").select("*").eq("category", "faq").order("sort_order", { ascending: true });
-      if (!error && data && data.length > 0) {
-        cachedFaqs = data.map((d) => ({
-          id: d.id,
-          question: d.title,
-          answer: d.description,
-          display_order: d.sort_order ?? 1,
-        }));
-      } else if (!error && data && data.length === 0) {
-        cachedFaqs = [];
-      }
-    } catch {}
-    return cachedFaqs;
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("faqs_and_terms").select("*")
+      .eq("category", "faq").eq("is_active", true).order("sort_order", { ascending: true });
+    if (error) throw new Error(`Unable to load FAQs: ${error.message}`);
+    return (data ?? []).map((item) => ({
+      id: item.id,
+      question: item.title,
+      answer: item.description,
+      display_order: item.sort_order ?? 0,
+    }));
   }
 
   static async saveFaq(faq: Partial<FaqItem>): Promise<FaqItem> {
-    const question = (faq.question || "New Question?").trim();
-    const answer = (faq.answer || "Answer details.").trim();
-    const display_order = faq.display_order ?? (cachedFaqs.length + 1);
-    let finalId = isUuid(faq.id) ? faq.id! : "";
-
-    const dbPayload: Record<string, unknown> = {
+    const question = faq.question?.trim() ?? "";
+    const answer = faq.answer?.trim() ?? "";
+    if (!question || !answer) throw new Error("A question and answer are required.");
+    const dbPayload = {
       category: "faq",
       title: question,
       description: answer,
-      sort_order: display_order,
+      sort_order: faq.display_order ?? 0,
       is_active: true,
     };
-    if (finalId) dbPayload.id = finalId;
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("faqs_and_terms").upsert(dbPayload).select().single();
-      if (!error && data?.id) {
-        finalId = data.id;
-      }
-    } catch {}
-
-    const full: FaqItem = {
-      id: finalId || faq.id || `faq-${Date.now()}`,
-      question,
-      answer,
-      display_order,
-    };
-
-    const idx = cachedFaqs.findIndex((f) => (finalId && f.id === finalId) || f.question === question);
-    if (idx >= 0) cachedFaqs[idx] = full;
-    else cachedFaqs.push(full);
-
-    return full;
+    const supabase = createAdminSupabaseClient();
+    const query = isUuid(faq.id)
+      ? supabase.from("faqs_and_terms").update(dbPayload).eq("id", faq.id)
+      : supabase.from("faqs_and_terms").insert(dbPayload);
+    const { data, error } = await query.select().single();
+    if (error || !data) throw new Error(`Unable to save FAQ: ${error?.message || "No FAQ returned."}`);
+    return { id: data.id, question: data.title, answer: data.description, display_order: data.sort_order ?? 0 };
   }
 
   static async deleteFaq(id: string): Promise<boolean> {
-    cachedFaqs = cachedFaqs.filter((f) => f.id !== id);
-    try {
-      const supabase = createAdminSupabaseClient();
-      if (isUuid(id)) await supabase.from("faqs_and_terms").delete().eq("id", id);
-      else await supabase.from("faqs_and_terms").delete().eq("title", id);
-    } catch {}
+    const supabase = createAdminSupabaseClient();
+    const query = supabase.from("faqs_and_terms").delete().eq("category", "faq");
+    const { error } = isUuid(id) ? await query.eq("id", id) : await query.eq("title", id);
+    if (error) throw new Error(`Unable to delete FAQ: ${error.message}`);
     return true;
   }
 
   static async deleteTerm(id: string): Promise<boolean> {
-    cachedTerms = cachedTerms.filter((t) => t.id !== id);
-    try {
-      const supabase = createAdminSupabaseClient();
-      if (isUuid(id)) await supabase.from("faqs_and_terms").delete().eq("id", id);
-      else await supabase.from("faqs_and_terms").delete().eq("title", id);
-    } catch {}
+    const supabase = createAdminSupabaseClient();
+    const query = supabase.from("faqs_and_terms").delete().in("category", ["term", "guarantee"]);
+    const { error } = isUuid(id) ? await query.eq("id", id) : await query.eq("title", id);
+    if (error) throw new Error(`Unable to delete terms: ${error.message}`);
     return true;
   }
 
   static async getTerms(): Promise<TermItem[]> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("faqs_and_terms").select("*").in("category", ["term", "guarantee"]).order("sort_order", { ascending: true });
-      if (!error && data && data.length > 0) {
-        cachedTerms = data.map((d) => ({
-          id: d.id,
-          title: d.title,
-          subtitle: d.subtitle || "",
-          description: d.description,
-        }));
-      } else if (!error && data && data.length === 0) {
-        cachedTerms = [];
-      }
-    } catch {}
-    return cachedTerms;
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase.from("faqs_and_terms").select("*")
+      .in("category", ["term", "guarantee"]).eq("is_active", true).order("sort_order", { ascending: true });
+    if (error) throw new Error(`Unable to load terms: ${error.message}`);
+    return (data ?? []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      subtitle: item.subtitle || "",
+      description: item.description,
+    }));
   }
 
   static async saveTerm(term: Partial<TermItem>): Promise<TermItem> {
-    const title = (term.title || "Policy Title").trim();
-    const subtitle = (term.subtitle || "Service Guarantee").trim();
-    const description = (term.description || "").trim();
-    let finalId = isUuid(term.id) ? term.id! : "";
-
-    const dbPayload: Record<string, unknown> = {
+    const title = term.title?.trim() ?? "";
+    const subtitle = term.subtitle?.trim() ?? "";
+    const description = term.description?.trim() ?? "";
+    if (!title || !description) throw new Error("A title and description are required.");
+    const dbPayload = {
       category: "term",
       title,
       subtitle,
       description,
       is_active: true,
     };
-    if (finalId) dbPayload.id = finalId;
-
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data, error } = await supabase.from("faqs_and_terms").upsert(dbPayload).select().single();
-      if (!error && data?.id) {
-        finalId = data.id;
-      }
-    } catch {}
-
-    const full: TermItem = {
-      id: finalId || term.id || `term-${Date.now()}`,
-      title,
-      subtitle,
-      description,
-    };
-
-    const idx = cachedTerms.findIndex((t) => (finalId && t.id === finalId) || t.title === title);
-    if (idx >= 0) cachedTerms[idx] = full;
-    else cachedTerms.push(full);
-
-    return full;
+    const supabase = createAdminSupabaseClient();
+    const query = isUuid(term.id)
+      ? supabase.from("faqs_and_terms").update(dbPayload).eq("id", term.id)
+      : supabase.from("faqs_and_terms").insert(dbPayload);
+    const { data, error } = await query.select().single();
+    if (error || !data) throw new Error(`Unable to save terms: ${error?.message || "No terms returned."}`);
+    return { id: data.id, title: data.title, subtitle: data.subtitle || "", description: data.description };
   }
 
-  static async getSettings(): Promise<BusinessSettings> {
-    try {
-      const supabase = createAdminSupabaseClient();
-      const { data } = await supabase.from("system_settings").select("*").eq("key", "business_operations").maybeSingle();
-      if (data && data.value) {
-        cachedSettings = { ...cachedSettings, ...data.value };
-      }
-    } catch {}
-    return cachedSettings;
+  static async getSettings(): Promise<BusinessSettings | null> {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("value")
+      .eq("key", "business_operations")
+      .maybeSingle();
+    if (error) throw new Error(`Unable to load business settings: ${error.message}`);
+    return (data?.value as BusinessSettings | undefined) ?? null;
   }
 
   static async updateSettings(updates: Partial<BusinessSettings>): Promise<BusinessSettings> {
-    cachedSettings = { ...cachedSettings, ...updates };
-    try {
-      const supabase = createAdminSupabaseClient();
-      await supabase.from("system_settings").upsert({
+    const current = await this.getSettings();
+    const settings = { ...current, ...updates } as BusinessSettings;
+    const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+    const numericValues = [
+      settings.min_order_bag,
+      settings.min_order_lbs,
+      settings.free_delivery_bags,
+      settings.free_delivery_lbs,
+      settings.standard_delivery_fee,
+    ];
+    if (!settings.operating_hours?.trim() ||
+      !Array.isArray(settings.delivery_zones) ||
+      !settings.delivery_zones.length ||
+      settings.delivery_zones.some((zone) => typeof zone !== "string" || !zone.trim()) ||
+      ![settings.slot1_start, settings.slot1_end, settings.slot2_start, settings.slot2_end].every((time) => typeof time === "string" && timePattern.test(time)) ||
+      numericValues.some((value) => !Number.isFinite(value) || value < 0) ||
+      settings.min_order_bag <= 0 ||
+      settings.min_order_lbs <= 0) {
+      throw new Error("Complete business hours, pickup windows, delivery zones, and valid order thresholds before saving.");
+    }
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("system_settings")
+      .upsert({
         key: "business_operations",
-        value: cachedSettings,
+        value: settings,
         description: "Operating hours, delivery zones, and thresholds",
         updated_at: new Date().toISOString(),
-      });
-    } catch {}
-    return cachedSettings;
+      })
+      .select("value")
+      .single();
+    if (error || !data) {
+      throw new Error(`Unable to save business settings: ${error?.message || "No settings returned."}`);
+    }
+    return data.value as BusinessSettings;
   }
 }

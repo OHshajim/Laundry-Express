@@ -27,11 +27,12 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
     : "per_bag";
 
   const bagsParam = searchParams.get("bags");
-  const initialBagCount = bagsParam ? Math.max(1, parseInt(bagsParam, 10) || 2) : 2;
+  const minBags = initialPricing?.min_bags ?? 1;
+  const initialBagCount = bagsParam ? Math.max(minBags, parseInt(bagsParam, 10) || minBags) : minBags;
 
-  const minLbs = initialPricing?.min_lbs ?? 10;
+  const minLbs = initialPricing?.min_lbs ?? 0;
   const weightParam = searchParams.get("lbs") || searchParams.get("weight");
-  const initialWeightLbs = weightParam ? Math.max(minLbs, parseFloat(weightParam) || minLbs) : Math.max(minLbs, 15);
+  const initialWeightLbs = weightParam ? Math.max(minLbs, parseFloat(weightParam) || minLbs) : minLbs;
 
   const initialPackageId = packageParam || "pkg-saver-5";
 
@@ -93,7 +94,9 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
           </div>
           <div>
             <h4 className="text-xs font-bold text-slate-900">
-              Free Delivery on {initialPricing?.free_delivery_threshold ?? 2}+ Bags or {initialPricing?.free_delivery_lbs ?? 30}+ lbs
+              {initialPricing
+                ? `Free Delivery on ${initialPricing.free_delivery_threshold}+ Bags or ${initialPricing.free_delivery_lbs}+ lbs`
+                : "Delivery rules set by Laundry Express"}
             </h4>
             <p className="text-[11px] text-slate-500 mt-0.5">
               Orders meeting the bag or weight threshold receive free standard delivery automatically.

@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { X, MapPin, Phone, Sparkles, Camera, Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, formatSlotLabel, resolveDetergentName } from "@/lib/utils";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";
+import type { InvoiceData } from "@/components/booking/order-invoice-modal";
 import type { Order } from "@/types";
 
 interface CustomerOrderDetailModalProps {
@@ -18,18 +18,18 @@ interface CustomerOrderDetailModalProps {
 export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrderDetailModalProps) {
   const [isPdfGenerating, setIsPdfGenerating] = React.useState(false);
   const [activePhoto, setActivePhoto] = React.useState<string | null>(null);
-  const [slotTimes, setSlotTimes] = React.useState({ s1: "08:00", e1: "12:00", s2: "13:00", e2: "18:00" });
+  const [slotTimes, setSlotTimes] = React.useState({ s1: "", e1: "", s2: "", e2: "" });
 
   React.useEffect(() => {
     fetch("/api/content?type=settings").then((r) => r.json()).then((d) => {
-      if (d?.settings) setSlotTimes({ s1: d.settings.slot1_start || "08:00", e1: d.settings.slot1_end || "12:00", s2: d.settings.slot2_start || "13:00", e2: d.settings.slot2_end || "18:00" });
+      if (d?.settings) setSlotTimes({ s1: d.settings.slot1_start || "", e1: d.settings.slot1_end || "", s2: d.settings.slot2_start || "", e2: d.settings.slot2_end || "" });
     }).catch(() => {});
   }, []);
 
   if (!isOpen || !order) return null;
 
-  const fullAddress = [order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city || "Lake in the Hills", order.state || "IL", order.zip_code || "60156"].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address";
-  const slotLabel = order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm"
+  const fullAddress = [order.street_address, order.apt_unit ? `Apt ${order.apt_unit}` : "", order.city, order.state, order.zip_code].filter(Boolean).join(", ") || order.pickup_address || "Doorstep Address";
+  const slotLabel = slotTimes.s1 && slotTimes.e1 && slotTimes.s2 && slotTimes.e2 && (order.pickup_slot === "8am-12pm" || order.pickup_slot === "1pm-6pm")
     ? formatSlotLabel(order.pickup_slot as "8am-12pm" | "1pm-6pm", slotTimes.s1, slotTimes.e1, slotTimes.s2, slotTimes.e2)
     : order.pickup_slot;
   const planLabel = order.pricing_mode === "per_bag" ? "By The Bag Wash & Fold (13 Gal)" : order.pricing_mode === "package" ? "Saver Package Credit" : "By The Pound (lb) Wash & Fold";
@@ -38,14 +38,14 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
   const handleDownloadPdf = async () => {
     try {
       setIsPdfGenerating(true);
-      const inv: any = {
+      const inv: InvoiceData = {
         orderId: order.order_number,
         orderDate: order.created_at ? new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         pickupDate: order.pickup_date, pickupSlot: slotLabel, deliveryDate: order.delivery_date || "Within 24 Hours",
         paymentMethod: order.payment_method === "card" ? "Credit / Debit Card (Stripe)" : "Stripe Secure Checkout",
         totalAmount: Number(order.total_amount || 0), subtotal: Number(order.subtotal || order.total_amount || 0), deliveryFee: Number(order.delivery_fee || 0), discountAmount: Number(order.discount_amount || 0),
         customerName: order.customer_name || "Valued Customer", customerEmail: order.customer_email || "", customerPhone: order.customer_phone || "", address: fullAddress,
-        orderDetails: { planName: planLabel, quantity: quantityLabel, detergent: resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
+        orderDetails: { planName: planLabel, quantity: quantityLabel,         detergent: order.detergent_name || resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
       };
       await downloadInvoiceAsPdf(inv, `LaundryExpress-Invoice-${order.order_number}.pdf`);
     } catch { window.print(); } finally { setIsPdfGenerating(false); }
@@ -106,7 +106,7 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
           <div className="space-y-1.5 leading-relaxed">
             <div className="flex justify-between"><span className="text-slate-500">Service Plan:</span><span className="font-bold text-slate-900">{planLabel}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">Intake Volume:</span><span className="font-bold text-slate-900">{quantityLabel}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Detergent Formula:</span><span className="font-bold text-slate-900">{resolveDetergentName(order.detergent_id)}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Detergent Formula:</span><span className="font-bold text-slate-900">{order.detergent_name || resolveDetergentName(order.detergent_id)}</span></div>
             <div className="flex justify-between pt-1 border-t border-slate-100">
               <span className="text-slate-500">Doorstep Protocol:</span>
               <span className="font-bold text-slate-900">{order.is_out_of_home ? "Away (Contactless Doorstep)" : "Home (Driver Rings Bell)"}</span>

@@ -55,7 +55,7 @@ export function OrderInvoiceCard({ invoice, className = "" }: OrderInvoiceCardPr
               Premium 24-Hour Wash &amp; Fold
             </p>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              {APP_CONFIG.location.displayAddress} &bull; {APP_CONFIG.supportPhone}
+              {APP_CONFIG.supportPhone}
             </p>
           </div>
         </div>

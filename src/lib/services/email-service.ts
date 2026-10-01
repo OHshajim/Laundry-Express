@@ -116,7 +116,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
                 Premium 24-Hour Wash &amp; Fold
               </p>
               <p style="color:#64748b;font-size:11px;margin:2px 0 0">
-                Lake in the Hills, IL &middot; (815) 575-9536
+                Laundry Express &middot; (815) 575-9536
               </p>
             </td>
             <td style="text-align:right;vertical-align:middle">

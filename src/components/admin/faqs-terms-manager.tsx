@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { HelpCircle, FileText, Plus, Trash2, Edit2, CheckCircle2 } from "lucide-react";
+import { HelpCircle, FileText, Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface FaqOrTermItem {
@@ -10,6 +10,13 @@ export interface FaqOrTermItem {
   title: string;
   subtitle?: string;
   description: string;
+}
+
+interface ContentResponse {
+  success: boolean;
+  error?: string;
+  faqs?: { id: string; question: string; answer: string }[];
+  terms?: { id: string; title: string; subtitle?: string; description: string }[];
 }
 
 export function FaqsTermsManager() {
@@ -21,29 +28,32 @@ export function FaqsTermsManager() {
   const [title, setTitle] = React.useState("");
   const [subtitle, setSubtitle] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
-    fetch("/api/content")
-      .then((res) => res.json())
+    fetch("/api/content", { cache: "no-store" })
+      .then(async (res) => {
+        const data = await res.json() as ContentResponse;
+        if (!res.ok || !data.success) throw new Error(data.error || "Unable to load content.");
+        return data;
+      })
       .then((data) => {
-        const fetchedFaqs: FaqOrTermItem[] = (data.faqs || []).map((f: any) => ({
+        const fetchedFaqs: FaqOrTermItem[] = (data.faqs || []).map((f) => ({
           id: f.id,
           category: "faq",
           title: f.question,
           description: f.answer,
         }));
-        const fetchedTerms: FaqOrTermItem[] = (data.terms || []).map((t: any) => ({
+        const fetchedTerms: FaqOrTermItem[] = (data.terms || []).map((t) => ({
           id: t.id,
           category: "terms",
           title: t.title,
           subtitle: t.subtitle,
           description: t.description,
         }));
-        if (fetchedFaqs.length > 0 || fetchedTerms.length > 0) {
-          setItems([...fetchedFaqs, ...fetchedTerms]);
-        }
+        setItems([...fetchedFaqs, ...fetchedTerms]);
       })
-      .catch(() => {});
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load content."));
   }, []);
 
   const resetForm = () => {
@@ -56,42 +66,41 @@ export function FaqsTermsManager() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !description.trim()) return;
-
-    const currentId = editingId || `${activeTab}-${Date.now()}`;
-    const newItem: FaqOrTermItem = {
-      id: currentId,
-      category: activeTab,
-      title: title.trim(),
-      subtitle: activeTab === "terms" ? subtitle.trim() : undefined,
-      description: description.trim(),
-    };
-
-    if (editingId) {
-      setItems((prev) => prev.map((item) => (item.id === editingId ? newItem : item)));
-    } else {
-      setItems((prev) => [newItem, ...prev]);
+    setError("");
+    if (!title.trim() || !description.trim()) {
+      setError("A title and description are required.");
+      return;
     }
 
     try {
-      await fetch("/api/content", {
+      const response = await fetch("/api/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: activeTab === "faq" ? "faqs" : "terms",
           item: {
-            id: currentId,
-            question: newItem.title,
-            title: newItem.title,
-            subtitle: newItem.subtitle,
-            answer: newItem.description,
-            description: newItem.description,
+            id: editingId || undefined,
+            question: title.trim(),
+            title: title.trim(),
+            subtitle: activeTab === "terms" ? subtitle.trim() : undefined,
+            answer: description.trim(),
+            description: description.trim(),
           },
         }),
       });
-    } catch {}
-
-    resetForm();
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to save content.");
+      const saved = activeTab === "faq" ? data.faq : data.term;
+      const persistedItem: FaqOrTermItem = activeTab === "faq"
+        ? { id: saved.id, category: "faq", title: saved.question, description: saved.answer }
+        : { id: saved.id, category: "terms", title: saved.title, subtitle: saved.subtitle, description: saved.description };
+      setItems((prev) => editingId
+        ? prev.map((item) => item.id === editingId ? persistedItem : item)
+        : [persistedItem, ...prev]);
+      resetForm();
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to save content.");
+    }
   };
 
   const handleStartEdit = (item: FaqOrTermItem) => {
@@ -103,18 +112,24 @@ export function FaqsTermsManager() {
   };
 
   const handleDelete = async (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setError("");
     try {
-      await fetch(`/api/content?section=${activeTab === "faq" ? "faqs" : "terms"}&id=${encodeURIComponent(id)}`, {
+      const response = await fetch(`/api/content?section=${activeTab === "faq" ? "faqs" : "terms"}&id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-    } catch {}
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to delete content.");
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "Unable to delete content.");
+    }
   };
 
   const filteredItems = items.filter((item) => item.category === activeTab);
 
   return (
     <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <h3 className="text-base font-black text-slate-900">FAQs and Terms &amp; Guarantees Manager</h3>

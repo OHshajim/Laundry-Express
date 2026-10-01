@@ -75,7 +75,7 @@ export function drawPortraitHeader(
   ctx.textAlign = "right";
   ctx.fillStyle = "#334155";
   ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(APP_CONFIG.location.displayAddress, W - 50, 78);
+  ctx.fillText(APP_CONFIG.name, W - 50, 78);
 
   ctx.fillStyle = "#64748B";
   ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";

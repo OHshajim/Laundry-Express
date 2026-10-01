@@ -1,6 +1,5 @@
 import { Plus, Minus, ShoppingBag, Zap, Scale, CheckCircle2 } from "lucide-react";
 import type { PricingMode } from "@/types";
-import { APP_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface StepBagCounterProps {
@@ -9,11 +8,11 @@ interface StepBagCounterProps {
   onBagCountChange: (count: number) => void;
   weightLbs?: number;
   onWeightLbsChange?: (lbs: number) => void;
-  bagPrice?: number;
-  freeDeliveryBags?: number;
-  minLbs?: number;
-  maxLbs?: number;
-  freeDeliveryLbs?: number;
+  bagPrice: number;
+  freeDeliveryBags: number;
+  minLbs: number;
+  maxLbs: number;
+  freeDeliveryLbs: number;
 }
 
 export function StepBagCounter({
@@ -22,11 +21,11 @@ export function StepBagCounter({
   onBagCountChange,
   weightLbs,
   onWeightLbsChange,
-  bagPrice = 32.50,
-  freeDeliveryBags = 2,
-  minLbs = 10,
-  maxLbs = 100,
-  freeDeliveryLbs = 30,
+  bagPrice,
+  freeDeliveryBags,
+  minLbs,
+  maxLbs,
+  freeDeliveryLbs,
 }: StepBagCounterProps) {
   const currentLbs = weightLbs ?? minLbs;
   const handleLbsChange = (val: number) => {

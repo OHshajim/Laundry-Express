@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Sparkles, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import type { PricingMode } from "@/types";
 import { Button } from "@/components/ui/button";
+import { useDetergents } from "@/hooks/use-detergents";
 
 function fmt12(t?: string): string {
   if (!t) return "";
@@ -16,17 +16,17 @@ function fmt12(t?: string): string {
 interface StepReviewProps {
   pricingMode: PricingMode;
   bagCount: number;
-  weightLbs?: number;
+  weightLbs: number;
   selectedDetergentId?: string;
   selectedDate: string;
   selectedSlot: string;
   address: string;
   phone?: string;
   isOutOfHome: boolean;
-  slot1Start?: string;
-  slot1End?: string;
-  slot2Start?: string;
-  slot2End?: string;
+  slot1Start: string;
+  slot1End: string;
+  slot2Start: string;
+  slot2End: string;
   onEditStep: (step: number) => void;
   onBack: () => void;
   onContinue: () => void;
@@ -35,29 +35,23 @@ interface StepReviewProps {
 export function StepReview({
   pricingMode,
   bagCount,
-  weightLbs = 15,
+  weightLbs,
   selectedDetergentId,
   selectedDate,
   selectedSlot,
   address,
   phone,
   isOutOfHome,
-  slot1Start = "08:00",
-  slot1End = "12:00",
-  slot2Start = "13:00",
-  slot2End = "18:00",
+  slot1Start,
+  slot1End,
+  slot2Start,
+  slot2End,
   onEditStep,
   onBack,
   onContinue,
 }: StepReviewProps) {
-  const detCatalog: Record<string, string> = {
-    "det-tide-pods": "Tide Original Power Pods",
-    "det-eco-plant": "Seventh Generation Eco-Plant",
-    "det-hypoallergenic": "All Free & Clear (Hypoallergenic)",
-    "det-persil": "Persil ProClean Intense",
-    "det-lavender": "Mrs. Meyer's Clean Day",
-  };
-  const detergentName = (selectedDetergentId && detCatalog[selectedDetergentId]) || selectedDetergentId?.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Premium Eco Detergent";
+  const { detergents } = useDetergents();
+  const detergentName = detergents.find((detergent) => detergent.id === selectedDetergentId)?.name || "Selected detergent";
   const getPlanDescription = () => {
     if (pricingMode === "per_bag") return `${bagCount} Standard 13-Gal Bag${bagCount > 1 ? "s" : ""}`;
     if (pricingMode === "per_lb") return `${weightLbs} lbs Weighed Volume`;

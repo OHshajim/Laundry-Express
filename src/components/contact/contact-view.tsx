@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Clock, ShieldCheck, Phone, Sparkles } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { LocationCard, OFFICIAL_LOCATION } from "@/components/contact/location-card";
 import { GoggleMap } from "@/components/shared/google-map";
 import { ContactForm } from "@/components/contact/contact-form";
-import { APP_CONFIG } from "@/lib/constants";
 import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 export function ContactView() {
@@ -17,7 +16,12 @@ export function ContactView() {
     <div className="w-full space-y-10">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
         <div className="lg:col-span-6 flex flex-col justify-between">
-          <LocationCard location={OFFICIAL_LOCATION} slot1={slot1} slot2={slot2} />
+          <LocationCard
+            location={OFFICIAL_LOCATION}
+            operatingHours={settings.operatingHours}
+            slot1={slot1}
+            slot2={slot2}
+          />
         </div>
         <div className="lg:col-span-6 min-h-[460px] sm:min-h-[520px] flex">
           <GoggleMap
@@ -34,8 +38,8 @@ export function ContactView() {
             <MapPin className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-xs font-black text-slate-900 block">30-Mile Service Territory</span>
-            <span className="text-[11px] text-slate-500">Lake in the Hills, Algonquin, Crystal Lake &amp; surrounding towns</span>
+            <span className="text-xs font-black text-slate-900 block">Service Coverage</span>
+            <span className="text-[11px] text-slate-500">{settings.deliveryZones.join(", ") || "Service areas configured by Laundry Express"}</span>
           </div>
         </div>
 
@@ -44,8 +48,8 @@ export function ContactView() {
             <Clock className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-xs font-black text-slate-900 block">Daily Pickup Operations</span>
-            <span className="text-[11px] text-slate-500">Morning ({slot1}) &amp; Afternoon ({slot2})</span>
+            <span className="text-xs font-black text-slate-900 block">Pickup Windows</span>
+            <span className="text-[11px] text-slate-500">{slot1} &amp; {slot2}</span>
           </div>
         </div>
 
@@ -70,7 +74,7 @@ export function ContactView() {
           <Link href="/pricing" className="text-primary font-black hover:underline">Plans &amp; Bags</Link>{" "}
           or inspect our{" "}
           <Link href="/#faq" className="text-primary font-black hover:underline">Frequently Asked Questions</Link>
-          . Our dispatch team is at your service 7 days a week from {slot1} and {slot2}.
+          .
         </p>
         <div className="pt-2 flex items-center justify-center gap-2 text-[11px] text-slate-400 font-medium">
           <Sparkles className="h-3.5 w-3.5 text-primary" />

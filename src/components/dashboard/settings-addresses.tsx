@@ -18,18 +18,16 @@ export interface SavedAddress {
 
 export function SettingsAddresses() {
   const [addresses, setAddresses] = React.useState<SavedAddress[]>([]);
-  const [coverageAreas, setCoverageAreas] = React.useState<string[]>([
-    "Lake in the Hills (60156)", "Algonquin (60102)", "Crystal Lake (60014)", "Huntley (60142)", "Carpentersville (60110)", "Dundee (60118)", "Elgin (60120)"
-  ]);
+  const [coverageAreas, setCoverageAreas] = React.useState<string[]>([]);
   const [isAdding, setIsAdding] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [label, setLabel] = React.useState("Home");
   const [street, setStreet] = React.useState("");
   const [apt, setApt] = React.useState("");
   const [selectedArea, setSelectedArea] = React.useState("");
-  const [city, setCity] = React.useState("Lake in the Hills");
-  const [state, setState] = React.useState("IL");
-  const [zip, setZip] = React.useState("60156");
+  const [city, setCity] = React.useState("");
+  const [state, setState] = React.useState("");
+  const [zip, setZip] = React.useState("");
   const [isDefault, setIsDefault] = React.useState(false);
 
   React.useEffect(() => {
@@ -37,7 +35,7 @@ export function SettingsAddresses() {
       if (Array.isArray(data.addresses)) {
         setAddresses(data.addresses.map((a: any) => ({
           id: a.id, label: a.label || "Home", street: a.street_address, apt: a.apt_unit,
-          city: a.city, state: a.state || "IL", zip: a.zip_code, isDefault: a.is_default || false,
+          city: a.city, state: a.state || "", zip: a.zip_code, isDefault: a.is_default || false,
         })));
       }
     }).catch(() => {});
@@ -60,7 +58,7 @@ export function SettingsAddresses() {
 
   const resetForm = () => {
     setLabel("Home"); setStreet(""); setApt(""); setSelectedArea("");
-    setCity("Lake in the Hills"); setState("IL"); setZip("60156");
+    setCity(""); setState(""); setZip("");
     setIsDefault(false); setIsAdding(false); setEditingId(null);
   };
 
@@ -153,7 +151,7 @@ export function SettingsAddresses() {
               </div>
               <div>
                 <label className="font-bold text-slate-700 block mb-1">State</label>
-                <input type="text" readOnly value={state} className="w-full px-2 py-2 rounded-xl border border-slate-200 bg-slate-100 font-medium" />
+                <input type="text" required maxLength={2} value={state} onChange={(e) => setState(e.target.value.toUpperCase())} className="w-full px-2 py-2 rounded-xl border border-slate-200 bg-white font-medium" />
               </div>
               <div>
                 <label className="font-bold text-slate-700 block mb-1">ZIP</label>

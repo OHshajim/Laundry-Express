@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { Check, ShoppingBag, Scale, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,29 @@ import { FloatingBubbles } from "./floating-bubbles";
 import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";
 
 export function PricingSection() {
+  const [pricing, setPricing] = React.useState<{
+    bag_price: number;
+    pound_price: number;
+    min_lbs: number;
+    free_delivery_threshold: number;
+    free_delivery_lbs: number;
+    standard_delivery_fee: number;
+  } | null>(null);
   const settings = useSettings();
   const slot1 = useSlot1Label(settings);
   const slot2 = useSlot2Label(settings);
+
+  React.useEffect(() => {
+    fetch("/api/pricing", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.pricing || null;
+      })
+      .then((data) => { if (data) setPricing(data); })
+      .catch(() => {});
+  }, []);
+
   return (
     <section id="pricing" className="relative overflow-hidden py-20 bg-slate-50/70 scroll-mt-20">
       <FloatingBubbles variant="banner" />
@@ -46,18 +67,18 @@ export function PricingSection() {
               </div>
 
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-slate-900">$32.50</span>
+                <span className="text-4xl font-black text-slate-900">{pricing ? `$${pricing.bag_price.toFixed(2)}` : "—"}</span>
                 <span className="text-xs text-slate-500 font-semibold">/ bag</span>
               </div>
 
               {/* Delivery Fee highlight */}
               <div className="p-4 rounded-2xl bg-sky-50/80 border border-sky-100 mb-6 space-y-2 text-xs">
                 <div className="flex justify-between items-center text-slate-700 font-semibold">
-                  <span>1 Bag Delivery:</span>
-                  <span className="text-slate-900 font-bold">$10.00 pickup &amp; delivery</span>
+                  <span>Below {pricing?.free_delivery_threshold ?? "—"} Bags:</span>
+                  <span className="text-slate-900 font-bold">{pricing ? `$${pricing.standard_delivery_fee.toFixed(2)} pickup &amp; delivery` : "Delivery fee configured by admin"}</span>
                 </div>
                 <div className="flex justify-between items-center text-emerald-800 font-bold bg-emerald-100/80 p-2 rounded-xl">
-                  <span>2 or More Bags (≥ 2):</span>
+                  <span>{pricing?.free_delivery_threshold ?? "—"} or More Bags:</span>
                   <span className="uppercase text-emerald-700">FREE Pickup &amp; Delivery</span>
                 </div>
               </div>
@@ -105,18 +126,18 @@ export function PricingSection() {
               </div>
 
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-slate-900">$1.99</span>
-                <span className="text-xs text-slate-500 font-semibold">/ lb (10 lbs min)</span>
+                <span className="text-4xl font-black text-slate-900">{pricing ? `$${pricing.pound_price.toFixed(2)}` : "—"}</span>
+                <span className="text-xs text-slate-500 font-semibold">/ lb ({pricing?.min_lbs ?? "—"} lbs min)</span>
               </div>
 
               {/* Delivery Fee highlight */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2 text-xs">
                 <div className="flex justify-between items-center text-slate-700 font-semibold">
-                  <span>Orders under 30 lbs:</span>
-                  <span className="text-slate-900 font-bold">$10.00 delivery fee</span>
+                  <span>Orders under {pricing?.free_delivery_lbs ?? "—"} lbs:</span>
+                  <span className="text-slate-900 font-bold">{pricing ? `$${pricing.standard_delivery_fee.toFixed(2)} delivery fee` : "Delivery fee configured by admin"}</span>
                 </div>
                 <div className="flex justify-between items-center text-emerald-800 font-bold bg-emerald-100/80 p-2 rounded-xl">
-                  <span>Orders 30 lbs and over:</span>
+                  <span>Orders {pricing?.free_delivery_lbs ?? "—"} lbs and over:</span>
                   <span className="uppercase text-emerald-700">FREE ($0.00) Delivery</span>
                 </div>
               </div>

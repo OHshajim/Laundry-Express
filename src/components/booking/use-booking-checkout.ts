@@ -24,10 +24,10 @@ export interface CheckoutPayload {
   notes: string;
   priceResult: { subtotal: number; delivery_fee: number; discount_amount: number; total_amount: number };
   paymentMethod: "card" | "apple_pay" | "cash_on_delivery";
-  slot1Start?: string;
-  slot1End?: string;
-  slot2Start?: string;
-  slot2End?: string;
+  slot1Start: string;
+  slot1End: string;
+  slot2Start: string;
+  slot2End: string;
 }
 
 export function useBookingCheckout() {
@@ -57,9 +57,9 @@ export function useBookingCheckout() {
           delivery_date: delivery,
           street_address: p.addressDetails?.street || p.address,
           apt_unit: p.addressDetails?.apt || "",
-          city: p.addressDetails?.city || "Lake in the Hills",
-          state: p.addressDetails?.state || "IL",
-          zip_code: p.addressDetails?.zip || "60156",
+          city: p.addressDetails?.city || "",
+          state: p.addressDetails?.state || "",
+          zip_code: p.addressDetails?.zip || "",
           is_out_of_home: p.isOutOfHome,
           is_away_for_dropoff: p.isAwayForDropoff,
           bag_outside_door_confirmed: p.bagConfirmed,
@@ -86,14 +86,7 @@ export function useBookingCheckout() {
         p.slot1Start, p.slot1End, p.slot2Start, p.slot2End
       );
 
-      const detCatalog: Record<string, string> = {
-        "det-tide-pods": "Tide Original Power Pods",
-        "det-eco-plant": "Seventh Generation Eco-Plant",
-        "det-hypoallergenic": "All Free & Clear (Hypoallergenic)",
-        "det-persil": "Persil ProClean Intense",
-        "det-lavender": "Mrs. Meyer's Clean Day",
-      };
-      const friendlyDetergent = detCatalog[p.selectedDetergentId] || p.selectedDetergentId.replace(/^det-/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const friendlyDetergent = data?.order?.detergent_name || p.selectedDetergentId;
 
       setInvoice({
         orderId,

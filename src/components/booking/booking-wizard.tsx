@@ -16,6 +16,7 @@ import { OrderSummaryCard } from "./order-summary-card";
 import { OrderInvoiceModal } from "./order-invoice-modal";
 import { Button } from "@/components/ui/button";
 import { useBookingCheckout } from "./use-booking-checkout";
+import { useBookingConfig } from "./use-booking-config";
 
 export interface BookingWizardProps {
   initialMode?: PricingMode;
@@ -38,7 +39,7 @@ export function BookingWizard({
   const [step, setStep] = React.useState(1);
   const [pricingMode, setPricingMode] = React.useState<PricingMode>(initialMode);
   const [bagCount, setBagCount] = React.useState(initialBagCount);
-  const [weightLbs, setWeightLbs] = React.useState(() => Number(initialWeightLbs ?? initialPricing?.min_lbs ?? 15));
+  const [weightLbs, setWeightLbs] = React.useState(() => Number(initialWeightLbs ?? initialPricing?.min_lbs ?? 0));
   const [selectedDetergentId, setSelectedDetergentId] = React.useState("");
   const [showStep2Errors, setShowStep2Errors] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState(() => new Date().toISOString().split("T")[0]);
@@ -60,38 +61,14 @@ export function BookingWizard({
   React.useEffect(() => {
     if (currentUser?.phone && !phone) setPhone(currentUser.phone);
   }, [currentUser?.phone, phone]);
-  const [settings, setSettings] = React.useState({ slot1Start: "08:00", slot1End: "12:00", slot2Start: "13:00", slot2End: "18:00", deliveryZones: [] as { city: string; zip: string }[] });
-  const [rates, setRates] = React.useState({ bagPrice: Number(initialPricing?.bag_price ?? 32.50), poundPrice: Number(initialPricing?.pound_price ?? 1.99), deliveryFee: Number(initialPricing?.standard_delivery_fee ?? 10.0), freeDeliveryBags: Number(initialPricing?.free_delivery_threshold ?? 2), freeDeliveryLbs: Number(initialPricing?.free_delivery_lbs ?? 30), minLbs: Number(initialPricing?.min_lbs ?? 10), maxLbs: Number(initialPricing?.max_lbs ?? 100) });
-
-  React.useEffect(() => {
-    fetch("/api/pricing").then((r) => r.json()).then((d) => {
-      if (d?.pricing) setRates({
-        bagPrice: Number(d.pricing.bag_price ?? 32.50), poundPrice: Number(d.pricing.pound_price ?? 1.99),
-        deliveryFee: Number(d.pricing.standard_delivery_fee ?? 10.0), freeDeliveryBags: Number(d.pricing.free_delivery_threshold ?? 2),
-        freeDeliveryLbs: Number(d.pricing.free_delivery_lbs ?? 30), minLbs: Number(d.pricing.min_lbs ?? 10), maxLbs: Number(d.pricing.max_lbs ?? 100),
-      });
-    }).catch(() => {});
-    fetch("/api/content?type=settings").then((r) => r.json()).then((d) => {
-      if (d?.settings) {
-        const rawZones: string[] = Array.isArray(d.settings.delivery_zones) ? d.settings.delivery_zones : [];
-        const zones = rawZones.map((item: string) => {
-          const m = item.match(/^(.+?)\s*\(([0-9]{5})\)$/);
-          return m ? { city: m[1].trim(), zip: m[2] } : { city: item, zip: "60156" };
-        });
-        setSettings({
-          slot1Start: d.settings.slot1_start || "08:00", slot1End: d.settings.slot1_end || "12:00",
-          slot2Start: d.settings.slot2_start || "13:00", slot2End: d.settings.slot2_end || "18:00", deliveryZones: zones,
-        });
-      }
-    }).catch(() => {});
-  }, []);
+  const { settings, rates, isLoading: isConfigLoading, error: configError } = useBookingConfig(initialPricing);
 
   const { checkout, isProcessing, invoice, setInvoice } = useBookingCheckout();
 
   const priceResult = React.useMemo(() => calculateOrderPrice({
     pricing_mode: pricingMode, bag_count: bagCount, estimated_weight_lbs: weightLbs,
     detergent_id: selectedDetergentId, promo_code: appliedPromo, base_bag_price: rates.bagPrice,
-    base_pound_price: rates.poundPrice, min_lbs: rates.minLbs, max_lbs: rates.maxLbs,
+    base_pound_price: rates.poundPrice, min_bags: rates.minBags, max_bags: rates.maxBags, min_lbs: rates.minLbs, max_lbs: rates.maxLbs,
     free_delivery_lbs: rates.freeDeliveryLbs, one_bag_delivery_fee: rates.deliveryFee,
     free_delivery_threshold: rates.freeDeliveryBags,
   }), [pricingMode, bagCount, weightLbs, selectedDetergentId, appliedPromo, rates]);
@@ -108,12 +85,15 @@ export function BookingWizard({
   };
 
   // Step validations
-  const isStep1Valid = pricingMode === "package" ? true : pricingMode === "per_lb" ? (weightLbs >= rates.minLbs && weightLbs <= rates.maxLbs && !isNaN(weightLbs)) : (bagCount >= 1);
+  const isStep1Valid = pricingMode === "package" ? true : pricingMode === "per_lb" ? (weightLbs >= rates.minLbs && weightLbs <= rates.maxLbs && !isNaN(weightLbs)) : (bagCount >= rates.minBags && bagCount <= rates.maxBags);
   const isStep2Valid = Boolean(selectedDetergentId);
   const isDateValid = Boolean(selectedDate && selectedDate >= new Date().toISOString().split("T")[0]);
   const isDropoffValid = !dropoffDate || dropoffDate >= selectedDate;
   const isStep3Valid = isDateValid && isDropoffValid && Boolean(selectedSlot);
-  const isAddressValid = address.trim().length >= 5 && (!addressDetails?.zip || /^\d{5}(-\d{4})?$/.test(addressDetails.zip.trim()));
+  const isAddressValid = address.trim().length >= 5 &&
+    Boolean(addressDetails?.city.trim()) &&
+    /^[A-Z]{2}$/.test(addressDetails?.state.trim() || "") &&
+    /^\d{5}(-\d{4})?$/.test(addressDetails?.zip.trim() || "");
   const isPhoneValid = phone.trim().length >= 7;
   const isStep4Valid = Boolean(isAddressValid && isPhoneValid && (!isOutOfHome || bagConfirmed));
 
@@ -129,6 +109,12 @@ export function BookingWizard({
 
   return (
     <div id="book-now" className="scroll-mt-24 py-4 w-full max-w-full">
+      {isConfigLoading || configError ? (
+        <div role={configError ? "alert" : "status"} className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700">
+          {isConfigLoading ? "Loading current service settings..." : configError}
+        </div>
+      ) : (
+      <>
       <WizardStepper steps={STEPS} currentStep={step} onStepClick={(target) => target < step && setStep(target)} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -240,6 +226,8 @@ export function BookingWizard({
       </div>
 
       <OrderInvoiceModal invoice={invoice} onClose={() => setInvoice(null)} />
+      </>
+      )}
     </div>
   );
 }
