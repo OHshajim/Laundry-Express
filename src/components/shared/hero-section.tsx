@@ -16,7 +16,6 @@ import { useSettings } from "@/hooks/use-settings";
  * - Dynamic live bag pricing synced directly from admin settings
  * - Animated transparent vector Bubble Hero mascot with gentle bobbing
  * - High-conversion value propositions, bag pricing, and delivery thresholds
- * - Strict adherence to CSS variables and the 100-250 lines rule
  */
 interface HeroSectionProps {
   initialBagPrice?: number;

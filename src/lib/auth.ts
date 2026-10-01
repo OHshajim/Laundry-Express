@@ -10,7 +10,6 @@ import { UserDbService } from "@/lib/services/user-db-service";
  * - Google OAuth authentication with database role synchronization
  * - Dynamic role retrieval (admin can be any email configured in database)
  * - JWT session strategy with role extraction ('admin' | 'customer')
- * - Strictly complies with the 100-250 lines architectural rule
  */
 
 declare module "next-auth" {

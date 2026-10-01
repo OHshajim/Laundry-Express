@@ -13,7 +13,6 @@ import { useAuth } from "@/context/auth-context";
  *
  * Dispatches a 6-digit verification code to the customer's email
  * and transitions seamlessly to the OTP verification & reset step.
- * Strictly complies with the 100-250 lines architectural rule.
  */
 export function ForgotPasswordView() {
   const router = useRouter();

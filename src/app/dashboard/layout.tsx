@@ -17,7 +17,6 @@ export const metadata: Metadata = {
  * Dedicated shell layout for the unified /dashboard directory:
  * - One layout wrapping the master role-based dashboard page
  * - Prevents double shell nesting while ensuring searchParams reactivity
- * - Strictly complies with the < 250 lines rule
  */
 export default function DashboardLayout({
   children,

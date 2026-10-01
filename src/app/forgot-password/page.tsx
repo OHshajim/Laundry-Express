@@ -83,7 +83,6 @@ function ForgotPasswordStructuredData() {
  * Dedicated simple password recovery page for customer and staff accounts:
  * - Simple layout matching /login and /register
  * - Dispatches recovery instructions
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export default function ForgotPasswordPage() {
   return (

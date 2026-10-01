@@ -5,7 +5,6 @@ import type { User, Order } from "@/types";
 /**
  * Creates a server-side Supabase client for Server Components, Server Actions, and API routes.
  * Utilizes Next.js cookies() API for secure cookie-based session management.
- * Strictly adheres to 100-250 lines rule.
  */
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();

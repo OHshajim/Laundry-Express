@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
  * Glassmorphic customer inquiry form with interactive focus glow and instant status feedback:
  * - Full Name, Email, Phone, Subject selection, and Message
  * - Simulated submission with loading spinner and success state
- * - Complies strictly with the 100-250 lines architectural rule
  */
 export function ContactForm() {
   const [form, setForm] = React.useState({

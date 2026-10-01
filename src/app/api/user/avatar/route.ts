@@ -10,7 +10,6 @@ import { getVerifiedUser } from "@/lib/auth-request";
  * - Validates file types (JPEG, PNG, WebP) and 5MB size limits
  * - Uploads asset to Supabase 'avatars' storage bucket
  * - Persists generated public CDN URL into public.users database
- * - Strictly complies with the 100-250 lines architectural rule
  */
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];

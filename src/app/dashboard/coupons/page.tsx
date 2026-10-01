@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layout";
 import { CouponsManager } from "@/components/admin/coupons-manager";
 

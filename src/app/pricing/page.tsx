@@ -35,7 +35,6 @@ export const metadata: Metadata = {
  * prepaid saver packages, and detailed plan comparison matrix.
  * Includes instant calculator and side-by-side plan comparisons.
  * Main navigation stays static as users scroll.
- * Strict adherence to the 100-250 lines rule.
  */
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 import { formatCurrency } from "@/lib/utils";

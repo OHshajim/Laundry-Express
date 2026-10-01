@@ -11,8 +11,6 @@ import { getAuthSecret } from "@/lib/auth-secret";
  * 2. /dashboard/:path* -> Strictly requires customer or admin authentication.
  * 3. /admin/:path* -> Strictly requires admin role; non-admins redirected to /dashboard.
  * 4. Auth pages (/login, /register, etc.) -> Authenticated users redirected to /dashboard.
- *
- * Adheres strictly to the < 250 lines rule and Next.js 16 proxy conventions.
  */
 export async function proxy(req: NextRequest) {
   const { pathname, search, searchParams } = req.nextUrl;

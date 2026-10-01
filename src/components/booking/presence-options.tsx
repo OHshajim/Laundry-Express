@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Home, UserX, AlertCircle, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 

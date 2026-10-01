@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
@@ -25,7 +24,6 @@ import { FloatingBubbles } from "@/components/shared/floating-bubbles";
  * - Floating interactive status badges (24h turnaround & photo verification)
  * - Shimmer shine CTA action button to maximize client conversion
  * - Responsive non-breaking pill guarantees
- * - Full adherence to the 100-250 lines architectural rule
  */
 export function HomeCtaBanner() {
   const prefersReduced = useReducedMotion();

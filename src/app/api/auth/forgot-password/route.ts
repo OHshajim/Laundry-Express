@@ -12,7 +12,6 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
  * - Sends a one-time verification code without disclosing account existence
  * - Prevents user enumeration by returning consistent success messages
  * - Dispatches transactional reset notifications
- * - Complies strictly with the 100-250 lines rule
  */
 export async function POST(req: Request) {
   try {

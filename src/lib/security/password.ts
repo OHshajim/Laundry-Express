@@ -3,7 +3,6 @@ import crypto from "crypto";
 /**
  * Enterprise Password Security Utilities
  * Uses Node.js native crypto module (scrypt + random salt + timingSafeEqual + HMAC tokens).
- * Adheres strictly to the < 250 lines rule and zero unnecessary dependencies.
  */
 
 const KEY_LENGTH = 64;

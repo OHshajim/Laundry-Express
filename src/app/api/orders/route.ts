@@ -22,7 +22,6 @@ function isProofType(value: unknown): value is typeof PROOF_TYPES[number] {
 /**
  * /api/orders
  * Dynamic endpoint for customer bookings & administrative fulfillment pipeline
- * Strictly complies with the < 250 lines rule
  */
 
 export async function GET(req: NextRequest) {

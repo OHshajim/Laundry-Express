@@ -16,7 +16,6 @@ import { useAuth } from "@/context/auth-context";
  * - One-click NextAuth Google OAuth sign-in
  * - Secure credentials authentication with remember me toggle
  * - Direct navigation to /register for new customers
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export function LoginView() {
   const router = useRouter();

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { useAuth } from "@/context/auth-context";

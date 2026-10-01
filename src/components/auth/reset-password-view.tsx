@@ -14,7 +14,6 @@ import { useAuth } from "@/context/auth-context";
  * Password reset form requiring 6-digit email OTP match:
  * - Email, 6-digit OTP code, and new password confirmation
  * - Matches OTP strictly against server-generated code
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export function ResetPasswordView() {
   const searchParams = useSearchParams();

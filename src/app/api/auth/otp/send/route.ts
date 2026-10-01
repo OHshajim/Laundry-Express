@@ -7,7 +7,6 @@ import { UserDbService } from "@/lib/services/user-db-service";
 /**
  * POST /api/auth/otp/send
  * Securely persists hashed 6-digit OTP in the database and dispatches code to email
- * Strictly adheres to the < 250 lines rule
  */
 export async function POST(req: NextRequest) {
   try {

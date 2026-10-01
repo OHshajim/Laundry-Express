@@ -94,7 +94,6 @@ function RegisterStructuredData() {
  * - Simple, focused layout with brand logo badge
  * - Independent page design separate from /login
  * - NextAuth custom registration and Google OAuth
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export default function RegisterPage() {
   return (

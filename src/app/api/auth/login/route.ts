@@ -9,7 +9,6 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
  * - Rate limiting enforcement (5 req/min)
  * - Email and password format validation
  * - Role-based assignment (Customer vs Admin)
- * - Zero hardcoded credentials and strict 100-250 lines compliance
  */
 export async function POST(req: Request) {
   try {

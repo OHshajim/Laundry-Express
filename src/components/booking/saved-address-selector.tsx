@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Check, Plus, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserAddress } from "@/lib/services/address-service";

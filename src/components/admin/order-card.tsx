@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Clock, Camera, AlertTriangle, Check, Send, ChevronRight } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { ORDER_STATUSES } from "@/lib/constants";

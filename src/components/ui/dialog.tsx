@@ -23,7 +23,6 @@ export interface DialogProps {
  * - Complete background body & html scroll block while dialog is open
  * - Single unified scroll container (strictly prevents dual nested scrollbars)
  * - Backdrop click-to-close & escape key dismissal
- * - Strict adherence to the 100-250 lines rule
  */
 export function Dialog({
   open,

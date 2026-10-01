@@ -29,7 +29,6 @@ export interface DashboardShellProps {
  * - Common responsive desktop/mobile frame with light theme
  * - Sticky, fixed 100vh height sidebar preventing dynamic stretching
  * - Coordinated mobile drawer state with hamburger trigger in DashboardHeader
- * - Strict adherence to the < 250 lines rule
  */
 export function DashboardShell({
   role,

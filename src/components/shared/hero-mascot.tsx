@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -17,7 +16,6 @@ import {
  * - Clean, non-messy composition with contained floating satellites
  * - Radiant ambient halo and dashed orbital ring
  * - Interactive spring hover on mascot character
- * - Strict adherence to the 100-250 lines architectural rule
  */
 export function HeroMascot() {
   const prefersReduced = useReducedMotion();
