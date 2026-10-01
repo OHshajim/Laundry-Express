@@ -16,7 +16,6 @@ import { EmailVerificationField } from "@/components/auth/email-verification-fie
  * - Prominent brand badge header with welcoming onboarding copy
  * - One-click NextAuth Google registration
  * - Clean structured form: Name, Email, Phone, Password, and Confirmation
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export function RegisterView() {
   const router = useRouter();

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Lock, Tag, ShieldCheck, ArrowLeft, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

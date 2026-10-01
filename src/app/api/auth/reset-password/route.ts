@@ -10,7 +10,6 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
  * - Rate limiting check (5 attempts/min)
  * - Cryptographically verifies matching 6-digit email OTP
  * - Updates hashed credentials across database and memory store
- * - Strictly complies with 100-250 lines rule
  */
 export async function POST(req: Request) {
   try {

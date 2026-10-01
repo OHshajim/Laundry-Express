@@ -15,14 +15,6 @@ export const metadata: Metadata = {
   title: "Laundry Express — Pick Up • Wash • Fold • Deliver | More Time For What Matters",
   description:
     "Professional doorstep laundry pickup, wash, fold, and delivery. View current plans, service areas, and pickup windows.",
-  keywords: [
-    "laundry pickup and delivery",
-    "wash and fold service",
-    "doorstep laundry service",
-    "lake in the hills laundry",
-    "algonquin laundry pickup",
-    "per bag laundry pricing",
-  ],
   alternates: {
     canonical: "/",
   },

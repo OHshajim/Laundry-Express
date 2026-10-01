@@ -4,14 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { CheckCircle2, ArrowRight, FileText, Loader2, Home, Truck, Clock, Mail, Check } from "lucide-react";
+import { CheckCircle2, ArrowRight, FileText, Loader2, Home, Clock, Mail, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";
 import type { InvoiceData } from "@/components/booking/order-invoice-modal";
 import type { Order } from "@/types";
-import { formatCurrency, formatSlotLabel, resolveDetergentName } from "@/lib/utils";
+import { formatSlotLabel, resolveDetergentName } from "@/lib/utils";
 import { OrderSummaryCard } from "./order-summary-card";
 
 function SuccessContent() {

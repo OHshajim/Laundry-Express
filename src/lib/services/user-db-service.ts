@@ -6,7 +6,6 @@ import type { User, UserRole } from "@/types";
  * User Database Service
  * Persists and manages authenticated users dynamically in Supabase (public.users).
  * User roles are dynamic from the database (admin can be any email address).
- * Strictly complies with the 100-250 lines architectural rule.
  */
 
 export interface SyncUserInput {

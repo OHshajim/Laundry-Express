@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 
 export type StatBadgeVariant = "success" | "warning" | "info" | "neutral" | "primary";
@@ -47,7 +46,6 @@ const ACCENT_STYLES = {
  * - Soft pastel icon containers with responsive sizing
  * - Status pills and trend badges
  * - Overflow-safe text truncation and word-wrapping
- * - Strictly compliant with the 100-250 lines rule
  */
 export function DashboardStatCard({
   title,

@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/reset-password",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Reset Password — Laundry Express",
     description: "Update your Laundry Express account password.",
@@ -80,7 +84,6 @@ function ResetPasswordStructuredData() {
  * Dedicated password reset completion page:
  * - Simple layout matching /login and /register
  * - Validates security token and allows customer/staff to save a new password
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export default function ResetPasswordPage() {
   return (

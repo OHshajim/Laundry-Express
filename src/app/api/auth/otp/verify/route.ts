@@ -5,7 +5,6 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
 /**
  * POST /api/auth/otp/verify
  * Validates that the submitted 6-digit OTP matches the database record
- * Strictly adheres to the < 250 lines rule
  */
 export async function POST(req: NextRequest) {
   try {

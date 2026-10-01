@@ -107,11 +107,6 @@ export default function OrdersUnifiedPage() {
     return true;
   };
 
-  const handleUpdateFinalWeight = async (orderId: string, finalWeight: number) => {
-    if (!(await updateOrder({ orderId, finalWeight })).success) return;
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, final_weight_lbs: finalWeight } : o)));
-  };
-
   const handleUploadProof = async (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => {
     if (!(await updateOrder({ orderId, proofType, imageUrl, notes })).success) return false;
     setOrders((prev) => prev.map((o) => {
@@ -155,7 +150,6 @@ export default function OrdersUnifiedPage() {
         <OrderPipeline
           orders={orders}
           onUpdateStatus={handleUpdateStatus}
-          onUpdateFinalWeight={handleUpdateFinalWeight}
           onUploadProof={handleUploadProof}
         />
       ) : (

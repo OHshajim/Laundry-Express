@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layout";
 import { FaqsTermsManager } from "@/components/admin/faqs-terms-manager";
 

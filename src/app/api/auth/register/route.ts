@@ -10,7 +10,6 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
  * - Rate limiting protection (5 registrations/min)
  * - Strict full name and password complexity checks (min 8 characters)
  * - Creates a new database account without modifying existing accounts
- * - Strictly adheres to 100-250 lines rule
  */
 export async function POST(req: Request) {
   try {

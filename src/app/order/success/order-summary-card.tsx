@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import type { Order } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 

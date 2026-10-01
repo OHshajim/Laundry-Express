@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ShoppingBag, CreditCard, CheckCircle2, Clock, Truck } from "lucide-react";
+import { ShoppingBag, CreditCard, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { PieChart, type PieSlice } from "@/components/shared/pie-chart";

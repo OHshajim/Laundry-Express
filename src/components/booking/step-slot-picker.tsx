@@ -83,8 +83,6 @@ export function StepSlotPicker({
       return { isoDate, dayName, monthDay };
     }), []);
 
-  const isAllTodaySlotsDisabled = isToday && slots.every((s) => isSlotDisabled(s));
-
   React.useEffect(() => {
     if (isToday) {
       const morning = slots[0];

@@ -6,7 +6,6 @@ import { getVerifiedUser } from "@/lib/auth-request";
 /**
  * POST /api/auth/change-password
  * Updates account password strictly upon matching 6-digit email OTP
- * Strictly adheres to the < 250 lines rule
  */
 export async function POST(req: NextRequest) {
   try {

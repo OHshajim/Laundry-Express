@@ -9,7 +9,6 @@ import type { NextRequest } from "next/server";
  * - Handles credentials sign-in, session verification, and Google OAuth callbacks
  * - Enforces zero-cache security directives for identity endpoints
  * - Dynamic roles retrieved from PostgreSQL database
- * - Strictly complies with the 100-250 lines architectural rule
  */
 
 const nextAuthHandler = NextAuth(authOptions);

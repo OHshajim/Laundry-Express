@@ -45,7 +45,6 @@ const STEPS: StepSummary[] = [
  * Captioned: "Every order is tracked from pickup to delivery — see live tracking after you book"
  * Directs active users to authenticate into the real customer dashboard.
  * Uses semantic CSS variables and theme tokens (--primary, --primary-dark, --primary-pale).
- * Strict adherence to the 100-250 lines rule.
  */
 export function OrderTrackingSummary() {
   return (

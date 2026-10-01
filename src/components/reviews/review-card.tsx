@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Star, CheckCircle, ShieldCheck, Sparkles, ZoomIn } from "lucide-react";
+import { Star, CheckCircle, ShieldCheck, ZoomIn } from "lucide-react";
 import type { OrderReview } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";

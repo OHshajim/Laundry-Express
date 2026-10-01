@@ -56,7 +56,6 @@ const FOOTER_BUBBLES: BubbleConfig[] = [
  * FloatingBubbles Component
  *
  * Ambient bubble physics with rise, drift, wobble, and depth parallax.
- * Strictly adheres to 100-250 lines rule.
  */
 export function FloatingBubbles({
   variant = "hero",

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CreditCard, ExternalLink, ShieldCheck, Search, ChevronDown } from "lucide-react";
+import { CreditCard, ExternalLink, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";

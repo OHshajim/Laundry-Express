@@ -6,26 +6,19 @@ import { PlanSelector } from "@/components/pricing/plan-selector";
 import { PlanComparison } from "@/components/pricing/plan-comparison";
 import { FaqSection } from "@/components/shared/faq-section";
 import { APP_CONFIG } from "@/lib/constants";
-import { Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Plans & Pricing — Transparent Laundry Rates",
   description:
     "View current doorstep laundry rates, weight-based services, and administrator-managed packages.",
-  keywords: [
-    "laundry pricing",
-    "wash and fold cost",
-    "free laundry delivery",
-    "per bag laundry pricing",
-    "commercial laundry price per pound",
-    "laundry packages",
-  ],
   alternates: {
     canonical: "/pricing",
   },
   openGraph: {
     title: "Laundry Express — Plans & Pricing",
-    description: "2+ Bags = FREE Delivery. Zero Hidden Fees.",
+    description:
+      "Compare current wash-and-fold pricing options and packages available from Laundry Express.",
     url: `${APP_CONFIG.url}/pricing`,
     siteName: "Laundry Express",
     images: [{ url: "/brand/logo-badge.jpg", width: 1200, height: 630, alt: "Laundry Express Pricing" }],
@@ -42,7 +35,6 @@ export const metadata: Metadata = {
  * prepaid saver packages, and detailed plan comparison matrix.
  * Includes instant calculator and side-by-side plan comparisons.
  * Main navigation stays static as users scroll.
- * Strict adherence to the 100-250 lines rule.
  */
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 import { formatCurrency } from "@/lib/utils";

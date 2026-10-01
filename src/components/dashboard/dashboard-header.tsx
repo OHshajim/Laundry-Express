@@ -37,7 +37,6 @@ const BADGE_CLASSES = {
  * - Clean white background with slate border and soft shadow
  * - Back to live site link and action button slots
  * - One-click Sign Out button
- * - Strict adherence to the 100-250 lines rule
  */
 export function DashboardHeader({
   title,

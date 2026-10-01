@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/register",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Create Account — Laundry Express",
     description: "Register for doorstep laundry service with automated 24-hour return.",
@@ -90,7 +94,6 @@ function RegisterStructuredData() {
  * - Simple, focused layout with brand logo badge
  * - Independent page design separate from /login
  * - NextAuth custom registration and Google OAuth
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export default function RegisterPage() {
   return (

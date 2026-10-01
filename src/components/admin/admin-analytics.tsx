@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { DollarSign, CheckCircle2, TrendingUp, Calendar, ShoppingBag, Scale, Layers, ChevronDown } from "lucide-react";
+import { DollarSign, CheckCircle2, TrendingUp, Calendar, ChevronDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { PieChart, type PieSlice } from "@/components/shared/pie-chart";
 import type { Order } from "@/types";

@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { Mail, Phone, MapPin, Eye, ShoppingBag } from "lucide-react";
+import { Mail, Phone, MapPin, Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { CustomerAccount } from "./customer-detail-modal";

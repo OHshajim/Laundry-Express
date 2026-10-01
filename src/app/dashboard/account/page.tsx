@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layout";
 import { DashboardSettings } from "@/components/dashboard/dashboard-settings";
 import { useAuth } from "@/context/auth-context";

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layout";
 import { AdminSettingsManager } from "@/components/admin/admin-settings-manager";
 import { DashboardSettings } from "@/components/dashboard/dashboard-settings";

@@ -17,7 +17,6 @@ const PROGRESS_WIDTHS = ["0%", "33.333%", "66.666%", "100%"];
  *
  * Interactive delivery journey with mathematically aligned route progress & traveling beacon.
  * Uses semantic CSS variables and Tailwind tokens (--primary, --secondary).
- * Strict adherence to the 100-250 lines rule.
  */
 export function HowItWorksSection() {
   const [activeService, setActiveService] = React.useState<ServiceKey>("bag");

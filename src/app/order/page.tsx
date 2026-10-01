@@ -12,20 +12,17 @@ import { SlotChip } from "@/components/order/slot-chip";
 export const metadata: Metadata = {
   title: "Book Laundry Pickup & Pay — Fast Checkout",
   description:
-    "Schedule your morning (8am–12pm) or afternoon (1pm–6pm) laundry pickup. 1 Bag = $10.00 fee; 2+ Bags = FREE delivery. Secure Stripe checkout with driver photo proof.",
-  keywords: [
-    "order laundry pickup",
-    "book laundry online",
-    "wash and fold checkout",
-    "doorstep laundry payment",
-    "free laundry delivery booking",
-  ],
+    "Schedule a laundry pickup, provide your service details, and continue to secure checkout.",
   alternates: {
     canonical: "/order",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Laundry Express — Book Pickup & Stripe Checkout",
-    description: "Book doorstep laundry pickup in 2 minutes. 2+ Bags = FREE Delivery.",
+    description: "Schedule a laundry pickup and continue to secure checkout.",
     url: `${APP_CONFIG.url}/order`,
     siteName: "Laundry Express",
     images: [{ url: "/brand/logo-badge.jpg", width: 1200, height: 630, alt: "Laundry Express Checkout" }],

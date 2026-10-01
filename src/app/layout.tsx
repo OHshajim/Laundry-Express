@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s | Laundry Express",
   },
   description:
-    "Laundry Express offers doorstep laundry pickup, washing, folding, and delivery. Explore current services and schedule a pickup. Serving Lake in the Hills & 30-mile radius.",
+    "Laundry Express provides doorstep laundry pickup, wash-and-fold service, and delivery in Lake in the Hills, Illinois and nearby service areas. Review current plans and service coverage online.",
   keywords: [
     "laundry express",
     "doorstep laundry service",
@@ -41,6 +41,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Laundry Express Team" }],
   creator: "STRIX DEVS",
   publisher: "Laundry Express Inc.",
+  category: "Laundry service",
   formatDetection: {
     telephone: true,
     date: false,
@@ -64,8 +65,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Laundry Express",
-    title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
-    description: "Doorstep laundry pickup, wash, fold, and delivery with photo-confirmed service.",
+    title: "Laundry Express | Doorstep Laundry Pickup & Wash-and-Fold",
+    description:
+      "Review laundry pickup and wash-and-fold services, current plans, and delivery coverage in Lake in the Hills, Illinois.",
     images: [
       {
         url: "/brand/mascot-bubble-hero.jpg",
@@ -77,9 +79,21 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laundry Express — Pick Up • Wash • Fold • Deliver",
-    description: "Explore laundry pickup, wash, fold, and delivery services from Laundry Express.",
+    title: "Laundry Express | Doorstep Laundry Pickup & Wash-and-Fold",
+    description:
+      "Review laundry pickup and wash-and-fold services, current plans, and delivery coverage in Lake in the Hills, Illinois.",
     images: ["/brand/mascot-bubble-hero.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Mail, KeyRound, CheckCircle2, AlertCircle, ShieldCheck, Eye, EyeOff, Send, RefreshCw } from "lucide-react";
+import { Mail, KeyRound, AlertCircle, ShieldCheck, Eye, EyeOff, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 
@@ -15,7 +15,6 @@ interface SettingsPasswordProps {
  * Implements password change strictly via email OTP verification:
  * 1. Dispatches cryptographically random 6-digit OTP to user's registered email
  * 2. Matches submitted OTP before updating to new hashed password
- * 3. Strictly adheres to the < 250 lines rule
  */
 export function SettingsPassword({
   userEmail = "customer@laundryexpress.com",

@@ -7,7 +7,6 @@ import { UserDbService } from "@/lib/services/user-db-service";
  * - Manages 'avatars', 'order-proofs', and 'review-photos' storage buckets
  * - Uploads new avatars first, persists to public.users, then cleans up previous avatar files
  * - Generates public CDN URLs
- * - Strictly complies with the 100-250 lines architectural rule
  */
 
 export const STORAGE_BUCKETS = {

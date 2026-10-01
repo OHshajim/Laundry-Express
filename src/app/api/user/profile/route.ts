@@ -5,7 +5,6 @@ import { getVerifiedUser } from "@/lib/auth-request";
 /**
  * POST /api/user/profile
  * Updates user profile attributes (name, phone, address) dynamically in database (public.users)
- * Strictly complies with the < 250 lines rule
  */
 export async function POST(req: NextRequest) {
   try {

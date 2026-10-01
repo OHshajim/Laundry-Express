@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { User, Phone, Mail, MapPin, CreditCard, Star, CheckCircle2 } from "lucide-react";
+import { Phone, Mail, MapPin, CreditCard, Star, CheckCircle2 } from "lucide-react";
 import type { Order, OrderReview } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";

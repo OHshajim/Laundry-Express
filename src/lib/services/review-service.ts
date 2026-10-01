@@ -4,7 +4,6 @@ import type { OrderReview } from "@/types";
 /**
  * Review Service
  * Manages customer reviews with up to 3 photos and administrative moderation.
- * Strictly complies with the < 250 lines architectural rule.
  */
 
 export class ReviewService {

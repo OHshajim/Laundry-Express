@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, ShoppingBag, Scale, Zap, ShieldCheck } from "lucide-react";
+import { Check, ShoppingBag, Scale, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FloatingBubbles } from "./floating-bubbles";
 import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";

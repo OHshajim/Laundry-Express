@@ -12,19 +12,16 @@ import { OrderProofModal } from "./order-proof-modal";
 interface OrderPipelineProps {
   orders: Order[];
   onUpdateStatus: (orderId: string, newStatus: OrderStatus) => Promise<boolean>;
-  onUpdateFinalWeight: (orderId: string, finalWeight: number) => void;
   onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => Promise<boolean>;
 }
 
 export function OrderPipeline({
   orders,
   onUpdateStatus,
-  onUpdateFinalWeight,
   onUploadProof,
 }: OrderPipelineProps) {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [detailOrderId, setDetailOrderId] = React.useState<string | null>(null);
-  const [weightInput, setWeightInput] = React.useState<string>("");
   const [proofType, setProofType] = React.useState<"pickup" | "dropoff" | "damage">("pickup");
   const [proofModalOpen, setProofModalOpen] = React.useState<boolean>(false);
   const [systemAlert, setSystemAlert] = React.useState<string | null>(null);
@@ -176,7 +173,6 @@ export function OrderPipeline({
                 key={ord.id}
                 order={ord}
                 onUpdateStatus={handleStatusChangeWithNotification}
-                onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_lbs || 15)); }}
                 onOpenProofModal={handleOpenProofModal}
                 onViewDetails={(o) => setDetailOrderId(o.id)}
               />
@@ -192,7 +188,6 @@ export function OrderPipeline({
             key={ord.id}
             order={ord}
             onUpdateStatus={handleStatusChangeWithNotification}
-            onOpenWeightDialog={(o) => { setSelectedOrder(o); setWeightInput(String(o.final_weight_lbs || 15)); }}
             onOpenProofModal={handleOpenProofModal}
             onViewDetails={(o) => setDetailOrderId(o.id)}
           />

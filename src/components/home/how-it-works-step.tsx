@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +31,6 @@ interface HowItWorksStepProps {
  * - Full-width typography without harsh truncate or line-clamps
  * - Playful spring animated mascot icons
  * - Clean CSS variables and theme tokens (--primary, --primary-dark)
- * - Strict adherence to the 100-250 lines rule
  */
 export function HowItWorksStep({
   step,

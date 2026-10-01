@@ -7,7 +7,6 @@ import type { User } from "@/types";
  * - Google OAuth authentication flow
  * - Email OTP dispatch and verification for password changes and resets
  * - Zero static admin whitelists (dynamic roles from PostgreSQL database)
- * - Strict adherence to the 100-250 lines architectural rule
  */
 
 export interface AuthResponse {

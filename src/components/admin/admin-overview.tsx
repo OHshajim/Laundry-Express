@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Users, Tag, Sparkles, Star, Package, ShoppingBag, ShieldCheck } from "lucide-react";
+import { Users, Package, ShoppingBag, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { AdminAnalytics } from "./admin-analytics";
 import type { Order } from "@/types";

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Package, Check, Zap, Sparkles } from "lucide-react";
+import { Package, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { useSettings, useSlot1Label, useSlot2Label } from "@/hooks/use-settings";

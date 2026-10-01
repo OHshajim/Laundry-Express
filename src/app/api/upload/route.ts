@@ -15,7 +15,6 @@ import { getVerifiedUser } from "@/lib/auth-request";
  * - Only administrators may upload operational order proofs
  * - Restricts uploads to safe raster image formats (JPEG, PNG, WebP)
  * - Blocks raw SVGs to prevent Stored XSS vectors
- * - Strictly adheres to 100-250 lines architectural limit
  */
 
 const ALLOWED_MIME_TYPES = [

@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/login",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Sign In — Laundry Express",
     description: "Access your customer orders or administrative operations portal.",
@@ -84,7 +88,6 @@ function LoginStructuredData() {
  * - Simple, focused layout with brand logo
  * - No redundant navigation or distracting cards
  * - NextAuth.js custom credentials and Google OAuth
- * - Strictly complies with the 100-250 lines architectural rule
  */
 export default function LoginPage() {
   return (

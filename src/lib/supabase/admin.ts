@@ -3,7 +3,6 @@ import type { Order, OrderStatus, PricingConfig } from "@/types";
 
 /**
  * Creates an administrative Supabase client with the service role key.
- * Strictly adheres to the 100-250 lines architectural rule.
  */
 export function createAdminSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";

@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { Clock, Scale, Camera, AlertTriangle, Check, Send, ChevronRight } from "lucide-react";
+import { Clock, Camera, AlertTriangle, Check, Send, ChevronRight } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { ORDER_STATUSES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -10,7 +9,6 @@ import { Button } from "@/components/ui/button";
 interface OrderCardProps {
   order: Order;
   onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
-  onOpenWeightDialog: (order: Order) => void;
   onOpenProofModal: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
   onViewDetails?: (order: Order) => void;
 }
@@ -24,7 +22,6 @@ interface OrderCardProps {
 export function OrderCard({
   order,
   onUpdateStatus,
-  onOpenWeightDialog,
   onOpenProofModal,
   onViewDetails,
 }: OrderCardProps) {
@@ -109,18 +106,6 @@ export function OrderCard({
         className="flex flex-wrap items-center justify-end gap-1.5 pt-1"
         onClick={(e) => e.stopPropagation()}
       >
-        {order.pricing_mode === "per_lb" && order.order_status !== "completed" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 px-2 text-xs"
-            onClick={() => onOpenWeightDialog(order)}
-          >
-            <Scale className="h-3.5 w-3.5 mr-1 shrink-0" />
-            Weigh
-          </Button>
-        )}
-
         {order.order_status === "confirmed" && (
           <Button
             variant="hero"
