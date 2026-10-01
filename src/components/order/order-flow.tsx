@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { useAuth } from "@/context/auth-context";
 import type { PricingMode, PricingConfig } from "@/types";
-import { ShieldCheck, Lock, Clock, Truck } from "lucide-react";
+import { Lock, Clock, Truck } from "lucide-react";
 
 
 export interface OrderFlowProps {

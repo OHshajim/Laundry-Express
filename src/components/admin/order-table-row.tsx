@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Clock, Scale, Camera, AlertTriangle, Check, Send } from "lucide-react";
+import { Clock, Camera, AlertTriangle, Check, Send } from "lucide-react";
 import type { Order, OrderStatus } from "@/types";
 import { ORDER_STATUSES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 interface OrderTableRowProps {
   order: Order;
   onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
-  onOpenWeightDialog: (order: Order) => void;
   onOpenProofModal: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
   onViewDetails?: (order: Order) => void;
 }
@@ -18,7 +17,6 @@ interface OrderTableRowProps {
 export function OrderTableRow({
   order,
   onUpdateStatus,
-  onOpenWeightDialog,
   onOpenProofModal,
   onViewDetails,
 }: OrderTableRowProps) {
@@ -104,23 +102,6 @@ export function OrderTableRow({
       </td>
 
       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-        {/* Optional Weigh scale for Pound/weight mode */}
-        {order.pricing_mode === "per_lb" && order.order_status !== "completed" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 px-2 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenWeightDialog(order);
-            }}
-            title="Record scale weight"
-          >
-            <Scale className="h-3.5 w-3.5 mr-1 shrink-0" />
-            Weigh
-          </Button>
-        )}
-
         {/* Step-by-Step Progressive Action Buttons */}
         {order.order_status === "confirmed" && (
           <Button

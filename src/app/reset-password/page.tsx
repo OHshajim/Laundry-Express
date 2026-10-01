@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/reset-password",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Reset Password — Laundry Express",
     description: "Update your Laundry Express account password.",

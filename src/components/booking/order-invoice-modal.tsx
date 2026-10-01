@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Printer, ArrowRight, Download, Loader2, FileText, Mail, Check } from "lucide-react";
+import { CheckCircle2, Printer, ArrowRight, Loader2, FileText, Mail, Check } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { downloadInvoiceAsPdf } from "@/lib/invoice/pdf-invoice-generator";

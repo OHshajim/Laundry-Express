@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Sparkles,
-  ShieldCheck,
   Zap,
   Heart,
 } from "lucide-react";

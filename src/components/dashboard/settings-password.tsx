@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Mail, KeyRound, CheckCircle2, AlertCircle, ShieldCheck, Eye, EyeOff, Send, RefreshCw } from "lucide-react";
+import { Mail, KeyRound, AlertCircle, ShieldCheck, Eye, EyeOff, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 

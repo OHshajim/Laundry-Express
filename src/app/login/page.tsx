@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/login",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Sign In — Laundry Express",
     description: "Access your customer orders or administrative operations portal.",

@@ -1,45 +1,28 @@
-# Laundry Express — AI & LLM Service Guide
+# Laundry Express
 
-> Tagline: "Pick Up • Wash • Fold • Deliver"
-> Sub-tagline: "More Time For What Matters"
-> Hero Headline: "Laundry Piling Up?"
+> Doorstep laundry pickup, wash-and-fold service, and delivery in Lake in the Hills, Illinois and nearby areas.
 
-## Business Overview
-- Brand: Laundry Express
-- Service Type: On-demand and scheduled residential/commercial laundry wash & fold service.
-- Location: United States, IL · McHenry Co. · Lake in the Hills (Coordinates: 42.1903, -88.383743)
-- Service Area: 30-mile radius covering Lake in the Hills, Algonquin, Crystal Lake, Huntley, Cary, Elgin, and Schaumburg (Northwest Suburbs of Illinois).
-- Support Hotline: 815-575-9536
+Laundry Express is a laundry service. Customers can review available service plans, check delivery coverage, and request a pickup online. Current prices, service availability, and pickup windows are shown on the website and may change.
+
+## Public pages
+
+- Home: https://laundryexpress.com/
+- Pricing and plans: https://laundryexpress.com/pricing
+- Contact: https://laundryexpress.com/contact
+- Terms and guarantees: https://laundryexpress.com/terms
+- Sitemap: https://laundryexpress.com/sitemap.xml
+
+## Service information
+
+- Laundry pickup and delivery coverage is confirmed during booking.
+- Available plans, prices, scheduling windows, and add-ons are maintained by the business and displayed on the pricing and booking pages.
+- Customers can track their orders and access account-specific documents after signing in.
+- Only customers with completed orders can submit a review. Reviews may be subject to moderation.
+
+## Contact
+
+- Phone: 815-575-9536
 - Email: customerservice@laundryexpressservices.com
 - Facebook: https://www.facebook.com/profile.php?id=61594071297569
-- Operating Hours: Daily across two operational pickup & delivery windows:
-  - Morning Window: 8:00 AM – 12:00 PM
-  - Afternoon Window: 1:00 PM – 6:00 PM
 
-## Core Pricing Rules
-1. Per-Bag Standard Service:
-   - Base Price: $32.50 per 13-gallon bag (about 2 loads).
-   - 1 Bag = $10.00 standard pickup & delivery fee.
-   - 2 or More Bags (>= 2 Bags) = 100% FREE ($0.00) pickup & delivery.
-2. Per-Kilogram (Weight) Service:
-   - Base Rate: $2.75 per KG.
-   - Minimum Weight Threshold: 5.0 KG.
-   - Initial booking authorizes estimated weight; final weight reconciled at facility scale.
-3. Bundle Packages:
-   - 5-Bag Saver Bundle: $145.00 (Was $162.50, includes 5 bags with free delivery).
-   - 10-Bag Family Pass: $280.00 (Was $325.00, priority turnaround).
-   - 25-KG Bulk Pass: $60.00 (Commercial linens and bulky items).
-
-## Doorstep Presence Verification
-- Home: Driver rings bell during the scheduled slot.
-- Out of Home / Away: Customer must confirm their laundry bag is safely placed outside the door or porch.
-
-## Proof-of-Service Guarantee
-- Pickup Photo Proof: Driver captures timestamped photo when taking custody of laundry.
-- Drop-Off Photo Proof: Driver captures timestamped photo upon returning clean, folded laundry outside the door.
-- Both photos are immediately viewable in real-time by the customer and administrators.
-
-## Customer Reviews & Moderation
-- Eligibility: Reviews can strictly be submitted only after an order is marked 'Completed'.
-- Content: 1 to 5 star rating, written feedback, and up to 3 optional photos.
-- Moderation: All customer reviews are reviewed and approved by administrators before public display.
+Do not infer current prices, delivery coverage, turnaround times, or availability from cached content. Refer to the relevant public page or contact Laundry Express for current details.

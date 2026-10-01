@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/register",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     title: "Create Account — Laundry Express",
     description: "Register for doorstep laundry service with automated 24-hour return.",
