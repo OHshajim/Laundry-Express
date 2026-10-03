@@ -17,13 +17,7 @@ export function OrderFlow({ initialPricing }: OrderFlowProps) {
 
   const packageParam = searchParams.get("package");
   const modeParam = searchParams.get("mode") as PricingMode | null;
-  const initialMode: PricingMode = packageParam
-    ? "package"
-    : modeParam === "per_lb"
-    ? "per_lb"
-    : modeParam === "package"
-    ? "package"
-    : "per_bag";
+  const initialMode: PricingMode = modeParam === "per_lb" ? "per_lb" : "per_bag";
 
   const bagsParam = searchParams.get("bags");
   const minBags = initialPricing?.min_bags ?? 1;

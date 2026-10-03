@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Footer } from "@/components/shared/footer";
 import { LoginView } from "@/components/auth/login-view";
 import { APP_CONFIG } from "@/lib/constants";
+import { serializeJsonLd } from "@/lib/seo/jsonld-schemas";
 
 export const metadata: Metadata = {
   title: "Sign In — Laundry Express Customer & Staff Portal",
@@ -76,7 +77,7 @@ function LoginStructuredData() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
     />
   );
 }

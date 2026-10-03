@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Footer } from "@/components/shared/footer";
 import { ForgotPasswordView } from "@/components/auth/forgot-password-view";
 import { APP_CONFIG } from "@/lib/constants";
+import { serializeJsonLd } from "@/lib/seo/jsonld-schemas";
 
 export const metadata: Metadata = {
   title: "Forgot Password — Laundry Express",
@@ -72,7 +73,7 @@ function ForgotPasswordStructuredData() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
     />
   );
 }

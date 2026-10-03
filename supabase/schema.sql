@@ -149,6 +149,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(order_status);
+CREATE INDEX IF NOT EXISTS idx_orders_pickup_slot_status
+    ON public.orders(pickup_date, pickup_time_slot, order_status);
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_email_sent_at TIMESTAMPTZ;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS stripe_checkout_session_id TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS estimated_weight_lbs NUMERIC(10,2) DEFAULT 0;
@@ -178,6 +180,51 @@ WHERE order_status IN ('received', 'in_washing', 'delivered');
 ALTER TABLE public.orders ADD CONSTRAINT orders_order_status_check CHECK (
     order_status IN ('pending', 'confirmed', 'driver_assigned', 'picked_up', 'in_wash', 'out_for_delivery', 'completed', 'cancelled')
 );
+
+CREATE OR REPLACE FUNCTION public.create_order_with_slot_capacity(
+    p_order JSONB,
+    p_pickup_date DATE,
+    p_pickup_slot TEXT,
+    p_slot_capacity INTEGER
+)
+RETURNS SETOF public.orders
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    active_count BIGINT;
+    created_order public.orders;
+BEGIN
+    IF p_slot_capacity IS NULL OR p_slot_capacity < 1 THEN
+        RAISE EXCEPTION 'Pickup capacity is not configured.';
+    END IF;
+    IF p_order->>'pickup_date' IS DISTINCT FROM p_pickup_date::TEXT
+       OR p_order->>'pickup_time_slot' IS DISTINCT FROM p_pickup_slot THEN
+        RAISE EXCEPTION 'Pickup slot does not match order data.';
+    END IF;
+
+    PERFORM pg_advisory_xact_lock(hashtextextended(p_pickup_date::TEXT || ':' || p_pickup_slot, 0));
+    SELECT COUNT(*) INTO active_count
+    FROM public.orders
+    WHERE pickup_date = p_pickup_date
+      AND pickup_time_slot = p_pickup_slot
+      AND order_status <> 'cancelled';
+
+    IF active_count >= p_slot_capacity THEN
+        RAISE EXCEPTION 'PICKUP_SLOT_FULL';
+    END IF;
+
+    INSERT INTO public.orders
+    SELECT (jsonb_populate_record(NULL::public.orders, p_order)).*
+    RETURNING * INTO created_order;
+
+    RETURN NEXT created_order;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.create_order_with_slot_capacity(JSONB, DATE, TEXT, INTEGER) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_order_with_slot_capacity(JSONB, DATE, TEXT, INTEGER) TO service_role;
 
 -- 9. ORDER PROOFS TABLE (Driver pickup & delivery photos)
 CREATE TABLE IF NOT EXISTS public.order_proofs (

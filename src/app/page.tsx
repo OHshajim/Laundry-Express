@@ -7,7 +7,7 @@ import { FaqSection } from "@/components/shared/faq-section";
 import { HomeCtaBanner } from "@/components/home/home-cta-banner";
 import { Footer } from "@/components/shared/footer";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
-import { getLocalBusinessSchema, getFaqSchema } from "@/lib/seo/jsonld-schemas";
+import { getLocalBusinessSchema, getFaqSchema, serializeJsonLd } from "@/lib/seo/jsonld-schemas";
 import { APP_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -58,11 +58,11 @@ export default async function HomePage() {
       {/* Schema.org Structured Microdata for SEO & AI / LLM Agents */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(localBusinessJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
       />
 
       {/* Sticky Main Navigation Bar */}

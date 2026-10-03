@@ -14,18 +14,22 @@ import { getAuthSecret } from "@/lib/auth-secret";
  */
 export async function proxy(req: NextRequest) {
   const { pathname, search, searchParams } = req.nextUrl;
-
-  const token = await getToken({
-    req,
-    secret: getAuthSecret(),
-  });
-
-  const isAuthenticated = !!token;
-  const userRole = token?.role as string | undefined;
-  const isAdmin = userRole === "admin";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isOrderRoute = pathname.startsWith("/order");
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isAuthRoute =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
+  const token = isAdminRoute || isOrderRoute || isDashboardRoute || isAuthRoute
+    ? await getToken({ req, secret: getAuthSecret() })
+    : null;
+  const isAuthenticated = Boolean(token);
+  const isAdmin = token?.role === "admin";
 
   // 1. Guard legacy /admin routes - strictly require admin role
-  if (pathname.startsWith("/admin")) {
+  if (isAdminRoute) {
     if (!isAuthenticated) {
       const loginUrl = new URL(`/login?callbackUrl=${encodeURIComponent("/dashboard")}`, req.url);
       return NextResponse.redirect(loginUrl);
@@ -35,14 +39,6 @@ export async function proxy(req: NextRequest) {
     }
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
-
-  const isOrderRoute = pathname.startsWith("/order");
-  const isDashboardRoute = pathname.startsWith("/dashboard");
-  const isAuthRoute =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/forgot-password") ||
-    pathname.startsWith("/reset-password");
 
   // 2. Guard protected customer & checkout routes
   if (isOrderRoute || isDashboardRoute) {
@@ -79,19 +75,34 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  return NextResponse.next();
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const isDevelopment = process.env.NODE_ENV !== "production";
+  const policy = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://js.stripe.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
+    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    "style-src-attr 'unsafe-inline'",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.googleusercontent.com https://*.supabase.co https://images.unsplash.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://accounts.google.com https://maps.googleapis.com",
+    "frame-src 'self' https://js.stripe.com https://accounts.google.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+  ].join("; ");
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", policy);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", policy);
+  return response;
 }
 
 export default proxy;
 
 export const config = {
   matcher: [
-    "/order/:path*",
-    "/dashboard/:path*",
-    "/admin/:path*",
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset-password",
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|llms-full.txt).*)",
   ],
 };

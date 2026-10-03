@@ -137,21 +137,6 @@ export function ReviewsSection() {
         )}
       </div>
 
-      <style>{`
-        .reviews-carousel {
-          animation: reviews-scroll 32s linear infinite;
-        }
-        .reviews-carousel:hover {
-          animation-play-state: paused;
-        }
-        @keyframes reviews-scroll {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .reviews-carousel { animation: none; }
-        }
-      `}</style>
     </section>
   );
 }

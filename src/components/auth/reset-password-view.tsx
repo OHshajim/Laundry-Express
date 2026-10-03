@@ -194,7 +194,7 @@ export function ResetPasswordView() {
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">New Password (Min 6 chars) *</label>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">New Password (Min 8 chars) *</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}

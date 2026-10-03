@@ -213,7 +213,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
             Questions? Contact support at <strong>(815) 575-9536</strong> or reply to <strong>customerservice@laundryexpressservices.com</strong>
           </p>
           <p style="color:#94a3b8;font-size:10px;margin:0">
-            Official Computer-Generated Tax Invoice &middot; Laundry Express &middot; laundryexpress.com
+            Official Computer-Generated Tax Invoice &middot; Laundry Express &middot; laundryexpressservices.com
           </p>
         </div>
       </div>

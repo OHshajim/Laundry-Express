@@ -1,6 +1,6 @@
 # Laundry Express — Complete System & Service Documentation for LLMs
 
-> Official AI & Machine-Readable Context for Laundry Express (laundryexpress.com)
+> Official AI & Machine-Readable Context for Laundry Express (www.laundryexpressservices.com)
 > Updated: October 2026
 
 ## 1. Overview
@@ -46,5 +46,5 @@ Laundry Express is a premium doorstep wash-and-fold laundry service operating in
 ## 6. Official Contact & Support
 - **Support Phone**: (815) 575-9536
 - **Support Email**: customerservice@laundryexpressservices.com
-- **Website**: https://laundryexpress.com/
-- **Sitemap**: https://laundryexpress.com/sitemap.xml
+- **Website**: https://www.laundryexpressservices.com/
+- **Sitemap**: https://www.laundryexpressservices.com/sitemap.xml

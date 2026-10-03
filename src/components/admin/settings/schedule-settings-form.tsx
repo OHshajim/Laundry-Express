@@ -11,6 +11,7 @@ export function ScheduleSettingsForm({ initialSettings }: { initialSettings: Bus
   const [slot1End, setSlot1End] = React.useState(initialSettings?.slot1_end || "");
   const [slot2Start, setSlot2Start] = React.useState(initialSettings?.slot2_start || "");
   const [slot2End, setSlot2End] = React.useState(initialSettings?.slot2_end || "");
+  const [maxOrdersPerSlot, setMaxOrdersPerSlot] = React.useState(initialSettings?.max_orders_per_slot ?? "");
   const { isSaving, error, saved, save } = useSettingsSave();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -19,6 +20,7 @@ export function ScheduleSettingsForm({ initialSettings }: { initialSettings: Bus
       operating_hours: operatingHours,
       slot1_start: slot1Start, slot1_end: slot1End,
       slot2_start: slot2Start, slot2_end: slot2End,
+      max_orders_per_slot: Number(maxOrdersPerSlot),
     }));
   };
 
@@ -29,7 +31,7 @@ export function ScheduleSettingsForm({ initialSettings }: { initialSettings: Bus
         <h4 className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
           <Clock className="h-4 w-4 text-primary" /> Operational Schedule &amp; Pickup Windows
         </h4>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 text-xs">
           <label className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 font-bold text-slate-700">
             Operating Days
             <input required type="text" value={operatingHours} onChange={(event) => setOperatingHours(event.target.value)}
@@ -37,6 +39,12 @@ export function ScheduleSettingsForm({ initialSettings }: { initialSettings: Bus
           </label>
           <TimeWindow title="Morning Pickup Window" start={slot1Start} end={slot1End} onStart={setSlot1Start} onEnd={setSlot1End} />
           <TimeWindow title="Afternoon Pickup Window" start={slot2Start} end={slot2End} onStart={setSlot2Start} onEnd={setSlot2End} />
+          <label className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 font-bold text-slate-700">
+            Orders per pickup window
+            <input required type="number" min="1" step="1" value={maxOrdersPerSlot}
+              onChange={(event) => setMaxOrdersPerSlot(event.target.value)}
+              className="mt-2 w-full min-w-0 px-3 py-2 rounded-lg border border-slate-200 bg-white font-medium" />
+          </label>
         </div>
       </section>
     </SaveSettingsForm>

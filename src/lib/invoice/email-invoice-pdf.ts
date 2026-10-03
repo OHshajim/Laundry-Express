@@ -13,10 +13,6 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
   const planName = String(invoice.planName || "Wash & Fold Service");
   const detergent = String(invoice.detergent || "Hypoallergenic Eco-Wash");
   const quantity = String(invoice.quantity || "1 Order");
-  const orderDate = String(invoice.orderDate || new Date().toISOString()).slice(0, 10);
-  const pickupDate = String(invoice.pickupDate || "Scheduled");
-  const pickupSlot = String(invoice.pickupSlot || "Standard");
-  const deliveryDate = String(invoice.deliveryDate || "Within 24 Hours");
   const subtotal = Number(invoice.subtotal || 0);
   const deliveryFee = Number(invoice.deliveryFee || 0);
   const discountAmount = Number(invoice.discountAmount || 0);
@@ -222,7 +218,7 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
   pdf.setFontSize(7);
   pdf.setTextColor(148, 163, 184);
   pdf.text("Questions? (815) 575-9536 • customerservice@laundryexpressservices.com", W / 2, 280, { align: "center" });
-  pdf.text("Official Computer-Generated Tax Invoice • Laundry Express • laundryexpress.com", W / 2, 284, { align: "center" });
+  pdf.text("Official Computer-Generated Tax Invoice • Laundry Express • laundryexpressservices.com", W / 2, 284, { align: "center" });
 
   return Buffer.from(pdf.output("arraybuffer"));
 }

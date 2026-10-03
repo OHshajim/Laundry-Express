@@ -32,7 +32,7 @@ function clearStepCache() {
  * Implements password change strictly via email OTP verification.
  * Automatically preserves the verify step across tab switching and page refreshes.
  */
-export function SettingsPassword({ userEmail = "customer@laundryexpress.com" }: SettingsPasswordProps) {
+export function SettingsPassword({ userEmail = "customer@laundryexpressservices.com" }: SettingsPasswordProps) {
   const { sendOtp, changePasswordWithOtp } = useAuth();
   const [step, setStep] = React.useState<"request" | "verify" | "success">(() => isRecentVerifyStep() ? "verify" : "request");
   const [otpCode, setOtpCode] = React.useState("");

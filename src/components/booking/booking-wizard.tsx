@@ -118,7 +118,6 @@ export function BookingWizard({
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in duration-200">
                 <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} bagPrice={rates.bagPrice} poundPrice={rates.poundPrice} minLbs={rates.minLbs} freeDeliveryBags={rates.freeDeliveryBags} freeDeliveryLbs={rates.freeDeliveryLbs} />
-                {pricingMode === "package" && <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Package-credit redemption is not available yet. Choose by bag or by pound to continue.</p>}
                 <StepBagCounter pricingMode={pricingMode} bagCount={boundedBagCount} onBagCountChange={setBagCount} minBags={rates.minBags} maxBags={rates.maxBags} weightLbs={boundedWeightLbs} onWeightLbsChange={setWeightLbs} bagPrice={rates.bagPrice} freeDeliveryBags={rates.freeDeliveryBags} minLbs={rates.minLbs} maxLbs={rates.maxLbs} freeDeliveryLbs={rates.freeDeliveryLbs} />
                 <div className="flex justify-end pt-2">
                   <Button variant="hero" size="lg" disabled={!isStep1Valid} onClick={() => isStep1Valid && setStep(2)}>Continue to Detergent <ArrowRight className="h-4 w-4 ml-2" /></Button>

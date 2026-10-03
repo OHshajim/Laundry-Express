@@ -40,6 +40,7 @@ export function OrderSummaryCard({
           <p className="font-bold text-slate-900">{customerName}</p>
           {customerEmail && <p className="text-slate-500">{customerEmail}</p>}
           {order.customer_phone && <p className="text-slate-500 font-medium">{order.customer_phone}</p>}
+          <p className="break-words text-slate-500">{fullAddress}</p>
         </div>
 
         <div className="space-y-1">

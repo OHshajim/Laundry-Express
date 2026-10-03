@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { APP_CONFIG } from "@/lib/constants";
 import "./globals.css";
@@ -102,11 +103,12 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/context/auth-context";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
   return (
     <html
       lang="en"

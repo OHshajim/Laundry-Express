@@ -15,7 +15,7 @@ export interface DashboardShellProps {
   activeSection?: string;
   onSelectSection?: (section: string) => void;
   activeAdminSection?: string;
-  onSelectAdminSection?: (section: any) => void;
+  onSelectAdminSection?: (section: string) => void;
   ordersCount?: number;
   customersCount?: number;
   pendingReviewsCount?: number;

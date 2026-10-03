@@ -1,5 +1,6 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { ContentService } from "@/lib/services/content-service";
 import { PricingPlanService } from "@/lib/services/pricing-plan-service";
 import { mapOrderRecord } from "@/lib/services/order-record-mapper";
 import { broadcastOrderEvent } from "@/lib/services/order-realtime-service";
@@ -47,43 +48,52 @@ export class OrderService {
 
   static async createOrder(payload: Partial<Order>): Promise<Order> {
     if (!payload.detergent_id) throw new Error("A detergent selection is required.");
+    const settings = await ContentService.getSettings();
+    const slotCapacity = settings?.max_orders_per_slot;
+    if (typeof slotCapacity !== "number" || !Number.isInteger(slotCapacity) || slotCapacity < 1) {
+      throw new Error("Pickup capacity is not configured.");
+    }
     const address = {
       street_address: payload.street_address || "", apt_unit: payload.apt_unit || "",
       city: payload.city || "", state: payload.state || "", zip_code: payload.zip_code || "",
     };
     const orderNumber = `LX-${new Date().getFullYear()}-${randomBytes(8).toString("hex").toUpperCase()}`;
     const supabase = createAdminSupabaseClient();
-    const { data, error } = await supabase.from("orders").insert({
-      order_number: orderNumber,
+    const orderData = {
+      id: randomUUID(), order_number: orderNumber,
       user_id: payload.user_id && payload.user_id !== "guest-customer" ? payload.user_id : null,
       customer_name: payload.customer_name?.trim() || "Customer",
       customer_email: payload.customer_email?.trim().toLowerCase() || "",
       customer_phone: payload.customer_phone?.trim() || "",
-      plan_type: payload.pricing_mode || "per_bag",
-      bag_count: payload.bag_count ?? 1,
-      estimated_weight_lbs: payload.estimated_weight_lbs ?? 0,
-      weight_lbs: payload.estimated_weight_lbs ?? 0,
-      detergent_id: payload.detergent_id,
-      detergent_name: payload.detergent_name || "",
-      detergent_fee: payload.detergent_fee ?? 0,
-      pickup_date: payload.pickup_date,
-      pickup_time_slot: payload.pickup_slot,
-      dropoff_date: payload.delivery_date || null,
-      pickup_address: address, ...address,
-      is_home_for_pickup: !payload.is_out_of_home,
+      plan_type: payload.pricing_mode || "per_bag", bag_count: payload.bag_count ?? 1,
+      estimated_weight_lbs: payload.estimated_weight_lbs ?? 0, weight_lbs: payload.estimated_weight_lbs ?? 0,
+      detergent_id: payload.detergent_id, detergent_name: payload.detergent_name || "",
+      detergent_fee: payload.detergent_fee ?? 0, pickup_date: payload.pickup_date,
+      pickup_time_slot: payload.pickup_slot, dropoff_date: payload.delivery_date || null,
+      pickup_address: address, ...address, is_home_for_pickup: !payload.is_out_of_home,
       doorstep_confirmation: Boolean(payload.bag_outside_door_confirmed),
       special_instructions: payload.special_instructions || payload.customer_notes || "",
-      subtotal: payload.subtotal ?? 0,
-      discount_amount: payload.discount_amount ?? 0,
-      coupon_code: payload.coupon_code || null,
-      delivery_fee: payload.delivery_fee ?? 0,
-      tax_amount: payload.tax_amount ?? 0,
-      total_amount: payload.total_amount ?? 0,
-      order_status: "pending", payment_status: "pending",
+      subtotal: payload.subtotal ?? 0, discount_amount: payload.discount_amount ?? 0,
+      coupon_code: payload.coupon_code || null, coupon_usage_counted_at: null,
+      delivery_fee: payload.delivery_fee ?? 0, tax_amount: payload.tax_amount ?? 0,
+      total_amount: payload.total_amount ?? 0, order_status: "pending", payment_status: "pending",
       payment_method: payload.payment_method || "card",
-    }).select("*, proofs:order_proofs(*)").single();
-    if (error || !data) throw new Error(`Unable to save order: ${error?.message || "No order returned."}`);
-    const order = mapOrderRecord(data);
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    };
+    const { data, error } = await supabase.rpc("create_order_with_slot_capacity", {
+      p_order: orderData,
+      p_pickup_date: payload.pickup_date,
+      p_pickup_slot: payload.pickup_slot,
+      p_slot_capacity: slotCapacity,
+    });
+    const record = Array.isArray(data) ? data[0] : data;
+    if (error || !record) {
+      if (error?.message.includes("PICKUP_SLOT_FULL")) {
+        throw new Error("The selected pickup window is fully booked. Please choose another slot.");
+      }
+      throw new Error(`Unable to save order: ${error?.message || "No order returned."}`);
+    }
+    const order = mapOrderRecord(record);
     void broadcastOrderEvent({
       eventType: "order_created", orderId: order.id, orderNumber: order.order_number,
       orderStatus: order.order_status, paymentStatus: order.payment_status,
@@ -209,15 +219,9 @@ export class OrderService {
     const deliveryFee = weightLbs >= pricing.free_delivery_lbs ? 0 : pricing.standard_delivery_fee;
     const total = Math.max(0, subtotal + Number((order as Order & { detergent_fee?: number }).detergent_fee || 0) + deliveryFee - order.discount_amount);
     const supabase = createAdminSupabaseClient();
-    const { data, error } = await supabase.from("orders")
-      .update({ final_weight_lbs: weightLbs, subtotal, delivery_fee: deliveryFee, total_amount: total, updated_at: new Date().toISOString() })
-      .eq("id", order.id).select("id").maybeSingle();
+    const { data, error } = await supabase.from("orders").update({ final_weight_lbs: weightLbs, subtotal, delivery_fee: deliveryFee, total_amount: total, updated_at: new Date().toISOString() }).eq("id", order.id).select("id").maybeSingle();
     if (error || !data) throw new Error(`Unable to update final weight: ${error?.message || "Order not found."}`);
-    void broadcastOrderEvent({
-      eventType: "order_status_updated", orderId: order.id, orderNumber: order.order_number,
-      orderStatus: order.order_status, totalAmount: total, userId: order.user_id,
-      customerEmail: order.customer_email, customerName: order.customer_name, updatedAt: new Date().toISOString(),
-    });
+    void broadcastOrderEvent({ eventType: "order_status_updated", orderId: order.id, orderNumber: order.order_number, orderStatus: order.order_status, totalAmount: total, userId: order.user_id, customerEmail: order.customer_email, customerName: order.customer_name, updatedAt: new Date().toISOString() });
     return true;
   }
 
@@ -226,15 +230,9 @@ export class OrderService {
     if (!order) throw new Error("Order not found.");
     const proofTypeMap = { pickup: "pickup_doorstep", dropoff: "delivery_doorstep", damage: "processing_wash" } as const;
     const supabase = createAdminSupabaseClient();
-    const { error } = await supabase.from("order_proofs").insert({
-      order_id: order.id, proof_type: proofTypeMap[proofType], photo_url: imageUrl, notes: notes || null,
-    });
+    const { error } = await supabase.from("order_proofs").insert({ order_id: order.id, proof_type: proofTypeMap[proofType], photo_url: imageUrl, notes: notes || null });
     if (error) throw new Error(`Unable to save order proof: ${error.message}`);
-    void broadcastOrderEvent({
-      eventType: "order_proof_uploaded", orderId: order.id, orderNumber: order.order_number,
-      orderStatus: order.order_status, proofType, userId: order.user_id, customerEmail: order.customer_email,
-      customerName: order.customer_name, updatedAt: new Date().toISOString(),
-    });
+    void broadcastOrderEvent({ eventType: "order_proof_uploaded", orderId: order.id, orderNumber: order.order_number, orderStatus: order.order_status, proofType, userId: order.user_id, customerEmail: order.customer_email, customerName: order.customer_name, updatedAt: new Date().toISOString() });
     return true;
   }
 }

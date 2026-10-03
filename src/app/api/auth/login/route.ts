@@ -12,22 +12,6 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
  */
 export async function POST(req: Request) {
   try {
-    if (!await consumeRateLimit(req, "auth_login", 5, 60)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many login attempts. Please wait 60 seconds before trying again.",
-        },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": "60",
-            "X-Content-Type-Options": "nosniff",
-          },
-        }
-      );
-    }
-
     const body = await req.json();
     const { email, password } = body;
 
@@ -44,6 +28,22 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "Please enter a valid email address format." },
         { status: 400 }
+      );
+    }
+
+    if (!await consumeRateLimit(req, "auth_login", 5, 60, normalizedEmail)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many login attempts. Please wait 60 seconds before trying again.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-Content-Type-Options": "nosniff",
+          },
+        }
       );
     }
 

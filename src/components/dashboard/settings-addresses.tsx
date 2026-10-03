@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { UserAddress } from "@/lib/services/address-service";
 import { Plus, Trash2, Edit2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,7 @@ export function SettingsAddresses() {
   React.useEffect(() => {
     fetch("/api/user/addresses").then((r) => r.json()).then((data) => {
       if (Array.isArray(data.addresses)) {
-        setAddresses(data.addresses.map((a: any) => ({
+        setAddresses(data.addresses.map((a: UserAddress) => ({
           id: a.id, label: a.label || "Home", street: a.street_address, apt: a.apt_unit,
           city: a.city, state: a.state || "", zip: a.zip_code, isDefault: a.is_default || false,
         })));

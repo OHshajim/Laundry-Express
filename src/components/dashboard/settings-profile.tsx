@@ -72,10 +72,10 @@ export function SettingsProfile() {
         type: "success",
         msg: "Avatar successfully compressed, uploaded, and synced to your profile!",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setFeedback({
         type: "error",
-        msg: err?.message || "Failed to upload avatar. Please check your connection.",
+        msg: err instanceof Error ? err.message : "Failed to upload avatar. Please check your connection.",
       });
     } finally {
       setIsUploading(false);

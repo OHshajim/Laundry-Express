@@ -8,6 +8,7 @@ import { calculateOrderPrice } from "@/lib/stripe/pricing-calc";
 import { getVerifiedUser } from "@/lib/auth-request";
 import { validateCheckoutPayload } from "@/lib/checkout-validation";
 import { syncUserOrderContact } from "@/lib/services/checkout-sync-service";
+import { validateOrderAvailability } from "@/lib/services/booking-availability-service";
 
 const stripeKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeKey ? new Stripe(stripeKey, {
@@ -44,6 +45,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const payloadError = validateCheckoutPayload(body);
     if (payloadError) return NextResponse.json({ success: false, error: payloadError }, { status: 400 });
+
+    const availabilityError = await validateOrderAvailability({
+      pickup_date: body.pickup_date,
+      pickup_slot: body.pickup_slot,
+      city: body.city,
+      zip_code: body.zip_code,
+    });
+    if (availabilityError) return NextResponse.json({ success: false, error: availabilityError }, { status: 400 });
+
     const paymentMethod = body.payment_method;
     const isOnline = paymentMethod !== "cash_on_delivery";
     if (isOnline && !stripe) return NextResponse.json({ success: false, error: "Online payment is temporarily unavailable." }, { status: 503 });
@@ -158,6 +168,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, order: createdOrder, isCash: true }, { status: 201 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to create checkout session";
+    if (msg.includes("fully booked")) {
+      return NextResponse.json({ success: false, error: msg }, { status: 409 });
+    }
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

@@ -124,7 +124,7 @@ export async function sendOrderCancellationEmail(payload: CancellationEmailPaylo
             Laundry Express Customer Operations &middot; <a href="mailto:customerservice@laundryexpressservices.com" style="color:#e11d48;text-decoration:none">customerservice@laundryexpressservices.com</a>
           </p>
           <p style="color:#94a3b8;font-size:10px;margin:0">
-            Official System Notification &middot; laundryexpress.com
+            Official System Notification &middot; laundryexpressservices.com
           </p>
         </div>
       </div>
