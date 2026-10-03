@@ -22,14 +22,22 @@ export default function ReviewsPage() {
   const handleApprove = async (id: string) => {
     setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "approved" as const } : r)));
     try {
-      await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "approved" }) });
+      await fetch("/api/reviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: id, status: "approved" }),
+      });
     } catch {}
   };
 
-  const handleReject = async (id: string) => {
-    setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "rejected" as const } : r)));
+  const handlePending = async (id: string) => {
+    setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: "pending" as const } : r)));
     try {
-      await fetch("/api/reviews", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewId: id, status: "rejected" }) });
+      await fetch("/api/reviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: id, status: "pending" }),
+      });
     } catch {}
   };
 
@@ -40,10 +48,9 @@ export default function ReviewsPage() {
     } catch {}
   };
 
-  const handleChangeStatus = (id: string, s: "pending" | "approved" | "rejected") => {
+  const handleChangeStatus = (id: string, s: "pending" | "approved") => {
     if (s === "approved") handleApprove(id);
-    else if (s === "rejected") handleReject(id);
-    else setReviews((p) => p.map((r) => (r.id === id ? { ...r, status: s } : r)));
+    else handlePending(id);
   };
 
   return (
@@ -58,7 +65,6 @@ export default function ReviewsPage() {
         <ReviewModerator
           reviews={reviews}
           onApprove={handleApprove}
-          onReject={handleReject}
           onDelete={handleDelete}
           onChangeStatus={handleChangeStatus}
         />

@@ -119,16 +119,16 @@ export function HeroSection({ initialBagPrice }: HeroSectionProps) {
               </Link>
             </div>
 
-            {/* Social Trust Bar */}
-            <div className="pt-1 flex items-center justify-center lg:justify-start gap-2.5 text-xs text-slate-500">
+            {/* Trust Indicator */}
+            <div className="pt-1 flex items-center justify-center lg:justify-start gap-2.5 text-xs">
               <div className="flex items-center text-amber-400">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <Star key={s} className="h-3.5 w-3.5 fill-amber-400" />
                 ))}
               </div>
-              <span className="font-semibold text-slate-800">4.9 / 5.0 Rating</span>
+              <span className="font-bold text-slate-900">Top Rated Premium Service</span>
               <span className="text-slate-300">•</span>
-              <span>10,000+ Clean Bags Delivered</span>
+              <span className="text-slate-600 font-medium">100% Doorstep Satisfaction</span>
             </div>
           </div>
 

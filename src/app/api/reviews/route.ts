@@ -7,11 +7,14 @@ export async function GET(req: NextRequest) {
     const verified = await getVerifiedUser(req);
     const isAdmin = verified?.user.role === "admin";
     const isPublic = req.nextUrl.searchParams.get("public") === "true";
-    const onlyApproved = !isAdmin || isPublic;
+    const onlyApproved = isPublic;
     const userId = !isAdmin && !isPublic ? verified?.user.id : undefined;
 
     const reviews = await ReviewService.getReviews(onlyApproved, userId);
-    return NextResponse.json({ success: true, reviews }, { status: 200 });
+    return NextResponse.json(
+      { success: true, reviews },
+      { status: 200, headers: { "Cache-Control": isPublic ? "public, max-age=60, s-maxage=120" : "no-store" } }
+    );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to load reviews";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

@@ -19,7 +19,7 @@ export function ReviewSubmitForm({ orders = [], reviewedOrderIds: externalReview
   // Use parent-provided set if available (avoids duplicate API call)
   const eligibleOrders = React.useMemo(() => {
     if (!externalReviewedIds) return completedOrders;
-    return completedOrders.filter((o) => !externalReviewedIds.has(o.id));
+    return completedOrders.filter((o) => !externalReviewedIds.has(o.id) && !externalReviewedIds.has(o.order_number));
   }, [completedOrders, externalReviewedIds]);
 
   const [selectedOrderId, setSelectedOrderId] = React.useState<string>("");
@@ -49,8 +49,7 @@ export function ReviewSubmitForm({ orders = [], reviewedOrderIds: externalReview
     setError(null);
     setIsUploading(true);
     try {
-      const uploaded: string[] = [];
-      for (const file of files) {
+      const uploadTasks = files.map(async (file, idx) => {
         if (file.size > 5 * 1024 * 1024) throw new Error(`"${file.name}" exceeds 5MB.`);
         if (!file.type.startsWith("image/")) throw new Error("Only image files are allowed.");
         const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 });
@@ -58,12 +57,13 @@ export function ReviewSubmitForm({ orders = [], reviewedOrderIds: externalReview
         fd.append("file", compressed);
         fd.append("bucket", "review-photos");
         fd.append("entityId", selectedOrderId || "review");
-        fd.append("subType", String(photos.length + uploaded.length + 1));
+        fd.append("subType", String(photos.length + idx + 1));
         const res = await fetch("/api/upload", { method: "POST", body: fd });
         const data = await res.json();
         if (!res.ok || !data.url) throw new Error(data.error || "Upload failed.");
-        uploaded.push(data.url);
-      }
+        return data.url as string;
+      });
+      const uploaded = await Promise.all(uploadTasks);
       setPhotos((prev) => [...prev, ...uploaded].slice(0, 3));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed.");
@@ -106,14 +106,14 @@ export function ReviewSubmitForm({ orders = [], reviewedOrderIds: externalReview
         </div>
         <div>
           <h3 className="font-black text-slate-900 text-base">Rate a Completed Order</h3>
-          <span className="text-[11px] text-slate-500">1–5 Stars · up to 3 photos · awaits admin approval</span>
+          <span className="text-[11px] text-slate-500">1–5 Stars · up to 3 photos · verified experience</span>
         </div>
       </div>
 
       {submitted && (
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>Thank you! Your review has been submitted for moderation.</span>
+          <span>Thank you! Your review has been published.</span>
         </div>
       )}
 
@@ -166,7 +166,7 @@ export function ReviewSubmitForm({ orders = [], reviewedOrderIds: externalReview
           <div className="flex flex-wrap items-center gap-3">
             {photos.map((url, idx) => (
               <div key={idx} className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xs">
-                <Image src={url} alt={`Review photo ${idx + 1}`} fill sizes="80px" className="object-cover" />
+                <Image src={url} alt={`Review photo ${idx + 1}`} fill sizes="80px" unoptimized className="object-cover" />
                 <button type="button" onClick={() => setPhotos((p) => p.filter((_, i) => i !== idx))} className="absolute top-1 right-1 p-1 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 cursor-pointer"><X className="h-3 w-3" /></button>
               </div>
             ))}
