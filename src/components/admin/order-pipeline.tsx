@@ -11,7 +11,7 @@ import { OrderProofModal } from "./order-proof-modal";
 
 interface OrderPipelineProps {
   orders: Order[];
-  onUpdateStatus: (orderId: string, newStatus: OrderStatus) => Promise<boolean>;
+  onUpdateStatus: (orderId: string, newStatus: OrderStatus, reason?: string, notes?: string) => Promise<boolean>;
   onUploadProof: (orderId: string, proofType: "pickup" | "dropoff" | "damage", imageUrl: string, notes?: string) => Promise<boolean>;
 }
 
@@ -39,15 +39,15 @@ export function OrderPipeline({
     setTimeout(() => setSystemAlert(null), 4000);
   };
 
-  const handleStatusChangeWithNotification = async (orderId: string, newStatus: OrderStatus) => {
-    if (!await onUpdateStatus(orderId, newStatus)) return false;
+  const handleStatusChangeWithNotification = async (orderId: string, newStatus: OrderStatus, reason?: string, notes?: string) => {
+    if (!await onUpdateStatus(orderId, newStatus, reason, notes)) return false;
     const ord = orders.find((o) => o.id === orderId);
     if (newStatus === "driver_assigned") {
       triggerAlert(`Order ${ord?.order_number || ""} accepted and ready for dispatch.`);
     } else if (newStatus === "out_for_delivery") {
       triggerAlert(`Order ${ord?.order_number || ""} marked Out for Delivery.`);
     } else if (newStatus === "cancelled") {
-      triggerAlert(`Order ${ord?.order_number || ""} cancelled. No refund was issued.`);
+      triggerAlert(`Order ${ord?.order_number || ""} cancelled. Customer & Admin notified.`);
     }
     return true;
   };

@@ -25,7 +25,7 @@ export function HeroMascot() {
       {/* Soft Multi-Layered Ambient Halo behind mascot */}
       <div
         aria-hidden="true"
-        className="absolute w-72 h-72 sm:w-84 sm:h-84 rounded-full bg-gradient-to-tr from-primary-pale via-primary-light/25 to-secondary/20 blur-3xl pointer-events-none -z-10 animate-pulse"
+        className="absolute w-72 h-72 sm:w-84 sm:h-84 rounded-full bg-linear-to-tr from-primary-pale via-primary-light/25 to-secondary/20 blur-3xl pointer-events-none -z-10 animate-pulse"
       />
 
       {/* Main Animated Levitation Wrapper */}
@@ -104,7 +104,7 @@ export function HeroMascot() {
 
         {/* Clean Floating Bubble Hero Verified Badge */}
         <motion.div
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-[275px] z-20 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-primary-pale shadow-xl flex items-center justify-between"
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-68.75 z-20 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-primary-pale shadow-xl flex items-center justify-between"
           animate={prefersReduced ? {} : { y: [-2, 2, -2] }}
           transition={{
             duration: 3.6,

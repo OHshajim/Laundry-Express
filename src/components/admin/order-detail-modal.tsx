@@ -16,7 +16,7 @@ interface OrderDetailModalProps {
   order: Order | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateStatus?: (orderId: string, newStatus: OrderStatus) => Promise<boolean>;
+  onUpdateStatus?: (orderId: string, newStatus: OrderStatus, reason?: string, notes?: string) => Promise<boolean>;
   onOpenProofModal?: (order: Order, type: "pickup" | "dropoff" | "damage") => void;
   allOrders?: Order[];
 }
@@ -46,9 +46,9 @@ export function OrderDetailModal({
     setIsUpdatingStatus(false);
     if (updated) onClose(); else setStatusError("The order was not updated. Please review the error and try again.");
   };
-  const cancelOrder = async () => {
+  const cancelOrder = async (reason?: string, notes?: string) => {
     if (!onUpdateStatus) return false;
-    const updated = await onUpdateStatus(order.id, "cancelled");
+    const updated = await onUpdateStatus(order.id, "cancelled", reason, notes);
     if (updated) onClose();
     return updated;
   };

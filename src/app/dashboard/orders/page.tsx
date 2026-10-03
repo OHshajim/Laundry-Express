@@ -96,8 +96,8 @@ export default function OrdersUnifiedPage() {
     }
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
-    const result = await updateOrder({ orderId, status: newStatus });
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus, reason?: string, notes?: string) => {
+    const result = await updateOrder({ orderId, status: newStatus, cancelReason: reason, cancelNotes: notes });
     if (!result.success) return false;
     setOrders((prev) => prev.map((o) => (o.id === orderId ? {
       ...o,

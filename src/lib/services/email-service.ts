@@ -7,7 +7,7 @@ import { createEmailInvoicePdf } from "@/lib/invoice/email-invoice-pdf";
 //   Brevo: host=smtp-relay.brevo.com, port=587
 //   Mailgun, SendGrid, etc. — all standard SMTP
 // ---------------------------------------------------------------------------
-function createTransport() {
+export function createTransport() {
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
@@ -20,7 +20,7 @@ function createTransport() {
   });
 }
 
-function getMailAddresses() {
+export function getMailAddresses() {
   const from = process.env.EMAIL_FROM;
   const admin = process.env.ADMIN_EMAIL;
   if (!from || !admin) throw new Error("EMAIL_FROM and ADMIN_EMAIL must be configured.");
