@@ -37,15 +37,10 @@ interface StepOutOfHomeProps {
 }
 
 export function StepOutOfHome({
-  currentUser,
-  phone, onPhoneChange,
-  isOutOfHome, onIsOutOfHomeChange,
-  isAwayForDropoff, onIsAwayForDropoffChange,
-  bagConfirmed, onBagConfirmedChange,
+  currentUser, phone, onPhoneChange, isOutOfHome, onIsOutOfHomeChange,
+  isAwayForDropoff, onIsAwayForDropoffChange, bagConfirmed, onBagConfirmedChange,
   address, onAddressChange, addressDetails, onAddressDetailsChange,
-  notes, onNotesChange,
-  deliveryZones = [],
-  showValidationErrors = false,
+  notes, onNotesChange, deliveryZones = [], showValidationErrors = false,
 }: StepOutOfHomeProps) {
   const defaultZone = deliveryZones[0] ?? { city: "", zip: "" };
   const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([]);
@@ -61,27 +56,22 @@ export function StepOutOfHome({
 
   const isInitialFetchDone = React.useRef(false);
   const isAddressInvalid = showValidationErrors && (
-    address.trim().length < 5 ||
-    !city.trim() ||
-    !/^[A-Z]{2}$/.test(state.trim()) ||
-    !/^\d{5}(-\d{4})?$/.test(zip.trim())
+    address.trim().length < 5 || !city.trim() || !/^[A-Z]{2}$/.test(state.trim()) || !/^\d{5}(-\d{4})?$/.test(zip.trim())
   );
 
-  const push = React.useCallback(
-    (s: string, a: string, c: string, z: string, stateValue: string) => {
-      onAddressChange([s, a ? `Apt ${a}` : "", c, stateValue, z].filter(Boolean).join(", "));
-      onAddressDetailsChange?.({ street: s, apt: a, city: c, state: stateValue, zip: z });
-    },
-    [onAddressChange, onAddressDetailsChange]
-  );
+  const push = React.useCallback((s: string, a: string, c: string, z: string, stateValue: string) => {
+    onAddressChange([s, a ? `Apt ${a}` : "", c, stateValue, z].filter(Boolean).join(", "));
+    onAddressDetailsChange?.({ street: s, apt: a, city: c, state: stateValue, zip: z });
+  }, [onAddressChange, onAddressDetailsChange]);
+
+  const applyAddress = React.useCallback((s: string, a: string, c: string, st: string, z: string) => {
+    setStreet(s); setApt(a); setCity(c); setState(st); setZip(z);
+    push(s, a, c, z, st);
+  }, [push]);
 
   React.useEffect(() => {
     const userId = currentUser?.id || currentUser?.email;
-    if (!userId) {
-      return;
-    }
-
-    if (isInitialFetchDone.current) return;
+    if (!userId || isInitialFetchDone.current) return;
 
     fetch(`/api/user/addresses?userId=${encodeURIComponent(userId)}`)
       .then((r) => r.json())
@@ -90,71 +80,35 @@ export function StepOutOfHome({
         if (Array.isArray(data.addresses) && data.addresses.length > 0) {
           const list: UserAddress[] = data.addresses;
           setSavedAddresses(list);
-
           if (addressDetails?.street && addressDetails.street.trim().length > 0) {
             const match = list.find((a) => a.street_address.toLowerCase() === addressDetails.street.toLowerCase());
-            if (match) {
-              setSelectedSavedId(match.id);
-              setIsAddingNew(false);
-            } else {
-              setIsAddingNew(true);
-            }
+            if (match) { setSelectedSavedId(match.id); setIsAddingNew(false); } else { setIsAddingNew(true); }
             return;
           }
-
           const defaultAddr = list.find((a) => a.is_default) || list[0];
           setSelectedSavedId(defaultAddr.id);
           setIsAddingNew(false);
-          setStreet(defaultAddr.street_address);
-          setApt(defaultAddr.apt_unit || "");
-          setCity(defaultAddr.city);
-          setState(defaultAddr.state || "");
-          setZip(defaultAddr.zip_code);
-          push(defaultAddr.street_address, defaultAddr.apt_unit || "", defaultAddr.city, defaultAddr.zip_code, defaultAddr.state || "");
+          applyAddress(defaultAddr.street_address, defaultAddr.apt_unit || "", defaultAddr.city, defaultAddr.state || "", defaultAddr.zip_code);
         } else {
           setIsAddingNew(true);
         }
       })
-      .catch(() => {
-        isInitialFetchDone.current = true;
-        setIsAddingNew(true);
-      });
-  }, [currentUser?.id, currentUser?.email, addressDetails?.street, push]);
+      .catch(() => { isInitialFetchDone.current = true; setIsAddingNew(true); });
+  }, [currentUser?.id, currentUser?.email, addressDetails?.street, applyAddress]);
 
   const selectSavedAddress = (addr: UserAddress) => {
-    setSelectedSavedId(addr.id);
-    setEditingAddress(null);
-    setIsAddingNew(false);
-    setStreet(addr.street_address);
-    setApt(addr.apt_unit || "");
-    setCity(addr.city);
-    setState(addr.state || "");
-    setZip(addr.zip_code);
-    push(addr.street_address, addr.apt_unit || "", addr.city, addr.zip_code, addr.state || "");
+    setSelectedSavedId(addr.id); setEditingAddress(null); setIsAddingNew(false);
+    applyAddress(addr.street_address, addr.apt_unit || "", addr.city, addr.state || "", addr.zip_code);
   };
 
   const handleStartAddNew = () => {
-    setSelectedSavedId(null);
-    setEditingAddress(null);
-    setIsAddingNew(true);
-    setStreet("");
-    setApt("");
-    setCity(defaultZone.city);
-    setState("");
-    setZip(defaultZone.zip);
-    push("", "", defaultZone.city, defaultZone.zip, "");
+    setSelectedSavedId(null); setEditingAddress(null); setIsAddingNew(true);
+    applyAddress("", "", defaultZone.city, "", defaultZone.zip);
   };
 
   const handleEditAddress = (addr: UserAddress) => {
-    setSelectedSavedId(addr.id);
-    setEditingAddress(addr);
-    setIsAddingNew(true);
-    setStreet(addr.street_address);
-    setApt(addr.apt_unit || "");
-    setCity(addr.city);
-    setState(addr.state || "");
-    setZip(addr.zip_code);
-    push(addr.street_address, addr.apt_unit || "", addr.city, addr.zip_code, addr.state || "");
+    setSelectedSavedId(addr.id); setEditingAddress(addr); setIsAddingNew(true);
+    applyAddress(addr.street_address, addr.apt_unit || "", addr.city, addr.state || "", addr.zip_code);
   };
 
   const handleAddressSaved = (savedAddr: UserAddress) => {
@@ -162,8 +116,7 @@ export function StepOutOfHome({
       const exists = prev.some((a) => a.id === savedAddr.id);
       return exists ? prev.map((a) => (a.id === savedAddr.id ? savedAddr : a)) : [savedAddr, ...prev];
     });
-    setEditingAddress(null);
-    selectSavedAddress(savedAddr);
+    setEditingAddress(null); selectSavedAddress(savedAddr);
   };
 
   const handleCancelForm = () => {
@@ -174,49 +127,25 @@ export function StepOutOfHome({
     }
   };
 
-  const isDoorstepInvalid = showValidationErrors && isOutOfHome && !bagConfirmed;
-
   return (
     <div className="space-y-6 p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 w-full max-w-full">
       <div className="space-y-3">
         <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase tracking-wider">
           <MapPin className="h-3.5 w-3.5 text-primary" /> Pickup &amp; Delivery Address *
         </label>
-
-        <SavedAddressSelector
-          savedAddresses={savedAddresses}
-          selectedSavedId={selectedSavedId}
-          onSelectSavedAddress={selectSavedAddress}
-          isAddingNew={isAddingNew}
-          onStartAddNew={handleStartAddNew}
-          onEditAddress={handleEditAddress}
-        />
-        {isAddressInvalid && (
-          <p role="alert" className="text-xs font-medium text-rose-600">
-            Enter a street address, city, 2-letter state code, and valid 5-digit ZIP code.
-          </p>
-        )}
-
+        <SavedAddressSelector savedAddresses={savedAddresses} selectedSavedId={selectedSavedId} onSelectSavedAddress={selectSavedAddress} isAddingNew={isAddingNew} onStartAddNew={handleStartAddNew} onEditAddress={handleEditAddress} />
+        {isAddressInvalid && <p role="alert" className="text-xs font-medium text-rose-600">Enter a street address, city, 2-letter state code, and valid 5-digit ZIP code.</p>}
         {(isAddingNew || savedAddresses.length === 0) && (
           <NewAddressForm
-            key={editingAddress?.id || "new-address"}
-            currentUser={currentUser}
-            street={street}
-            onStreetChange={(v) => { setStreet(v); push(v, apt, city, zip, state); }}
-            apt={apt}
-            onAptChange={(v) => { setApt(v); push(street, v, city, zip, state); }}
-            city={city}
-            onCityChange={(v) => { setCity(v); push(street, apt, v, zip, state); }}
-            state={state}
-            onStateChange={(v) => { setState(v); push(street, apt, city, zip, v); }}
-            zip={zip}
-            onZipChange={(v) => { setZip(v); push(street, apt, city, v, state); }}
-            deliveryZones={deliveryZones}
-            showValidationErrors={showValidationErrors}
-            onAddressSaved={handleAddressSaved}
-            hasSavedAddresses={savedAddresses.length > 0}
-            onCancelAddNew={handleCancelForm}
-            editingAddress={editingAddress}
+            key={editingAddress?.id || "new-address"} currentUser={currentUser}
+            street={street} onStreetChange={(v) => { setStreet(v); push(v, apt, city, zip, state); }}
+            apt={apt} onAptChange={(v) => { setApt(v); push(street, v, city, zip, state); }}
+            city={city} onCityChange={(v) => { setCity(v); push(street, apt, v, zip, state); }}
+            state={state} onStateChange={(v) => { setState(v); push(street, apt, city, zip, v); }}
+            zip={zip} onZipChange={(v) => { setZip(v); push(street, apt, city, v, state); }}
+            deliveryZones={deliveryZones} showValidationErrors={showValidationErrors}
+            onAddressSaved={handleAddressSaved} hasSavedAddresses={savedAddresses.length > 0}
+            onCancelAddNew={handleCancelForm} editingAddress={editingAddress}
           />
         )}
       </div>
@@ -227,27 +156,19 @@ export function StepOutOfHome({
           <span className="text-[10px] text-slate-400 font-normal lowercase">saved to profile for driver updates</span>
         </label>
         <input
-          type="tel"
-          value={phone}
-          onChange={(e) => onPhoneChange(e.target.value)}
-          placeholder="(815) 555-0199"
+          type="tel" value={phone} onChange={(e) => onPhoneChange(e.target.value)} placeholder="(815) 555-0199"
           className={`w-full px-3 py-2 rounded-xl border text-xs focus:ring-2 focus:ring-primary focus:outline-none ${
             showValidationErrors && (!phone || phone.trim().length < 7) ? "border-rose-400 bg-rose-50/50" : "border-slate-200"
           }`}
         />
-        {showValidationErrors && (!phone || phone.trim().length < 7) && (
-          <p className="text-[11px] text-rose-500 font-semibold">Valid phone number required for driver dispatch updates.</p>
-        )}
+        {showValidationErrors && (!phone || phone.trim().length < 7) && <p className="text-[11px] text-rose-500 font-semibold">Valid phone number required for driver dispatch updates.</p>}
       </div>
 
       <PresenceOptions
-        isOutOfHome={isOutOfHome}
-        onIsOutOfHomeChange={onIsOutOfHomeChange}
-        isAwayForDropoff={isAwayForDropoff}
-        onIsAwayForDropoffChange={onIsAwayForDropoffChange}
-        bagConfirmed={bagConfirmed}
-        onBagConfirmedChange={onBagConfirmedChange}
-        isDoorstepInvalid={isDoorstepInvalid}
+        isOutOfHome={isOutOfHome} onIsOutOfHomeChange={onIsOutOfHomeChange}
+        isAwayForDropoff={isAwayForDropoff} onIsAwayForDropoffChange={onIsAwayForDropoffChange}
+        bagConfirmed={bagConfirmed} onBagConfirmedChange={onBagConfirmedChange}
+        isDoorstepInvalid={showValidationErrors && isOutOfHome && !bagConfirmed}
       />
 
       <div className="space-y-1">

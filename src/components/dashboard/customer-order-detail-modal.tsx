@@ -45,9 +45,11 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
         orderDate: order.created_at ? new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         pickupDate: order.pickup_date, pickupSlot: slotLabel, deliveryDate: order.delivery_date || "Within 24 Hours",
         paymentMethod: order.payment_method === "card" ? "Credit / Debit Card (Stripe)" : "Stripe Secure Checkout",
-        totalAmount: Number(order.total_amount || 0), subtotal: Number(order.subtotal || order.total_amount || 0), deliveryFee: Number(order.delivery_fee || 0), discountAmount: Number(order.discount_amount || 0),
+        totalAmount: Number(order.total_amount || 0), subtotal: Number(order.subtotal || order.total_amount || 0),
+        detergentFee: Number(order.detergent_fee || 0), deliveryFee: Number(order.delivery_fee || 0), discountAmount: Number(order.discount_amount || 0),
+        transactionId: order.stripe_payment_intent || undefined,
         customerName: order.customer_name || "Valued Customer", customerEmail: order.customer_email || "", customerPhone: order.customer_phone || "", address: fullAddress,
-        orderDetails: { planName: planLabel, quantity: quantityLabel,         detergent: order.detergent_name || resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
+        orderDetails: { planName: planLabel, quantity: quantityLabel, detergent: order.detergent_name || resolveDetergentName(order.detergent_id), specialRequest: order.is_out_of_home ? "Away — Contactless Doorstep Pickup" : "Home — Driver Rings Bell" },
       };
       await downloadInvoiceAsPdf(inv, `LaundryExpress-Invoice-${order.order_number}.pdf`);
     } catch {
@@ -168,11 +170,23 @@ export function CustomerOrderDetailModal({ order, isOpen, onClose }: CustomerOrd
         <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
           <div className="flex justify-between text-slate-500"><span>Subtotal</span><span>{formatCurrency(order.subtotal || order.total_amount)}</span></div>
           <div className="flex justify-between text-slate-500">
+            <span>Detergent Formulation</span>
+            <span className={Number(order.detergent_fee || 0) === 0 ? "text-emerald-600 font-bold" : "text-slate-900 font-semibold"}>
+              {Number(order.detergent_fee || 0) === 0 ? "FREE (Included)" : `+${formatCurrency(Number(order.detergent_fee))}`}
+            </span>
+          </div>
+          <div className="flex justify-between text-slate-500">
             <span>Doorstep Delivery</span>
             <span className={order.delivery_fee === 0 ? "text-emerald-600 font-bold" : ""}>{order.delivery_fee === 0 ? "FREE ($0.00)" : formatCurrency(order.delivery_fee)}</span>
           </div>
           {order.discount_amount > 0 && (
             <div className="flex justify-between text-emerald-600 font-bold"><span>Coupon Discount</span><span>-{formatCurrency(order.discount_amount)}</span></div>
+          )}
+          {order.stripe_payment_intent && (
+            <div className="flex justify-between items-center text-[11px] text-slate-400 pt-0.5 border-t border-slate-100">
+              <span>Stripe Tx ID:</span>
+              <span className="font-mono text-slate-700 select-all font-semibold">{order.stripe_payment_intent}</span>
+            </div>
           )}
           <div className="flex justify-between font-black text-sm text-slate-900 pt-1 border-t border-slate-200">
             <span>{order.payment_status === "paid" ? "Total Paid" : "Order Total"}</span>

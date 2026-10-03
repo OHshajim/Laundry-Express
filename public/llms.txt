@@ -6,11 +6,12 @@ Laundry Express is a laundry service. Customers can review available service pla
 
 ## Public pages
 
-- Home: https://laundryexpress.com/
-- Pricing and plans: https://laundryexpress.com/pricing
-- Contact: https://laundryexpress.com/contact
-- Terms and guarantees: https://laundryexpress.com/terms
-- Sitemap: https://laundryexpress.com/sitemap.xml
+- Home: https://www.laundryexpressservices.com/
+- Pricing and plans: https://www.laundryexpressservices.com/pricing
+- Contact: https://www.laundryexpressservices.com/contact
+- Terms and guarantees: https://www.laundryexpressservices.com/terms
+- Sitemap: https://www.laundryexpressservices.com/sitemap.xml
+- Complete AI Context: https://www.laundryexpressservices.com/llms-full.txt
 
 ## Service information
 

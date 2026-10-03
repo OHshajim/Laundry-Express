@@ -7,7 +7,7 @@ import { createEmailInvoicePdf } from "@/lib/invoice/email-invoice-pdf";
 //   Brevo: host=smtp-relay.brevo.com, port=587
 //   Mailgun, SendGrid, etc. — all standard SMTP
 // ---------------------------------------------------------------------------
-function createTransport() {
+export function createTransport() {
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
@@ -20,7 +20,7 @@ function createTransport() {
   });
 }
 
-function getMailAddresses() {
+export function getMailAddresses() {
   const from = process.env.EMAIL_FROM;
   const admin = process.env.ADMIN_EMAIL;
   if (!from || !admin) throw new Error("EMAIL_FROM and ADMIN_EMAIL must be configured.");
@@ -59,19 +59,23 @@ export interface InvoiceEmailPayload {
   orderNumber: string;
   orderDate: string;
   paymentMethod: string;
+  transactionId?: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   pickupDate: string;
   pickupSlot: string;
   deliveryDate: string;
   planName: string;
   quantity: string;
   detergent: string;
+  detergentFee?: number;
   subtotal: number;
   deliveryFee: number;
   discountAmount: number;
   totalAmount: number;
   address: string;
+  specialRequest?: string;
   orderCancelled?: boolean;
 }
 
@@ -95,6 +99,8 @@ function escapeHtml(value: string): string {
 export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<void> {
   if (!payload.customerEmail) throw new Error("Customer email is required for invoice delivery.");
   const { from, admin } = getMailAddresses();
+  const detFee = Number(payload.detergentFee || 0);
+  const txId = payload.transactionId || `STRIPE-TX-${payload.orderNumber.replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase()}`;
   const safe = {
     ...payload,
     orderNumber: escapeHtml(payload.orderNumber),
@@ -107,6 +113,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
     quantity: escapeHtml(payload.quantity),
     detergent: escapeHtml(payload.detergent),
     address: escapeHtml(payload.address),
+    transactionId: escapeHtml(txId),
   };
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:580px;margin:auto;background:#ffffff;padding:0;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden">
@@ -149,6 +156,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
             <tr><td style="color:#64748b;padding:4px 0">Doorstep Address</td><td style="text-align:right;color:#0f172a;font-weight:600">${safe.address}</td></tr>
             <tr><td style="color:#64748b;padding:4px 0">Pickup Window</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.pickupDate} (${safe.pickupSlot})</td></tr>
             <tr><td style="color:#64748b;padding:4px 0">Estimated Delivery</td><td style="text-align:right;color:#047857;font-weight:800">${safe.deliveryDate} (24hr Return)</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Stripe Tx ID</td><td style="text-align:right;color:#be185d;font-family:monospace;font-weight:700">${safe.transactionId}</td></tr>
           </table>
         </div>
 
@@ -158,7 +166,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
           <table style="width:100%;font-size:12px;border-collapse:collapse">
             <tr><td style="color:#64748b;padding:4px 0">Selected Plan</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.planName}</td></tr>
             <tr><td style="color:#64748b;padding:4px 0">Quantity</td><td style="text-align:right;color:#0f172a;font-weight:700">${safe.quantity}</td></tr>
-            <tr><td style="color:#64748b;padding:4px 0">Formula &amp; Care</td><td style="text-align:right;color:#0f172a;font-weight:600">${safe.detergent} &bull; Gentle Cold Wash</td></tr>
+            <tr><td style="color:#64748b;padding:4px 0">Formula &amp; Care</td><td style="text-align:right;color:#0f172a;font-weight:600">${safe.detergent} &bull; Gentle Cold Wash (${detFee === 0 ? "Included Free" : usd(detFee)})</td></tr>
             <tr><td style="color:#64748b;padding:4px 0">Payment Method</td><td style="text-align:right;color:#0f172a;font-weight:600">${escapeHtml(payload.paymentMethod)}</td></tr>
           </table>
         </div>
@@ -169,12 +177,22 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
           <table style="width:100%;font-size:12px;border-collapse:collapse">
             <tr><td style="color:#64748b;padding:4px 0">Subtotal</td><td style="text-align:right;color:#334155;font-weight:600">${usd(payload.subtotal)}</td></tr>
             <tr>
+              <td style="color:#64748b;padding:4px 0">Detergent Formulation</td>
+              <td style="text-align:right;color:${detFee === 0 ? "#047857" : "#334155"};font-weight:${detFee === 0 ? "800" : "600"}">
+                ${detFee === 0 ? "FREE (Included)" : usd(detFee)}
+              </td>
+            </tr>
+            <tr>
               <td style="color:#64748b;padding:4px 0">Doorstep Logistics (2-Way)</td>
               <td style="text-align:right;color:${payload.deliveryFee === 0 ? "#047857" : "#334155"};font-weight:${payload.deliveryFee === 0 ? "800" : "600"}">
                 ${payload.deliveryFee === 0 ? "FREE ($0.00)" : usd(payload.deliveryFee)}
               </td>
             </tr>
             ${payload.discountAmount > 0 ? `<tr><td style="color:#047857;padding:4px 0">Promo Discount</td><td style="text-align:right;color:#047857;font-weight:700">-${usd(payload.discountAmount)}</td></tr>` : ""}
+            <tr>
+              <td style="color:#64748b;padding:4px 0">Stripe Transaction ID</td>
+              <td style="text-align:right;color:#0f172a;font-family:monospace;font-size:11px;font-weight:700">${safe.transactionId}</td>
+            </tr>
             <tr style="border-top:2px solid #e2e8f0">
               <td style="color:#0f172a;font-weight:900;padding:12px 0 0;font-size:14px">Total Cleared</td>
               <td style="text-align:right;color:#be185d;font-weight:900;font-size:18px;padding:12px 0 0">${usd(payload.totalAmount)}</td>
@@ -195,7 +213,7 @@ export async function sendInvoiceEmail(payload: InvoiceEmailPayload): Promise<vo
             Questions? Contact support at <strong>(815) 575-9536</strong> or reply to <strong>customerservice@laundryexpressservices.com</strong>
           </p>
           <p style="color:#94a3b8;font-size:10px;margin:0">
-            Official Computer-Generated Tax Invoice &middot; Laundry Express &middot; laundryexpress.com
+            Official Computer-Generated Tax Invoice &middot; Laundry Express &middot; laundryexpressservices.com
           </p>
         </div>
       </div>

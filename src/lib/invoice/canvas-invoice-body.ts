@@ -69,6 +69,8 @@ export function drawPortraitTable(
   ctx.textAlign = "left";
 
   const detName = resolveDetergentName(inv.orderDetails.detergent);
+  const detFee = Number(inv.detergentFee || 0);
+  const detFeeStr = detFee === 0 ? "FREE (Included)" : `$${detFee.toFixed(2)}`;
 
   const rows = [
     {
@@ -76,6 +78,12 @@ export function drawPortraitTable(
       spec: `${detName} • Gentle Cold Wash Care`,
       qty: inv.orderDetails.quantity,
       amt: `$${(inv.subtotal ?? inv.totalAmount).toFixed(2)}`,
+    },
+    {
+      item: `Detergent Formulation (${detName})`,
+      spec: detFee === 0 ? "Standard Eco Cold-Wash Formula (Included)" : "Premium Detergent Add-on Option",
+      qty: "1 Cycle",
+      amt: detFeeStr,
     },
     {
       item: "Doorstep Pickup & 24hr Return Delivery",
@@ -165,61 +173,66 @@ export function drawPortraitTotals(
 
   ctx.fillStyle = "#475569";
   ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
-  const refCode = inv.orderId.replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase();
-  ctx.fillText(`Stripe Reference: STRIPE-TX-${refCode}`, 70, bY + 76);
+  const txId = inv.transactionId || `STRIPE-TX-${inv.orderId.replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase()}`;
+  ctx.fillStyle = "#BE185D";
+  ctx.font = "bold 11px monospace, -apple-system, sans-serif";
+  ctx.fillText(`Stripe Tx ID: ${txId}`, 70, bY + 76);
+  ctx.fillStyle = "#475569";
+  ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("Status: Captured & Settled (Authorized)", 70, bY + 96);
   ctx.fillText("Encrypted transaction via TLS 1.3 256-bit gateway.", 70, bY + 116);
 
   // Right card: Financial summary
   const tX = 50 + cardW + 24;
   drawRoundRect(ctx, tX, bY, cardW, cardH, 14);
-  ctx.fillStyle = "#F8FAFC";
-  ctx.fill();
-  ctx.strokeStyle = "#E2E8F0";
-  ctx.stroke();
+  ctx.fillStyle = "#F8FAFC"; ctx.fill();
+  ctx.strokeStyle = "#E2E8F0"; ctx.stroke();
 
   const subt = `$${(inv.subtotal ?? inv.totalAmount).toFixed(2)}`;
+  const detFee = Number(inv.detergentFee || 0);
+  const detDisplay = detFee === 0 ? "FREE (Included)" : `$${detFee.toFixed(2)}`;
   const deliv = (inv.deliveryFee ?? 0) === 0 ? "FREE" : `$${(inv.deliveryFee ?? 0).toFixed(2)}`;
 
-  ctx.fillStyle = "#64748B";
-  ctx.font = "normal 12px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("Subtotal:", tX + 24, bY + 28);
-  ctx.textAlign = "right";
-  ctx.fillStyle = "#0F172A";
-  ctx.fillText(subt, tX + cardW - 24, bY + 28);
-  ctx.textAlign = "left";
+  ctx.fillStyle = "#64748B"; ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("Service Subtotal:", tX + 24, bY + 24);
+  ctx.textAlign = "right"; ctx.fillStyle = "#0F172A"; ctx.fillText(subt, tX + cardW - 24, bY + 24); ctx.textAlign = "left";
 
-  ctx.fillStyle = "#64748B";
-  ctx.fillText("Doorstep Logistics:", tX + 24, bY + 50);
-  ctx.textAlign = "right";
-  ctx.fillStyle = deliv === "FREE" ? "#059669" : "#0F172A";
-  ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(deliv, tX + cardW - 24, bY + 50);
-  ctx.textAlign = "left";
+  ctx.fillStyle = "#64748B"; ctx.fillText("Detergent Formulation:", tX + 24, bY + 44);
+  ctx.textAlign = "right"; ctx.fillStyle = detFee === 0 ? "#059669" : "#0F172A";
+  ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(detDisplay, tX + cardW - 24, bY + 44); ctx.textAlign = "left";
 
+  ctx.fillStyle = "#64748B"; ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("Doorstep Logistics:", tX + 24, bY + 64);
+  ctx.textAlign = "right"; ctx.fillStyle = deliv === "FREE" ? "#059669" : "#0F172A";
+  ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(deliv, tX + cardW - 24, bY + 64); ctx.textAlign = "left";
+
+  let divY = bY + 84;
   if (inv.discountAmount && inv.discountAmount > 0) {
     ctx.fillStyle = "#059669";
-    ctx.fillText("Promo Discount:", tX + 24, bY + 72);
+    ctx.fillText("Promo Discount:", tX + 24, divY);
     ctx.textAlign = "right";
-    ctx.fillText(`-$${inv.discountAmount.toFixed(2)}`, tX + cardW - 24, bY + 72);
+    ctx.fillText(`-$${inv.discountAmount.toFixed(2)}`, tX + cardW - 24, divY);
     ctx.textAlign = "left";
+    divY += 18;
   }
 
   // Divider
   ctx.strokeStyle = "#CBD5E1";
   ctx.beginPath();
-  ctx.moveTo(tX + 24, bY + 90);
-  ctx.lineTo(tX + cardW - 24, bY + 90);
+  ctx.moveTo(tX + 24, divY + 4);
+  ctx.lineTo(tX + cardW - 24, divY + 4);
   ctx.stroke();
 
   ctx.fillStyle = "#0F172A";
-  ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("TOTAL CLEARED:", tX + 24, bY + 122);
+  ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("TOTAL CLEARED:", tX + 24, divY + 26);
 
   ctx.textAlign = "right";
   ctx.fillStyle = "#BE185D";
-  ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(`$${inv.totalAmount.toFixed(2)}`, tX + cardW - 24, bY + 122);
+  ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(`$${inv.totalAmount.toFixed(2)}`, tX + cardW - 24, divY + 26);
   ctx.textAlign = "left";
 
   return bY + cardH;

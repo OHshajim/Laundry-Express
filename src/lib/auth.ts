@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { UserDbService } from "@/lib/services/user-db-service";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
  * NextAuth Configuration & Authentication Options
@@ -58,9 +59,20 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email", placeholder: "you@example.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Please enter both email and password.");
+        }
+
+        const allowed = await consumeRateLimit(
+          req as Parameters<typeof consumeRateLimit>[0],
+          "auth_login",
+          5,
+          60,
+          credentials.email
+        );
+        if (!allowed) {
+          throw new Error("Too many login attempts. Please wait 60 seconds before trying again.");
         }
 
         const result = await UserDbService.verifyCredentialsWithStatus(

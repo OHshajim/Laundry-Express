@@ -18,6 +18,7 @@ export interface TermItem {
 export interface BusinessSettings {
   operating_hours: string;
   delivery_zones: string[];
+  max_orders_per_slot?: number;
   slot1_start?: string;
   slot1_end?: string;
   slot2_start?: string;
@@ -132,6 +133,7 @@ export class ContentService {
   static async updateSettings(updates: Partial<BusinessSettings>): Promise<BusinessSettings> {
     const allowedKeys = [
       "operating_hours", "delivery_zones", "slot1_start", "slot1_end", "slot2_start", "slot2_end",
+      "max_orders_per_slot",
       "min_order_bag", "max_order_bag", "min_order_lbs", "max_order_lbs",
       "free_delivery_bags", "free_delivery_lbs", "standard_delivery_fee",
     ] as const;
@@ -163,6 +165,10 @@ export class ContentService {
       if (value !== undefined && (!Number.isFinite(value) || value < 0)) {
         throw new Error("Enter valid, non-negative business thresholds.");
       }
+    }
+    if (updates.max_orders_per_slot !== undefined &&
+      (!Number.isInteger(updates.max_orders_per_slot) || updates.max_orders_per_slot < 1)) {
+      throw new Error("Pickup capacity must be a positive whole number.");
     }
     if ((settings.min_order_bag && settings.max_order_bag && settings.max_order_bag < settings.min_order_bag) ||
       (settings.min_order_lbs && settings.max_order_lbs && settings.max_order_lbs < settings.min_order_lbs)) {

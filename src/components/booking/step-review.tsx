@@ -51,7 +51,9 @@ export function StepReview({
   onContinue,
 }: StepReviewProps) {
   const { detergents } = useDetergents();
-  const detergentName = detergents.find((detergent) => detergent.id === selectedDetergentId)?.name || "Selected detergent";
+  const selectedDetergent = detergents.find((detergent) => detergent.id === selectedDetergentId);
+  const detergentName = selectedDetergent?.name || "Selected detergent";
+  const detergentFee = Number(selectedDetergent?.price || 0);
   const getPlanDescription = () => {
     if (pricingMode === "per_bag") return `${bagCount} Standard 13-Gal Bag${bagCount > 1 ? "s" : ""}`;
     if (pricingMode === "per_lb") return `${weightLbs} lbs Weighed Volume`;
@@ -86,8 +88,9 @@ export function StepReview({
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
             <span className="text-slate-400 uppercase font-bold text-[10px]">Detergent &amp; Cycle</span>
             <p className="font-bold text-slate-900">
-              {detergentName} · Standard Cold Eco-Wash (30°C)
+              {detergentName} <span className={detergentFee === 0 ? "text-emerald-700 font-semibold" : "text-amber-700 font-bold"}>({detergentFee === 0 ? "Free · Included" : `+$${detergentFee.toFixed(2)}`})</span>
             </p>
+            <p className="text-[11px] text-slate-500">Standard Cold Eco-Wash (30°C)</p>
             <button type="button" onClick={() => onEditStep(2)} className="text-sky-600 font-semibold hover:underline cursor-pointer">Edit Detergent →</button>
           </div>
 

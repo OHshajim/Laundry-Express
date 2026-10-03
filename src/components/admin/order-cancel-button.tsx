@@ -4,41 +4,42 @@ import * as React from "react";
 import { XCircle } from "lucide-react";
 import type { Order } from "@/types";
 import { Button } from "@/components/ui/button";
+import { OrderCancelModal } from "./order-cancel-modal";
 
 interface OrderCancelButtonProps {
   order: Order;
-  disabled: boolean;
-  onCancel: () => Promise<boolean>;
+  disabled?: boolean;
+  onCancel: (reason?: string, notes?: string) => Promise<boolean>;
 }
 
-export function OrderCancelButton({ order, disabled, onCancel }: OrderCancelButtonProps) {
-  const [isCancelling, setIsCancelling] = React.useState(false);
-  const [error, setError] = React.useState("");
-
-  const cancelOrder = async () => {
-    if (!window.confirm(
-      `Cancel order ${order.order_number}? This stops fulfillment but does not issue a refund. Contact the customer and process any agreed refund separately.`
-    )) return;
-    setIsCancelling(true);
-    setError("");
-    const cancelled = await onCancel();
-    setIsCancelling(false);
-    if (!cancelled) setError("The order was not cancelled. Review the error and try again.");
-  };
+export function OrderCancelButton({ order, disabled = false, onCancel }: OrderCancelButtonProps) {
+  const [modalOpen, setModalOpen] = React.useState(false);
 
   return (
-    <div>
+    <>
       <Button
+        type="button"
         variant="outline"
         size="sm"
-        disabled={disabled || isCancelling}
-        className="border-rose-300 text-rose-700 hover:bg-rose-50"
-        onClick={() => { void cancelOrder(); }}
+        disabled={disabled}
+        className="border-rose-300 text-rose-700 hover:bg-rose-50 font-bold"
+        onClick={() => setModalOpen(true)}
       >
         <XCircle className="h-3.5 w-3.5 mr-1 shrink-0" />
-        {isCancelling ? "Cancelling..." : "Cancel Order"}
+        Cancel Order
       </Button>
-      {error && <p role="alert" className="mt-2 text-xs text-rose-700">{error}</p>}
-    </div>
+
+      <OrderCancelModal
+        order={order}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirmCancel={async (reason, notes) => {
+          return await onCancel(reason, notes);
+        }}
+        disabled={disabled}
+      />
+    </>
   );
 }
+
+export { OrderCancelModal };

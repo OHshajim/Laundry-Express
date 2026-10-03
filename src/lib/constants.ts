@@ -1,3 +1,20 @@
+const DEFAULT_SITE_URL = "https://www.laundryexpressservices.com";
+let siteUrl = DEFAULT_SITE_URL;
+try {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (raw) {
+    const parsed = new URL(raw);
+    const isLocal = ["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname);
+    if (process.env.NODE_ENV === "production" && (parsed.protocol !== "https:" || isLocal)) {
+      siteUrl = DEFAULT_SITE_URL;
+    } else {
+      siteUrl = parsed.origin;
+    }
+  }
+} catch {
+  siteUrl = DEFAULT_SITE_URL;
+}
+
 export const APP_CONFIG = {
   name: "Laundry Express",
   tagline: "Pick Up • Wash • Fold • Deliver",
@@ -5,7 +22,7 @@ export const APP_CONFIG = {
   heroHeadline: "Laundry Piling Up?",
   description:
     "Professional doorstep laundry service with pickup, wash, fold, and delivery.",
-  url: "https://laundryexpress.com",
+  url: siteUrl,
   supportPhone: "815-575-9536",
   supportEmail: "customerservice@laundryexpressservices.com",
   facebookUrl: "https://www.facebook.com/profile.php?id=61594071297569",

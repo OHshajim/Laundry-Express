@@ -72,10 +72,10 @@ export function SettingsProfile() {
         type: "success",
         msg: "Avatar successfully compressed, uploaded, and synced to your profile!",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setFeedback({
         type: "error",
-        msg: err?.message || "Failed to upload avatar. Please check your connection.",
+        msg: err instanceof Error ? err.message : "Failed to upload avatar. Please check your connection.",
       });
     } finally {
       setIsUploading(false);
@@ -85,19 +85,23 @@ export function SettingsProfile() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phoneNumber.trim()) {
+      setFeedback({ type: "error", msg: "Phone number cannot be empty. You can update your phone number, but cannot remove it." });
+      return;
+    }
     setIsSaving(true);
     setFeedback(null);
     try {
       const res = await fetch("/api/user/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, phone: phoneNumber }),
+        body: JSON.stringify({ fullName, phone: phoneNumber.trim() }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to update profile in database.");
       }
-      updateUserProfile({ full_name: fullName, phone: phoneNumber });
+      updateUserProfile({ full_name: fullName, phone: phoneNumber.trim() });
       setFeedback({
         type: "success",
         msg: "Profile details updated and saved to database successfully.",
@@ -219,6 +223,7 @@ export function SettingsProfile() {
             </label>
             <input
               type="tel"
+              required
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="w-full h-10 px-3 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"

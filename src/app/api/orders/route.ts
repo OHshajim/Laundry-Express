@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { OrderService } from "@/lib/services/order-service";
+import { sendOrderCancellationEmail } from "@/lib/services/cancellation-email";
 import { getVerifiedUser } from "@/lib/auth-request";
 import type { OrderStatus } from "@/types";
 
@@ -65,7 +66,7 @@ export async function PATCH(req: NextRequest) {
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json({ success: false, error: "A JSON object is required." }, { status: 400 });
     }
-    const { orderId, status, finalWeight, proofType, imageUrl, notes } = body as Record<string, unknown>;
+    const { orderId, status, finalWeight, proofType, imageUrl, notes, cancelReason, cancelNotes } = body as Record<string, unknown>;
 
     const validatedStatus = isOrderStatus(status) ? status : undefined;
     const validatedProofType = isProofType(proofType) ? proofType : undefined;
@@ -129,9 +130,48 @@ export async function PATCH(req: NextRequest) {
         }
         await OrderService.updateOrderStatus(order.id, "cancelled");
         const cancelledOrder = await OrderService.getOrderByNumber(order.id);
+
+        if (cancelledOrder) {
+          const customerEmail = cancelledOrder.customer_email || cancelledOrder.user?.email || "";
+          if (customerEmail) {
+            const fullAddress = [
+              cancelledOrder.street_address,
+              cancelledOrder.apt_unit ? `Apt ${cancelledOrder.apt_unit}` : "",
+              cancelledOrder.city,
+              cancelledOrder.state,
+              cancelledOrder.zip_code,
+            ].filter(Boolean).join(", ") || cancelledOrder.pickup_address || "Doorstep Address";
+
+            try {
+              await sendOrderCancellationEmail({
+                orderNumber: cancelledOrder.order_number,
+                customerName: cancelledOrder.customer_name || cancelledOrder.user?.full_name || "Valued Customer",
+                customerEmail,
+                customerPhone: cancelledOrder.customer_phone || undefined,
+                pickupDate: cancelledOrder.pickup_date,
+                pickupSlot: cancelledOrder.pickup_slot,
+                deliveryDate: cancelledOrder.delivery_date || undefined,
+                planName: cancelledOrder.pricing_mode === "per_bag"
+                  ? `${cancelledOrder.bag_count} Bag(s) (13-Gal)`
+                  : cancelledOrder.pricing_mode === "per_lb"
+                  ? `By the Pound (${cancelledOrder.estimated_weight_lbs || 0} lbs)`
+                  : "Wash & Fold Package",
+                address: fullAddress,
+                totalAmount: cancelledOrder.total_amount,
+                paymentStatus: cancelledOrder.payment_status || "pending",
+                paymentMethod: cancelledOrder.payment_method || "card",
+                reason: typeof cancelReason === "string" ? cancelReason : undefined,
+                notes: typeof cancelNotes === "string" ? cancelNotes : undefined,
+              });
+            } catch (err) {
+              console.error("[orders-api] Cancellation email failed:", err);
+            }
+          }
+        }
+
         return NextResponse.json({
           success: true,
-          message: "Order cancelled. No refund was issued.",
+          message: "Order cancelled. Customer notified.",
           order: cancelledOrder,
         });
       }

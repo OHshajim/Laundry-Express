@@ -80,7 +80,7 @@ export function drawPortraitHeader(
   ctx.fillStyle = "#64748B";
   ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(`Phone: ${APP_CONFIG.supportPhone} • ${APP_CONFIG.supportEmail}`, W - 50, 98);
-  ctx.fillText("Official Portal: www.laundryexpress.com", W - 50, 118);
+  ctx.fillText("Official Portal: www.laundryexpressservices.com", W - 50, 118);
   ctx.textAlign = "left";
 
   // Dividing rule

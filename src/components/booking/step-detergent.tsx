@@ -93,14 +93,25 @@ export function StepDetergent({
                   )}
                 >
                   <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900">{detergent.name}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold text-slate-900">{detergent.name}</span>
+                        {Number(detergent.price || 0) > 0 ? (
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                            +${Number(detergent.price).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            FREE (Included)
+                          </span>
+                        )}
+                      </div>
                       {isSelected ? (
-                        <div className="h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center">
+                        <div className="h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
                           <Check className="h-2.5 w-2.5 stroke-3" />
                         </div>
                       ) : (
-                        <div className="h-4 w-4 rounded-full border border-slate-300" />
+                        <div className="h-4 w-4 rounded-full border border-slate-300 shrink-0" />
                       )}
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1 leading-snug">{detergent.description}</p>

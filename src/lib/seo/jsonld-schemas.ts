@@ -51,3 +51,14 @@ export function getFaqSchema(faqs: FaqItem[] = []) {
     })),
   };
 }
+
+/**
+ * Safely serializes JSON-LD objects for HTML script tags.
+ * Escapes '<', '>', and '&' to unicode escape sequences to prevent script breakout / injection.
+ */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}

@@ -189,7 +189,7 @@ export function RegisterView() {
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                placeholder="Min 6 chars"
+                placeholder="Min 8 chars"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"

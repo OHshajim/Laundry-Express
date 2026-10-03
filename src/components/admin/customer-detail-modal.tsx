@@ -131,11 +131,11 @@ export function CustomerDetailModal({
                         <tr key={ord.id} className="hover:bg-slate-50/70">
                           <td className="p-2.5 font-bold text-slate-900">{ord.order_number}</td>
                           <td className="p-2.5 text-slate-500">{formatDate(ord.created_at)}</td>
-                          <td className="p-2.5 uppercase text-[10px] font-semibold">{ord.pricing_mode.replace("_", " ")}</td>
+                          <td className="p-2.5 uppercase text-[10px] font-semibold">{String(ord.pricing_mode || "per_bag").replace(/_/g, " ")}</td>
                           <td className="p-2.5 font-extrabold text-slate-900">{formatCurrency(ord.total_amount)}</td>
                           <td className="p-2.5">
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                              {ord.order_status.replace("_", " ")}
+                              {String(ord.order_status || "pending").replace(/_/g, " ")}
                             </span>
                           </td>
                         </tr>
@@ -153,7 +153,7 @@ export function CustomerDetailModal({
                       </div>
                       <div className="flex items-center justify-between text-slate-500 text-[11px]">
                         <span>{formatDate(ord.created_at)}</span>
-                        <span className="capitalize px-1.5 py-0.5 rounded bg-slate-100 font-semibold">{ord.order_status.replace("_", " ")}</span>
+                        <span className="capitalize px-1.5 py-0.5 rounded bg-slate-100 font-semibold">{String(ord.order_status || "pending").replace(/_/g, " ")}</span>
                       </div>
                     </div>
                   ))}

@@ -23,31 +23,23 @@ export interface AuthContextType {
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
-const PROFILE_CHECK_INTERVAL_MS = 60_000;
-const PROFILE_CHECK_TIMEOUT_MS = 10_000;
+const PROFILE_CHECK_INTERVAL_MS = 120_000; // 2 minutes periodic sync
+const PROFILE_CHECK_TIMEOUT_MS = 8_000;
 
 function AuthStateBridge({ children }: { children: React.ReactNode }) {
   const { data: session, status, update: updateSession } = useSession();
-  const [verifiedProfile, setVerifiedProfile] = React.useState<{
-    user: User;
-    sessionId: string;
-    expires: string;
-  } | null>(null);
-  const [profileFailure, setProfileFailure] = React.useState<{
-    sessionId: string;
-    expires: string;
-    message: string;
-  } | null>(null);
+  const [verifiedProfile, setVerifiedProfile] = React.useState<{ user: User; sessionId: string } | null>(null);
+  const [profileFailure, setProfileFailure] = React.useState<{ sessionId: string; message: string } | null>(null);
   const [profileRetry, setProfileRetry] = React.useState(0);
 
+  const sessionId = session?.user?.id ?? "";
+
   React.useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !sessionId) return;
 
     let disposed = false;
     let checking = false;
-    const sessionId = session?.user?.id ?? "";
-    const expires = session?.expires ?? "";
-    if (!sessionId || !expires) return;
+
     const validateProfile = async () => {
       if (checking || disposed) return;
       checking = true;
@@ -64,40 +56,21 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
           await signOut({ callbackUrl: "/login" });
           return;
         }
-        if (!response.ok) {
-          throw new Error("Unable to verify account.");
-        }
+        if (!response.ok) throw new Error("Unable to verify account.");
         const result = await response.json();
-        if (!result?.success || !result.user || disposed) {
-          throw new Error("Unable to verify account.");
-        }
+        if (!result?.success || !result.user || disposed) throw new Error("Unable to verify account.");
         const dbUser = result.user as User;
-        if (!dbUser.is_active) {
-          throw new Error("Account is no longer active.");
-        }
-        setVerifiedProfile((previous) => {
-          const unchanged = previous &&
-            previous.sessionId === sessionId &&
-            previous.expires === expires &&
-            previous.user.id === dbUser.id &&
-            previous.user.email === dbUser.email &&
-            previous.user.full_name === dbUser.full_name &&
-            previous.user.avatar_url === dbUser.avatar_url &&
-            previous.user.phone === dbUser.phone &&
-            previous.user.address === dbUser.address &&
-            previous.user.role === dbUser.role &&
-            previous.user.is_active === dbUser.is_active &&
-            previous.user.updated_at === dbUser.updated_at;
-          return unchanged ? previous : { user: dbUser, sessionId, expires };
+        if (!dbUser.is_active) throw new Error("Account is no longer active.");
+
+        setVerifiedProfile((prev) => {
+          if (prev && prev.sessionId === sessionId && prev.user.updated_at === dbUser.updated_at) return prev;
+          return { user: dbUser, sessionId };
         });
         setProfileFailure(null);
       } catch {
-        if (disposed) return;
-        setProfileFailure({
-          sessionId,
-          expires,
-          message: "We couldn't verify your account right now. Please retry or sign out.",
-        });
+        if (!disposed && !verifiedProfile) {
+          setProfileFailure({ sessionId, message: "We couldn't verify your account right now. Please retry." });
+        }
       } finally {
         window.clearTimeout(timeout);
         checking = false;
@@ -106,34 +79,18 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
 
     void validateProfile();
     const timer = window.setInterval(validateProfile, PROFILE_CHECK_INTERVAL_MS);
-    window.addEventListener("focus", validateProfile);
     return () => {
       disposed = true;
       window.clearInterval(timer);
-      window.removeEventListener("focus", validateProfile);
     };
-  }, [session?.user?.id, session?.expires, status, profileRetry]);
+  }, [sessionId, status, profileRetry]);
 
   const login = React.useCallback(async (email: string, password: string) => {
     try {
-      const res = await signIn("credentials", {
-        redirect: false,
-        email: email.trim().toLowerCase(),
-        password,
-      });
-
-      if (!res || res.error) {
-        return { success: false, error: res?.error || "Invalid email or password." };
-      }
-
-      const refreshedSession = await updateSession();
-      if (!refreshedSession?.user?.id || !refreshedSession.expires) {
-        return {
-          success: false,
-          error: "Sign-in completed, but we couldn't establish your session. Please try again.",
-        };
-      }
-
+      const res = await signIn("credentials", { redirect: false, email: email.trim().toLowerCase(), password });
+      if (!res || res.error) return { success: false, error: res?.error || "Invalid email or password." };
+      const refreshed = await updateSession();
+      if (!refreshed?.user?.id) return { success: false, error: "Session setup failed. Please try again." };
       return { success: true };
     } catch (err: unknown) {
       return { success: false, error: err instanceof Error ? err.message : "Authentication failed." };
@@ -152,73 +109,52 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
   const register = React.useCallback(async (data: RegisterPayload) => {
     const res = await authService.register(data);
     if (!res.success) return { success: false, error: res.error || "Registration failed." };
-
     return login(data.email, data.password);
   }, [login]);
 
-  const sendOtp = React.useCallback(
-    (email: string, purpose: "change_password" | "reset_password" | "register_email") =>
-      authService.sendOtp(email, purpose),
-    []
-  );
-
-  const changePasswordWithOtp = React.useCallback(
-    (email: string, otp: string, newPass: string) =>
-      authService.changePasswordWithOtp(email, otp, newPass),
-    []
-  );
-
-  const resetPasswordWithOtp = React.useCallback(
-    (email: string, otp: string, newPass: string) =>
-      authService.resetPasswordWithOtp(email, otp, newPass),
-    []
-  );
+  const sendOtp = React.useCallback((email: string, purpose: "change_password" | "reset_password" | "register_email") =>
+    authService.sendOtp(email, purpose), []);
+  const changePasswordWithOtp = React.useCallback((email: string, otp: string, newPass: string) =>
+    authService.changePasswordWithOtp(email, otp, newPass), []);
+  const resetPasswordWithOtp = React.useCallback((email: string, otp: string, newPass: string) =>
+    authService.resetPasswordWithOtp(email, otp, newPass), []);
 
   const updateAvatar = React.useCallback((avatarUrl: string) => {
-    setVerifiedProfile((prev) => prev ? {
-      ...prev,
-      user: { ...prev.user, avatar_url: avatarUrl },
-    } : null);
-    if (updateSession) {
-      updateSession({ image: avatarUrl, avatar_url: avatarUrl });
-    }
+    setVerifiedProfile((prev) => prev ? { ...prev, user: { ...prev.user, avatar_url: avatarUrl } } : null);
+    if (updateSession) updateSession({ image: avatarUrl, avatar_url: avatarUrl });
   }, [updateSession]);
 
   const updateUserProfile = React.useCallback((updates: Partial<Pick<User, "full_name" | "phone" | "address">>) => {
-    setVerifiedProfile((prev) => prev ? {
-      ...prev,
-      user: { ...prev.user, ...updates },
-    } : null);
-    if (updateSession && updates.full_name) {
-      updateSession({ name: updates.full_name });
-    }
+    setVerifiedProfile((prev) => prev ? { ...prev, user: { ...prev.user, ...updates } } : null);
+    if (updateSession && updates.full_name) updateSession({ name: updates.full_name });
   }, [updateSession]);
 
-  const logout = React.useCallback(() => {
-    signOut({ callbackUrl: "/login" });
-  }, []);
+  const logout = React.useCallback(() => { signOut({ callbackUrl: "/login" }); }, []);
 
-  const sessionId = session?.user?.id;
-  const sessionExpires = session?.expires;
-  const activeUser = status === "authenticated" &&
-    verifiedProfile !== null &&
-    verifiedProfile.sessionId === sessionId &&
-    verifiedProfile.expires === sessionExpires
-    ? verifiedProfile.user
+  // Baseline user from session prevents flickering during background re-validations
+  const fallbackUser: User | null = session?.user ? {
+    id: session.user.id || "",
+    email: session.user.email || "",
+    full_name: session.user.name || "Valued Customer",
+    role: (session.user as { role?: "admin" | "customer" }).role || "customer",
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } : null;
+
+  const activeUser = status === "authenticated" && sessionId
+    ? (verifiedProfile && verifiedProfile.sessionId === sessionId ? verifiedProfile.user : fallbackUser)
     : null;
-  const profileError = profileFailure !== null &&
-    profileFailure.sessionId === (sessionId ?? "") &&
-    profileFailure.expires === (sessionExpires ?? "")
-    ? profileFailure.message
-    : status === "authenticated" && (!sessionId || !sessionExpires)
-      ? "We couldn't establish your sign-in session. Please retry or sign out."
-      : null;
+
+  const profileError = profileFailure && profileFailure.sessionId === sessionId && !activeUser
+    ? profileFailure.message : null;
+
   const contextValue = React.useMemo<AuthContextType>(() => ({
     user: activeUser,
     isAuthenticated: !!activeUser,
     isAdmin: activeUser?.role === "admin",
     isCustomer: activeUser?.role === "customer",
-    isLoading: status === "loading" || (status === "authenticated" && !activeUser && !profileError),
+    isLoading: status === "loading",
     login,
     loginWithGoogle,
     register,
@@ -228,10 +164,7 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
     updateAvatar,
     updateUserProfile,
     logout,
-  }), [
-    activeUser, status, profileError, login, loginWithGoogle, register, sendOtp,
-    changePasswordWithOtp, resetPasswordWithOtp, updateAvatar, updateUserProfile, logout,
-  ]);
+  }), [activeUser, status, login, loginWithGoogle, register, sendOtp, changePasswordWithOtp, resetPasswordWithOtp, updateAvatar, updateUserProfile, logout]);
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -241,20 +174,8 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
             <h1 className="text-lg font-semibold text-slate-900">Account verification unavailable</h1>
             <p className="mt-2 text-sm text-slate-600">{profileError}</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-                onClick={() => setProfileRetry((retry) => retry + 1)}
-                type="button"
-              >
-                Retry
-              </button>
-              <button
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-                onClick={logout}
-                type="button"
-              >
-                Sign out
-              </button>
+              <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white" onClick={() => setProfileRetry((r) => r + 1)} type="button">Retry</button>
+              <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700" onClick={logout} type="button">Sign out</button>
             </div>
           </section>
         </main>
@@ -265,7 +186,7 @@ function AuthStateBridge({ children }: { children: React.ReactNode }) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider refetchInterval={0} refetchOnWindowFocus={true}>
+    <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
       <AuthStateBridge>{children}</AuthStateBridge>
     </SessionProvider>
   );
@@ -273,8 +194,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = React.useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

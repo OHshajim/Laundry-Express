@@ -75,7 +75,7 @@ export function drawPortraitFooterNotes(
   ctx.fillStyle = "#64748B";
   ctx.font = "normal 11px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(
-    `Laundry Express • Support: ${APP_CONFIG.supportPhone} • ${APP_CONFIG.supportEmail} • www.laundryexpress.com`,
+    `Laundry Express • Support: ${APP_CONFIG.supportPhone} • ${APP_CONFIG.supportEmail} • www.laundryexpressservices.com`,
     50,
     H - 38
   );

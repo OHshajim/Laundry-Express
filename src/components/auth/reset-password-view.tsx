@@ -21,7 +21,20 @@ export function ResetPasswordView() {
 
   const { resetPasswordWithOtp, sendOtp } = useAuth();
 
-  const [email, setEmail] = React.useState(initialEmail);
+  const [email, setEmail] = React.useState(() => {
+    if (initialEmail) return initialEmail;
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("laundry_reset_email") || "";
+    }
+    return "";
+  });
+
+  React.useEffect(() => {
+    if (email && typeof window !== "undefined") {
+      sessionStorage.setItem("laundry_reset_email", email);
+    }
+  }, [email]);
+
   const [otpCode, setOtpCode] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -181,7 +194,7 @@ export function ResetPasswordView() {
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">New Password (Min 6 chars) *</label>
+            <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">New Password (Min 8 chars) *</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}

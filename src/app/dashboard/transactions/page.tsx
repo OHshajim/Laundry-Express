@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layout";
 import { TransactionsManager } from "@/components/admin/transactions-manager";
+import { useOrdersRealtime } from "@/hooks/use-orders-realtime";
 import type { Order } from "@/types";
 
 interface CustomerTxn {
@@ -21,21 +22,32 @@ interface CustomerTxn {
 }
 
 export default function TransactionsUnifiedPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
-  React.useEffect(() => {
-    fetch("/api/orders")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.orders)) setOrders(data.orders);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
+  const loadOrders = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/orders", { cache: "no-store" });
+      const data = await res.json();
+      if (Array.isArray(data.orders)) setOrders(data.orders);
+    } catch {}
+    finally { setIsLoading(false); }
   }, []);
+
+  useOrdersRealtime({
+    onEvent: (event) => {
+      const isRelevant = isAdmin || (user && (event.userId === user.id || event.customerEmail === user.email))
+        || orders.some((o) => o.id === event.orderId || o.order_number === event.orderNumber);
+      if (isRelevant) void loadOrders();
+    },
+  });
+
+  React.useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
 
   const transactions: CustomerTxn[] = React.useMemo(() => {
     return orders.map((o) => ({

@@ -1,6 +1,7 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { mapOrderRecord } from "@/lib/services/order-record-mapper";
 import type { CustomerAccount } from "@/components/admin/customer-detail-modal";
-import type { Order, OrderReview } from "@/types";
+import type { OrderReview } from "@/types";
 
 export class CustomerService {
   static async getCustomers(): Promise<CustomerAccount[]> {
@@ -10,7 +11,7 @@ export class CustomerService {
         supabase.from("users")
           .select("id,full_name,email,phone,address,role,created_at")
           .order("created_at", { ascending: false }),
-        supabase.from("orders").select("*").order("created_at", { ascending: false }),
+        supabase.from("orders").select("*, proofs:order_proofs(*)").order("created_at", { ascending: false }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
       ]);
     if (usersError || ordersError || reviewsError) {
@@ -61,7 +62,7 @@ export class CustomerService {
       const customerOrders = (orders || []).filter((order) =>
         (order.customer_email && order.customer_email.toLowerCase() === email) ||
         (order.user_id && order.user_id === customer.id));
-      customer.orders = customerOrders as Order[];
+      customer.orders = customerOrders.map(mapOrderRecord);
       customer.reviews = (reviews || []).filter((review) =>
         review.user_id === customer.id) as OrderReview[];
       customer.payments = customerOrders.map((order) => ({

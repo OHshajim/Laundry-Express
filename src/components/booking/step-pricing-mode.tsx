@@ -1,4 +1,4 @@
-import { ShoppingBag, Scale, Package, Sparkles } from "lucide-react";
+import { ShoppingBag, Scale, Sparkles } from "lucide-react";
 import type { PricingMode } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -45,14 +45,6 @@ export function StepPricingMode({
       priceLabel: `$${poundPrice.toFixed(2)} / lb (${minLbs} lbs min)`,
       icon: Scale,
     },
-    {
-      id: "package",
-      title: "Pre-paid Saver Package",
-      badge: "Save up to 20%",
-      description: "Redeem pre-purchased credits from your active bundle with zero checkout hassle.",
-      priceLabel: "Credit Redemption",
-      icon: Package,
-    },
   ];
 
   return (
@@ -64,7 +56,7 @@ export function StepPricingMode({
         </h4>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {modes.map((mode) => {
           const Icon = mode.icon;
           const isSelected = selectedMode === mode.id;

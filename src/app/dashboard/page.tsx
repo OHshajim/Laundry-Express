@@ -8,18 +8,37 @@ import { DashboardPageLayout } from "@/components/dashboard/dashboard-page-layou
 import { useAuth } from "@/context/auth-context";
 import { AdminOverview } from "@/components/admin/admin-overview";
 import { CustomerOverview } from "@/components/dashboard/customer-overview";
+import { useOrdersRealtime } from "@/hooks/use-orders-realtime";
 import type { Order } from "@/types";
 import type { CustomerAccount } from "@/components/admin/customer-detail-modal";
 
 export default function DashboardOverviewMasterPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [customers, setCustomers] = React.useState<CustomerAccount[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
+  const fetchOrders = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/orders", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data?.success && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+      }
+    } catch {}
+  }, []);
+
+  useOrdersRealtime({
+    onEvent: (event) => {
+      const isRelevant = isAdmin || (user && (event.userId === user.id || event.customerEmail === user.email))
+        || orders.some((o) => o.id === event.orderId || o.order_number === event.orderNumber);
+      if (isRelevant) void fetchOrders();
+    },
+  });
+
   React.useEffect(() => {
-    const fetchPromises: Promise<any>[] = [
-      fetch("/api/orders")
+    const fetchPromises: Promise<unknown>[] = [
+      fetch("/api/orders", { cache: "no-store" })
         .then((r) => r.json())
         .then((data) => {
           if (Array.isArray(data.orders)) setOrders(data.orders);

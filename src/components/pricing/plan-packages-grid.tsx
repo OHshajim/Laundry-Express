@@ -88,11 +88,17 @@ export function PlanPackagesGrid() {
                 ))}
               </ul>
             </div>
-            <Link href={`/order?package=${pkg.id}`} className="mt-6 block">
+            <a
+              href="tel:815-575-9536"
+              className="mt-6 block"
+            >
               <Button variant={isFeatured ? "hero" : "outline"} className="w-full">
-                Select {pkg.name.split(" ")[0]}
+                Activate via Concierge (815) 575-9536
               </Button>
-            </Link>
+            </a>
+            <p className="text-[10px] text-center text-slate-400 mt-2">
+              Pre-paid bundles are activated on customer accounts via concierge support.
+            </p>
           </div>
         );
       })}

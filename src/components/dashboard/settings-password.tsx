@@ -10,25 +10,37 @@ interface SettingsPasswordProps {
   userPhone?: string;
 }
 
+const STEP_KEY = "laundry_pwd_step";
+const TIME_KEY = "laundry_pwd_time";
+
+function isRecentVerifyStep(): boolean {
+  if (typeof window === "undefined") return false;
+  const saved = sessionStorage.getItem(STEP_KEY);
+  const time = Number(sessionStorage.getItem(TIME_KEY) || 0);
+  return saved === "verify" && Date.now() - time < 600_000;
+}
+
+function clearStepCache() {
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem(STEP_KEY);
+    sessionStorage.removeItem(TIME_KEY);
+  }
+}
+
 /**
  * SettingsPassword Component
- * Implements password change strictly via email OTP verification:
- * 1. Dispatches cryptographically random 6-digit OTP to user's registered email
- * 2. Matches submitted OTP before updating to new hashed password
+ * Implements password change strictly via email OTP verification.
+ * Automatically preserves the verify step across tab switching and page refreshes.
  */
-export function SettingsPassword({
-  userEmail = "customer@laundryexpress.com",
-}: SettingsPasswordProps) {
+export function SettingsPassword({ userEmail = "customer@laundryexpressservices.com" }: SettingsPasswordProps) {
   const { sendOtp, changePasswordWithOtp } = useAuth();
-
-  const [step, setStep] = React.useState<"request" | "verify" | "success">("request");
+  const [step, setStep] = React.useState<"request" | "verify" | "success">(() => isRecentVerifyStep() ? "verify" : "request");
   const [otpCode, setOtpCode] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
-
   const [showPassword, setShowPassword] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
-  const [infoMsg, setInfoMsg] = React.useState("");
+  const [infoMsg, setInfoMsg] = React.useState(() => isRecentVerifyStep() ? "A 6-digit verification code was dispatched to your email." : "");
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSendOtp = async (e?: React.FormEvent) => {
@@ -41,6 +53,10 @@ export function SettingsPassword({
       const res = await sendOtp(userEmail, "change_password");
       if (res.success) {
         setStep("verify");
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(STEP_KEY, "verify");
+          sessionStorage.setItem(TIME_KEY, String(Date.now()));
+        }
         setInfoMsg(`A 6-digit verification code has been dispatched to ${userEmail}.`);
       } else {
         setErrorMsg(res.error || "Failed to dispatch verification code.");
@@ -52,6 +68,13 @@ export function SettingsPassword({
     }
   };
 
+  const handleCancel = () => {
+    setStep("request");
+    clearStepCache();
+    setErrorMsg("");
+    setInfoMsg("");
+  };
+
   const handleVerifyAndChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
@@ -60,12 +83,10 @@ export function SettingsPassword({
       setErrorMsg("Please enter the complete 6-digit verification code from your email.");
       return;
     }
-
     if (newPassword.length < 8) {
       setErrorMsg("New password must be at least 8 characters long.");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setErrorMsg("New passwords do not match. Please verify.");
       return;
@@ -76,6 +97,7 @@ export function SettingsPassword({
       const res = await changePasswordWithOtp(userEmail, otpCode.trim(), newPassword);
       if (res.success) {
         setStep("success");
+        clearStepCache();
         setOtpCode("");
         setNewPassword("");
         setConfirmPassword("");
@@ -147,7 +169,7 @@ export function SettingsPassword({
           </div>
 
           <div>
-            <label className="block text-slate-700 font-semibold mb-1">New Password (Min 6 Characters) *</label>
+            <label className="block text-slate-700 font-semibold mb-1">New Password (Min 8 Characters) *</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -180,7 +202,7 @@ export function SettingsPassword({
           </div>
 
           <div className="flex items-center gap-2 pt-1">
-            <Button type="button" variant="outline" size="sm" onClick={() => setStep("request")} className="cursor-pointer">
+            <Button type="button" variant="outline" size="sm" onClick={handleCancel} className="cursor-pointer">
               Cancel
             </Button>
             <Button type="submit" variant="hero" size="sm" isLoading={isLoading} className="cursor-pointer">
@@ -206,7 +228,7 @@ export function SettingsPassword({
             <span>Password Successfully Updated!</span>
           </div>
           <p>Your password was securely updated via email OTP verification. Your new password is now active.</p>
-          <Button type="button" variant="outline" size="sm" onClick={() => setStep("request")} className="cursor-pointer text-xs">
+          <Button type="button" variant="outline" size="sm" onClick={handleCancel} className="cursor-pointer text-xs">
             Done
           </Button>
         </div>
@@ -214,3 +236,5 @@ export function SettingsPassword({
     </div>
   );
 }
+
+export default SettingsPassword;

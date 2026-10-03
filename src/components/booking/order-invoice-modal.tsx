@@ -16,8 +16,10 @@ export interface InvoiceData {
   paymentMethod: string;
   totalAmount: number;
   subtotal?: number;
+  detergentFee?: number;
   deliveryFee?: number;
   discountAmount?: number;
+  transactionId?: string;
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
@@ -91,7 +93,7 @@ export function OrderInvoiceModal({ invoice, onClose }: OrderInvoiceModalProps) 
       <div className="space-y-4 py-1">
         {/* Success Banner */}
         <div className="rounded-2xl overflow-hidden print:hidden">
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-5 flex items-center gap-4 shadow-sm">
+          <div className="bg-linear-to-r from-emerald-500 to-teal-600 p-5 flex items-center gap-4 shadow-sm">
             <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-7 w-7 text-white" />
             </div>
