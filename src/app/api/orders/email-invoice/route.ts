@@ -82,11 +82,15 @@ export async function POST(req: NextRequest) {
         ? `${order.bag_count} Bag(s)`
         : `${order.final_weight_lbs || order.estimated_weight_lbs || 0} lbs`,
       detergent: order.detergent_name || resolveDetergentName(order.detergent_id),
+      detergentFee: Number(order.detergent_fee || 0),
       subtotal: Number(order.subtotal || 0),
       deliveryFee: Number(order.delivery_fee || 0),
       discountAmount: Number(order.discount_amount || 0),
       totalAmount: Number(order.total_amount || 0),
       address: fullAddress,
+      customerPhone: order.customer_phone || undefined,
+      specialRequest: order.customer_notes || undefined,
+      transactionId: order.stripe_payment_intent || undefined,
       orderCancelled: order.order_status === "cancelled",
     });
     await OrderService.markInvoiceEmailSent(order.id);

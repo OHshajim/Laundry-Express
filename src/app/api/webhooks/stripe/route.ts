@@ -177,11 +177,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         ? `${finalOrder.bag_count} Bag(s)`
         : `${finalOrder.final_weight_lbs || finalOrder.estimated_weight_lbs || 0} lbs`,
       detergent: finalOrder.detergent_name || resolveDetergentName(finalOrder.detergent_id),
+      detergentFee: Number(finalOrder.detergent_fee || 0),
       subtotal: Number(finalOrder.subtotal || 0),
       deliveryFee: Number(finalOrder.delivery_fee || 0),
       discountAmount: Number(finalOrder.discount_amount || 0),
       totalAmount: Number(finalOrder.total_amount || 0),
       address: fullAddress,
+      customerPhone: finalOrder.customer_phone || undefined,
+      specialRequest: finalOrder.customer_notes || undefined,
+      transactionId: finalOrder.stripe_payment_intent || (typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id) || undefined,
       orderCancelled: finalOrder.order_status === "cancelled",
     });
 

@@ -53,12 +53,12 @@ export function OrderSummaryCard({
           <span>Laundry Wash ({breakdown.unit_count} {breakdown.unit_name})</span>
           <span className="font-semibold text-slate-900">{formatCurrency(subtotal)}</span>
         </div>
-        {detergent_fee > 0 && (
-          <div className="flex justify-between text-slate-600">
-            <span>Detergent Add-on</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(detergent_fee)}</span>
-          </div>
-        )}
+        <div className="flex justify-between items-center text-slate-600">
+          <span>Detergent Formulation</span>
+          <span className={detergent_fee === 0 ? "font-bold text-emerald-600" : "font-semibold text-slate-900"}>
+            {detergent_fee === 0 ? "FREE (Included)" : `+${formatCurrency(detergent_fee)}`}
+          </span>
+        </div>
         <div className="flex justify-between items-center text-slate-600">
           <span>Doorstep Delivery {isFreeDelivery && <span className="text-[10px] font-bold text-emerald-700 ml-1">FREE</span>}</span>
           <span className={isFreeDelivery ? "font-bold text-emerald-600" : "font-semibold text-slate-900"}>

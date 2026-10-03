@@ -49,12 +49,21 @@ export function OrderSummaryCard({
         </div>
 
         <div className="space-y-1 sm:col-span-2">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Service &amp; Address</span>
+          <span className="text-[10px] font-bold uppercase text-slate-400">Detergent Formulation</span>
           <p className="font-bold text-slate-900">
-            {order.pricing_mode === "per_bag" ? `${order.bag_count || 1} Bag(s)` : `${order.estimated_weight_lbs || 15} lbs`} · {fullAddress}
+            {order.detergent_name || "Standard Hypoallergenic"} · <span className={Number(order.detergent_fee || 0) === 0 ? "text-emerald-700 font-semibold" : "text-amber-700 font-bold"}>
+              {Number(order.detergent_fee || 0) === 0 ? "FREE (Included)" : `+${formatCurrency(Number(order.detergent_fee))}`}
+            </span>
           </p>
         </div>
       </div>
+
+      {order.stripe_payment_intent && (
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+          <span className="text-slate-400 font-bold uppercase">Stripe Tx ID</span>
+          <span className="font-mono text-slate-700 select-all font-semibold">{order.stripe_payment_intent}</span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
         <span className="font-bold text-slate-600">Total Amount Paid</span>
