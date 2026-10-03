@@ -21,7 +21,20 @@ export function ResetPasswordView() {
 
   const { resetPasswordWithOtp, sendOtp } = useAuth();
 
-  const [email, setEmail] = React.useState(initialEmail);
+  const [email, setEmail] = React.useState(() => {
+    if (initialEmail) return initialEmail;
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("laundry_reset_email") || "";
+    }
+    return "";
+  });
+
+  React.useEffect(() => {
+    if (email && typeof window !== "undefined") {
+      sessionStorage.setItem("laundry_reset_email", email);
+    }
+  }, [email]);
+
   const [otpCode, setOtpCode] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
