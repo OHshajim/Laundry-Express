@@ -8,7 +8,19 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
   const contentW = W - margin * 2;
   const detFee = Number(invoice.detergentFee || 0);
   const detFeeStr = detFee === 0 ? "FREE (Included)" : `$${detFee.toFixed(2)}`;
-  const txId = invoice.transactionId || `STRIPE-TX-${invoice.orderNumber.replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase()}`;
+  const orderNumber = String(invoice.orderNumber || "LX-ORDER");
+  const txId = invoice.transactionId || `STRIPE-TX-${orderNumber.replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase()}`;
+  const planName = String(invoice.planName || "Wash & Fold Service");
+  const detergent = String(invoice.detergent || "Hypoallergenic Eco-Wash");
+  const quantity = String(invoice.quantity || "1 Order");
+  const orderDate = String(invoice.orderDate || new Date().toISOString()).slice(0, 10);
+  const pickupDate = String(invoice.pickupDate || "Scheduled");
+  const pickupSlot = String(invoice.pickupSlot || "Standard");
+  const deliveryDate = String(invoice.deliveryDate || "Within 24 Hours");
+  const subtotal = Number(invoice.subtotal || 0);
+  const deliveryFee = Number(invoice.deliveryFee || 0);
+  const discountAmount = Number(invoice.discountAmount || 0);
+  const totalAmount = Number(invoice.totalAmount || 0);
 
   // Top Accent Bar
   pdf.setFillColor(190, 24, 93);
@@ -111,12 +123,12 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
   // Table Rows
   y += 7;
   const rows = [
-    [invoice.planName, `${invoice.detergent} • Gentle Cold Wash`, invoice.quantity, `$${invoice.subtotal.toFixed(2)}`],
-    [`Detergent Formulation (${invoice.detergent})`, "Standard Cold Eco-Wash Formula", "1 Cycle", detFeeStr],
-    ["Doorstep Pickup & 24hr Return Delivery", invoice.specialRequest || "Contactless Delivery", "1 Trip", invoice.deliveryFee === 0 ? "FREE" : `$${invoice.deliveryFee.toFixed(2)}`],
+    [planName, `${detergent} • Gentle Cold Wash`, quantity, `$${subtotal.toFixed(2)}`],
+    [`Detergent Formulation (${detergent})`, "Standard Cold Eco-Wash Formula", "1 Cycle", detFeeStr],
+    ["Doorstep Pickup & 24hr Return Delivery", invoice.specialRequest || "Contactless Delivery", "1 Trip", deliveryFee === 0 ? "FREE" : `$${deliveryFee.toFixed(2)}`],
   ];
-  if (invoice.discountAmount > 0) {
-    rows.push(["Promotional Coupon Discount", "Verified discount applied", "1 Promo", `-$${invoice.discountAmount.toFixed(2)}`]);
+  if (discountAmount > 0) {
+    rows.push(["Promotional Coupon Discount", "Verified discount applied", "1 Promo", `-$${discountAmount.toFixed(2)}`]);
   }
 
   pdf.setDrawColor(226, 232, 240);
@@ -126,14 +138,15 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
     pdf.setFontSize(7.5);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(15, 23, 42);
-    pdf.text(desc, margin + 4, y + 5.5);
+    pdf.text(String(desc || ""), margin + 4, y + 5.5);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(71, 85, 105);
-    pdf.text(spec, margin + 70, y + 5.5);
-    pdf.text(qty, margin + 130, y + 5.5);
+    pdf.text(String(spec || ""), margin + 70, y + 5.5);
+    pdf.text(String(qty || "1"), margin + 130, y + 5.5);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(amt.startsWith("FREE") ? 4 : 15, amt.startsWith("FREE") ? 120 : 23, amt.startsWith("FREE") ? 87 : 42);
-    pdf.text(amt, W - margin - 4, y + 5.5, { align: "right" });
+    const safeAmt = String(amt || "$0.00");
+    pdf.setTextColor(safeAmt.startsWith("FREE") ? 4 : 15, safeAmt.startsWith("FREE") ? 120 : 23, safeAmt.startsWith("FREE") ? 87 : 42);
+    pdf.text(safeAmt, W - margin - 4, y + 5.5, { align: "right" });
     y += 8.5;
   });
 
@@ -172,15 +185,15 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
   pdf.text("Detergent Formulation:", tX + 4, y + 11);
   pdf.text("Doorstep Logistics:", tX + 4, y + 16);
   pdf.setTextColor(15, 23, 42);
-  pdf.text(`$${invoice.subtotal.toFixed(2)}`, tX + cardW - 4, y + 6, { align: "right" });
+  pdf.text(`$${subtotal.toFixed(2)}`, tX + cardW - 4, y + 6, { align: "right" });
   pdf.text(detFeeStr, tX + cardW - 4, y + 11, { align: "right" });
-  pdf.text(invoice.deliveryFee === 0 ? "FREE" : `$${invoice.deliveryFee.toFixed(2)}`, tX + cardW - 4, y + 16, { align: "right" });
+  pdf.text(deliveryFee === 0 ? "FREE" : `$${deliveryFee.toFixed(2)}`, tX + cardW - 4, y + 16, { align: "right" });
 
   let curY = y + 21;
-  if (invoice.discountAmount > 0) {
+  if (discountAmount > 0) {
     pdf.setTextColor(4, 120, 87);
     pdf.text("Promo Discount:", tX + 4, curY);
-    pdf.text(`-$${invoice.discountAmount.toFixed(2)}`, tX + cardW - 4, curY, { align: "right" });
+    pdf.text(`-$${discountAmount.toFixed(2)}`, tX + cardW - 4, curY, { align: "right" });
     curY += 4.5;
   }
   pdf.setDrawColor(203, 213, 225);
@@ -191,7 +204,7 @@ export function createEmailInvoicePdf(invoice: InvoiceEmailPayload): Buffer {
   pdf.text("TOTAL CLEARED:", tX + 4, curY + 4.5);
   pdf.setFontSize(12);
   pdf.setTextColor(190, 24, 93);
-  pdf.text(`$${invoice.totalAmount.toFixed(2)}`, tX + cardW - 4, curY + 4.5, { align: "right" });
+  pdf.text(`$${totalAmount.toFixed(2)}`, tX + cardW - 4, curY + 4.5, { align: "right" });
 
   // Satisfaction Guarantee Banner
   y += bCardH + 5;

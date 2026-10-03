@@ -47,6 +47,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, message: "Address deleted." });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Failed to delete address";
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    const status = msg.includes("at least one") ? 400 : 500;
+    return NextResponse.json({ success: false, error: msg }, { status });
   }
 }

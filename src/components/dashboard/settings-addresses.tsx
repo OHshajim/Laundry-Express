@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, Edit2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,6 +29,7 @@ export function SettingsAddresses() {
   const [state, setState] = React.useState("");
   const [zip, setZip] = React.useState("");
   const [isDefault, setIsDefault] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     fetch("/api/user/addresses").then((r) => r.json()).then((data) => {
@@ -96,8 +97,27 @@ export function SettingsAddresses() {
   };
 
   const handleDelete = async (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
-    try { await fetch(`/api/user/addresses?id=${encodeURIComponent(id)}`, { method: "DELETE" }); } catch {}
+    if (addresses.length <= 1) {
+      setDeleteError("You must keep at least one saved address on file. Please add a new address before deleting this one.");
+      setTimeout(() => setDeleteError(null), 5000);
+      return;
+    }
+    setDeleteError(null);
+    const prev = addresses;
+    setAddresses((cur) => cur.filter((a) => a.id !== id));
+    try {
+      const res = await fetch(`/api/user/addresses?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        setAddresses(prev);
+        setDeleteError(data?.error || "Failed to delete address.");
+        setTimeout(() => setDeleteError(null), 5000);
+      }
+    } catch {
+      setAddresses(prev);
+      setDeleteError("Failed to delete address.");
+      setTimeout(() => setDeleteError(null), 5000);
+    }
   };
 
   return (
@@ -113,6 +133,13 @@ export function SettingsAddresses() {
           </Button>
         )}
       </div>
+
+      {deleteError && (
+        <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+          <span>{deleteError}</span>
+        </div>
+      )}
 
       {isAdding && (
         <form onSubmit={handleSave} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
@@ -138,13 +165,16 @@ export function SettingsAddresses() {
             </div>
             <div>
               <label className="font-bold text-slate-700 block mb-1">Street Address *</label>
-              <input type="text" required placeholder="e.g. 742 Evergreen Terrace" value={street} onChange={(e) => setStreet(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+              <input type="text" required placeholder="123 Main St" value={street} onChange={(e) => setStreet(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Apt, Suite, Unit (optional)</label>
-              <input type="text" placeholder="e.g. Apt 4B" value={apt} onChange={(e) => setApt(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+              <label className="font-bold text-slate-700 block mb-1">Apt / Suite (optional)</label>
+              <input type="text" placeholder="Apt 4B" value={apt} onChange={(e) => setApt(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="sm:col-span-2 grid grid-cols-3 gap-2">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">City</label>
                 <input type="text" readOnly value={city} className="w-full px-2 py-2 rounded-xl border border-slate-200 bg-slate-100 font-medium" />
@@ -192,7 +222,14 @@ export function SettingsAddresses() {
               <Button size="sm" variant="ghost" onClick={() => handleStartEdit(a)} className="h-7 w-7 p-0 cursor-pointer">
                 <Edit2 className="h-3.5 w-3.5 text-slate-500" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => handleDelete(a.id)} className="h-7 w-7 p-0 cursor-pointer text-rose-600">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDelete(a.id)}
+                disabled={addresses.length <= 1}
+                title={addresses.length <= 1 ? "At least one saved address must be kept" : "Delete address"}
+                className="h-7 w-7 p-0 cursor-pointer text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>

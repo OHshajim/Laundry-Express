@@ -23,6 +23,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_CONFIG.url),
+  alternates: {
+    canonical: "./",
+  },
   title: {
     default: "Laundry Express | Pick Up • Wash • Fold • Deliver",
     template: "%s | Laundry Express",

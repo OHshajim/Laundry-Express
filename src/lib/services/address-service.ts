@@ -49,7 +49,6 @@ export class AddressService {
       if (!persistedAddress) throw new Error("Address not found.");
     }
 
-    // Check for existing address for this user with same street and zip
     const { data: matches, error: matchError } = await supabase.from("user_addresses")
       .select("*").eq("user_id", userId).eq("street_address", street).eq("zip_code", zip).limit(1);
     if (matchError) throw new Error(matchError.message);
@@ -86,6 +85,22 @@ export class AddressService {
 
   static async deleteAddress(id: string, userId: string): Promise<boolean> {
     const supabase = createAdminSupabaseClient();
+    const { count, error: countError } = await supabase
+      .from("user_addresses")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (countError) throw new Error(countError.message);
+    if (count !== null && count <= 1) {
+      throw new Error("You must keep at least one saved address on file.");
+    }
+
+    const { data: toDelete } = await supabase
+      .from("user_addresses")
+      .select("is_default")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from("user_addresses")
       .delete()
@@ -95,6 +110,22 @@ export class AddressService {
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!data) return false;
+
+    if (toDelete?.is_default) {
+      const { data: remaining } = await supabase
+        .from("user_addresses")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      if (remaining?.id) {
+        await supabase
+          .from("user_addresses")
+          .update({ is_default: true })
+          .eq("id", remaining.id);
+      }
+    }
+
     return true;
   }
 }

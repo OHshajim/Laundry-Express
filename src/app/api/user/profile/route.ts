@@ -34,7 +34,14 @@ export async function POST(req: NextRequest) {
       updates.full_name = fullName.trim();
     }
     if (typeof phone === "string") {
-      updates.phone = phone.trim();
+      const trimmedPhone = phone.trim();
+      if (!trimmedPhone) {
+        return NextResponse.json(
+          { success: false, error: "Phone number cannot be empty. You can update your phone number, but cannot remove it." },
+          { status: 400 }
+        );
+      }
+      updates.phone = trimmedPhone;
     }
     if (typeof address === "string") {
       updates.address = address.trim();

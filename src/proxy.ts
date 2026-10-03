@@ -53,9 +53,10 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // 3. Guard against customer accessing admin-exclusive tabs via query parameters
+    // 3. Guard against customer accessing admin-exclusive tabs via query parameters or direct URL paths
     if (isDashboardRoute && !isAdmin) {
       const requestedTab = searchParams.get("tab");
+      const pathSegment = pathname.replace(/^\/dashboard\/?/, "").split("/")[0];
       const adminExclusiveTabs = new Set([
         "customers",
         "packages",
@@ -67,9 +68,8 @@ export async function proxy(req: NextRequest) {
         "settings",
       ]);
 
-      if (requestedTab && adminExclusiveTabs.has(requestedTab)) {
-        const sanitizedUrl = new URL("/dashboard?tab=overview", req.url);
-        return NextResponse.redirect(sanitizedUrl);
+      if ((requestedTab && adminExclusiveTabs.has(requestedTab)) || (pathSegment && adminExclusiveTabs.has(pathSegment))) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
   }

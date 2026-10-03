@@ -31,11 +31,7 @@ export interface BookingWizardProps {
 const STEPS = ["Plan & Quantity", "Detergent", "Schedule", "Address", "Review", "Payment"];
 
 export function BookingWizard({
-  initialMode = "per_bag",
-  initialBagCount = 2,
-  initialWeightLbs,
-  initialPricing,
-  currentUser = null,
+  initialMode = "per_bag", initialBagCount = 2, initialWeightLbs, initialPricing, currentUser = null,
 }: BookingWizardProps) {
   const [step, setStep] = React.useState(1);
   const [pricingMode, setPricingMode] = React.useState<PricingMode>(initialMode);
@@ -63,68 +59,47 @@ export function BookingWizard({
   const { settings, rates, isLoading: isConfigLoading, error: configError } = useBookingConfig(initialPricing);
   const { detergents, isLoading: isLoadingDetergents, error: detergentError } = useDetergents();
   const selectedDetergent = detergents.find((item) => item.id === selectedDetergentId);
-
   const { checkout, isProcessing, checkoutError } = useBookingCheckout();
 
-  const boundedBagCount = rates.minBags > 0 && rates.maxBags >= rates.minBags
-    ? Math.min(rates.maxBags, Math.max(rates.minBags, bagCount))
-    : bagCount;
-  const boundedWeightLbs = rates.minLbs > 0 && rates.maxLbs >= rates.minLbs
-    ? Math.min(rates.maxLbs, Math.max(rates.minLbs, weightLbs))
-    : weightLbs;
-  const pricingIsValid = rates.bagPrice > 0 &&
-    rates.poundPrice > 0 &&
-    rates.minBags > 0 &&
-    rates.maxBags >= rates.minBags &&
-    rates.minLbs > 0 &&
-    rates.maxLbs >= rates.minLbs;
+  const boundedBagCount = rates.minBags > 0 && rates.maxBags >= rates.minBags ? Math.min(rates.maxBags, Math.max(rates.minBags, bagCount)) : bagCount;
+  const boundedWeightLbs = rates.minLbs > 0 && rates.maxLbs >= rates.minLbs ? Math.min(rates.maxLbs, Math.max(rates.minLbs, weightLbs)) : weightLbs;
+  const pricingIsValid = rates.bagPrice > 0 && rates.poundPrice > 0 && rates.minBags > 0 && rates.maxBags >= rates.minBags && rates.minLbs > 0 && rates.maxLbs >= rates.minLbs;
 
   const priceResult = React.useMemo(() => {
     if (isConfigLoading || configError || !pricingIsValid) return null;
     return calculateOrderPrice({
       pricing_mode: pricingMode, bag_count: boundedBagCount, estimated_weight_lbs: boundedWeightLbs,
       detergent_id: selectedDetergentId, detergent_fee: selectedDetergent?.price || 0,
-      promo: appliedCoupon, base_bag_price: rates.bagPrice,
-      base_pound_price: rates.poundPrice, min_bags: rates.minBags, max_bags: rates.maxBags, min_lbs: rates.minLbs, max_lbs: rates.maxLbs,
-      free_delivery_lbs: rates.freeDeliveryLbs, one_bag_delivery_fee: rates.deliveryFee,
-      free_delivery_threshold: rates.freeDeliveryBags,
+      promo: appliedCoupon, base_bag_price: rates.bagPrice, base_pound_price: rates.poundPrice,
+      min_bags: rates.minBags, max_bags: rates.maxBags, min_lbs: rates.minLbs, max_lbs: rates.maxLbs,
+      free_delivery_lbs: rates.freeDeliveryLbs, one_bag_delivery_fee: rates.deliveryFee, free_delivery_threshold: rates.freeDeliveryBags,
     });
   }, [isConfigLoading, configError, pricingIsValid, pricingMode, boundedBagCount, boundedWeightLbs, selectedDetergentId, selectedDetergent?.price, appliedCoupon, rates]);
 
   const handleApplyPromo = async () => {
-    if (!priceResult) return;
-    const code = promoCode.trim().toUpperCase();
-    if (!code) return;
+    if (!priceResult || !promoCode.trim()) return;
     try {
-      const res = await fetch(`/api/coupons?code=${encodeURIComponent(code)}&subtotal=${priceResult.subtotal}`);
+      const res = await fetch(`/api/coupons?code=${encodeURIComponent(promoCode.trim().toUpperCase())}&subtotal=${priceResult.subtotal}`);
       const data = await res.json();
       if (res.ok && data.valid) { setAppliedCoupon(data.coupon); setPromoError(""); }
       else setPromoError(data.error || "Invalid coupon code.");
     } catch { setPromoError("Failed to validate coupon."); }
   };
 
-  // Step validations
-  const isStep1Valid = pricingMode === "per_lb"
-    ? (boundedWeightLbs >= rates.minLbs && boundedWeightLbs <= rates.maxLbs && !isNaN(boundedWeightLbs))
-    : pricingMode === "per_bag" && boundedBagCount >= rates.minBags && boundedBagCount <= rates.maxBags;
+  const isStep1Valid = pricingMode === "per_lb" ? (boundedWeightLbs >= rates.minLbs && boundedWeightLbs <= rates.maxLbs && !isNaN(boundedWeightLbs)) : pricingMode === "per_bag" && boundedBagCount >= rates.minBags && boundedBagCount <= rates.maxBags;
   const isStep2Valid = Boolean(selectedDetergentId);
   const isDateValid = Boolean(selectedDate && selectedDate >= new Date().toISOString().split("T")[0]);
   const isDropoffValid = !dropoffDate || dropoffDate >= selectedDate;
   const isStep3Valid = isDateValid && isDropoffValid && Boolean(selectedSlot);
-  const isAddressValid = address.trim().length >= 5 &&
-    Boolean(addressDetails?.city.trim()) &&
-    /^[A-Z]{2}$/.test(addressDetails?.state.trim() || "") &&
-    /^\d{5}(-\d{4})?$/.test(addressDetails?.zip.trim() || "");
-  const isPhoneValid = phoneValue.trim().length >= 7;
-  const isStep4Valid = Boolean(isAddressValid && isPhoneValid && (!isOutOfHome || bagConfirmed));
+  const isAddressValid = address.trim().length >= 5 && Boolean(addressDetails?.city.trim()) && /^[A-Z]{2}$/.test(addressDetails?.state.trim() || "") && /^\d{5}(-\d{4})?$/.test(addressDetails?.zip.trim() || "");
+  const isStep4Valid = Boolean(isAddressValid && phoneValue.trim().length >= 7 && (!isOutOfHome || bagConfirmed));
 
   const handleConfirm = () => {
     if (!priceResult) return;
     checkout({
       currentUser, pricingMode, bagCount: boundedBagCount, weightLbs: boundedWeightLbs, selectedDetergentId,
       selectedDate, selectedSlot, dropoffDate, address, phone: phoneValue, addressDetails, isOutOfHome,
-      isAwayForDropoff, bagConfirmed, notes, priceResult, paymentMethod,
-      coupon: appliedCoupon,
+      isAwayForDropoff, bagConfirmed, notes, priceResult, paymentMethod, coupon: appliedCoupon,
     });
   };
 
@@ -136,129 +111,62 @@ export function BookingWizard({
         </div>
       ) : (
       <>
-      <WizardStepper steps={STEPS} currentStep={step} onStepClick={(target) => target < step && setStep(target)} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {checkoutError && (
-          <p role="alert" className="lg:col-span-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-            {checkoutError}
-          </p>
-        )}
-        <div className="lg:col-span-2 space-y-6">
-          {step === 1 && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} bagPrice={rates.bagPrice} poundPrice={rates.poundPrice} minLbs={rates.minLbs} freeDeliveryBags={rates.freeDeliveryBags} freeDeliveryLbs={rates.freeDeliveryLbs} />
-              {pricingMode === "package" && (
-                <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                  Package-credit redemption is not available yet. Choose by bag or by pound to continue.
-                </p>
-              )}
-              <StepBagCounter pricingMode={pricingMode} bagCount={boundedBagCount} onBagCountChange={setBagCount} minBags={rates.minBags} maxBags={rates.maxBags} weightLbs={boundedWeightLbs} onWeightLbsChange={setWeightLbs} bagPrice={rates.bagPrice} freeDeliveryBags={rates.freeDeliveryBags} minLbs={rates.minLbs} maxLbs={rates.maxLbs} freeDeliveryLbs={rates.freeDeliveryLbs} />
-              <div className="flex justify-end pt-2">
-                <Button variant="hero" size="lg" disabled={!isStep1Valid} onClick={() => isStep1Valid && setStep(2)}>
-                  Continue to Detergent <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <StepDetergent
-                selectedDetergentId={selectedDetergentId}
-                onSelectDetergent={(id) => { setSelectedDetergentId(id); setShowStep2Errors(false); }}
-                showError={showStep2Errors}
-                detergents={detergents}
-                isLoading={isLoadingDetergents}
-                loadError={detergentError}
-              />
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
-                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                  {!isStep2Valid && <span className="text-xs text-rose-500 font-semibold">Selection required</span>}
-                  <Button
-                    variant="hero" size="lg" disabled={!isStep2Valid}
-                    onClick={() => { if (!isStep2Valid) { setShowStep2Errors(true); return; } setStep(3); }}
-                  >
-                    Continue to Schedule <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+        <WizardStepper steps={STEPS} currentStep={step} onStepClick={(target) => target < step && setStep(target)} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {checkoutError && <p role="alert" className="lg:col-span-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{checkoutError}</p>}
+          <div className="lg:col-span-2 space-y-6">
+            {step === 1 && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <StepPricingMode selectedMode={pricingMode} onSelectMode={setPricingMode} bagPrice={rates.bagPrice} poundPrice={rates.poundPrice} minLbs={rates.minLbs} freeDeliveryBags={rates.freeDeliveryBags} freeDeliveryLbs={rates.freeDeliveryLbs} />
+                {pricingMode === "package" && <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Package-credit redemption is not available yet. Choose by bag or by pound to continue.</p>}
+                <StepBagCounter pricingMode={pricingMode} bagCount={boundedBagCount} onBagCountChange={setBagCount} minBags={rates.minBags} maxBags={rates.maxBags} weightLbs={boundedWeightLbs} onWeightLbsChange={setWeightLbs} bagPrice={rates.bagPrice} freeDeliveryBags={rates.freeDeliveryBags} minLbs={rates.minLbs} maxLbs={rates.maxLbs} freeDeliveryLbs={rates.freeDeliveryLbs} />
+                <div className="flex justify-end pt-2">
+                  <Button variant="hero" size="lg" disabled={!isStep1Valid} onClick={() => isStep1Valid && setStep(2)}>Continue to Detergent <ArrowRight className="h-4 w-4 ml-2" /></Button>
                 </div>
               </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <StepSlotPicker
-                selectedDate={selectedDate} onSelectDate={setSelectedDate}
-                selectedSlot={selectedSlot} onSelectSlot={setSelectedSlot}
-                dropoffDate={dropoffDate} onSelectDropoffDate={setDropoffDate}
-                slot1Start={settings.slot1Start} slot1End={settings.slot1End}
-                slot2Start={settings.slot2Start} slot2End={settings.slot2End}
-              />
-              {!isDropoffValid && (
-                <p className="text-xs text-rose-600 font-semibold px-1">Drop-off date cannot be before pickup date ({selectedDate}).</p>
-              )}
-              <div className="flex items-center justify-between pt-2">
-                <Button variant="outline" onClick={() => setStep(2)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
-                <Button variant="hero" size="lg" disabled={!isStep3Valid} onClick={() => isStep3Valid && setStep(4)}>
-                  Continue to Address <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+            )}
+            {step === 2 && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <StepDetergent selectedDetergentId={selectedDetergentId} onSelectDetergent={(id) => { setSelectedDetergentId(id); setShowStep2Errors(false); }} showError={showStep2Errors} detergents={detergents} isLoading={isLoadingDetergents} loadError={detergentError} />
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                  <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    {!isStep2Valid && <span className="text-xs text-rose-500 font-semibold">Selection required</span>}
+                    <Button variant="hero" size="lg" disabled={!isStep2Valid} onClick={() => { if (!isStep2Valid) { setShowStep2Errors(true); return; } setStep(3); }}>Continue to Schedule <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <StepOutOfHome
-                currentUser={currentUser}
-                phone={phoneValue} onPhoneChange={(value) => setPhone(value)}
-                isOutOfHome={isOutOfHome} onIsOutOfHomeChange={setIsOutOfHome}
-                isAwayForDropoff={isAwayForDropoff} onIsAwayForDropoffChange={setIsAwayForDropoff}
-                bagConfirmed={bagConfirmed} onBagConfirmedChange={setBagConfirmed}
-                address={address} onAddressChange={setAddress}
-                addressDetails={addressDetails} onAddressDetailsChange={setAddressDetails}
-                notes={notes} onNotesChange={setNotes}
-                deliveryZones={settings.deliveryZones}
-                showValidationErrors={showStep4Errors}
-              />
-              <div className="flex items-center justify-between pt-2">
-                <Button variant="outline" onClick={() => setStep(3)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
-                <Button variant="hero" size="lg" onClick={() => { if (!isStep4Valid) { setShowStep4Errors(true); return; } setStep(5); }}>
-                  Review Order <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+            )}
+            {step === 3 && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <StepSlotPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} selectedSlot={selectedSlot} onSelectSlot={setSelectedSlot} dropoffDate={dropoffDate} onSelectDropoffDate={setDropoffDate} slot1Start={settings.slot1Start} slot1End={settings.slot1End} slot2Start={settings.slot2Start} slot2End={settings.slot2End} />
+                {!isDropoffValid && <p className="text-xs text-rose-600 font-semibold px-1">Drop-off date cannot be before pickup date ({selectedDate}).</p>}
+                <div className="flex items-center justify-between pt-2">
+                  <Button variant="outline" onClick={() => setStep(2)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
+                  <Button variant="hero" size="lg" disabled={!isStep3Valid} onClick={() => isStep3Valid && setStep(4)}>Continue to Address <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                </div>
               </div>
-            </div>
-          )}
-
-          {step === 5 && (
-            <StepReview
-              pricingMode={pricingMode} bagCount={boundedBagCount} weightLbs={boundedWeightLbs}
-              selectedDetergentId={selectedDetergentId} selectedDate={selectedDate} selectedSlot={selectedSlot}
-              address={address} phone={phoneValue} isOutOfHome={isOutOfHome}
-              slot1Start={settings.slot1Start} slot1End={settings.slot1End}
-              slot2Start={settings.slot2Start} slot2End={settings.slot2End}
-              onEditStep={setStep} onBack={() => setStep(4)} onContinue={() => setStep(6)}
-            />
-          )}
-
-          {step === 6 && (
-            <StepPayment
-              priceResult={priceResult} promoCode={promoCode} onPromoCodeChange={setPromoCode}
-              onApplyPromo={handleApplyPromo} promoError={promoError}
-              paymentMethod={paymentMethod} onSelectPaymentMethod={setPaymentMethod}
-              isProcessing={isProcessing} onConfirm={handleConfirm} onBack={() => setStep(5)}
-            />
-          )}
+            )}
+            {step === 4 && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <StepOutOfHome currentUser={currentUser} phone={phoneValue} onPhoneChange={(value) => setPhone(value)} isOutOfHome={isOutOfHome} onIsOutOfHomeChange={setIsOutOfHome} isAwayForDropoff={isAwayForDropoff} onIsAwayForDropoffChange={setIsAwayForDropoff} bagConfirmed={bagConfirmed} onBagConfirmedChange={setBagConfirmed} address={address} onAddressChange={setAddress} addressDetails={addressDetails} onAddressDetailsChange={setAddressDetails} notes={notes} onNotesChange={setNotes} deliveryZones={settings.deliveryZones} showValidationErrors={showStep4Errors} />
+                <div className="flex items-center justify-between pt-2">
+                  <Button variant="outline" onClick={() => setStep(3)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
+                  <Button variant="hero" size="lg" onClick={() => { if (!isStep4Valid) { setShowStep4Errors(true); return; } setStep(5); }}>Review Order <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                </div>
+              </div>
+            )}
+            {step === 5 && (
+              <StepReview pricingMode={pricingMode} bagCount={boundedBagCount} weightLbs={boundedWeightLbs} selectedDetergentId={selectedDetergentId} selectedDate={selectedDate} selectedSlot={selectedSlot} address={address} phone={phoneValue} isOutOfHome={isOutOfHome} slot1Start={settings.slot1Start} slot1End={settings.slot1End} slot2Start={settings.slot2Start} slot2End={settings.slot2End} onEditStep={setStep} onBack={() => setStep(4)} onContinue={() => setStep(6)} />
+            )}
+            {step === 6 && (
+              <StepPayment priceResult={priceResult} promoCode={promoCode} onPromoCodeChange={setPromoCode} onApplyPromo={handleApplyPromo} promoError={promoError} paymentMethod={paymentMethod} onSelectPaymentMethod={setPaymentMethod} isProcessing={isProcessing} onConfirm={handleConfirm} onBack={() => setStep(5)} />
+            )}
+          </div>
+          <div className="lg:col-span-1">
+            <OrderSummaryCard pricingMode={pricingMode} bagCount={boundedBagCount} weightLbs={boundedWeightLbs} priceResult={priceResult} />
+          </div>
         </div>
-
-        <div className="lg:col-span-1">
-          <OrderSummaryCard
-            pricingMode={pricingMode} bagCount={boundedBagCount} weightLbs={boundedWeightLbs} priceResult={priceResult}
-          />
-        </div>
-      </div>
-
       </>
       )}
     </div>

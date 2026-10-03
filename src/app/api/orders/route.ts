@@ -142,28 +142,30 @@ export async function PATCH(req: NextRequest) {
               cancelledOrder.zip_code,
             ].filter(Boolean).join(", ") || cancelledOrder.pickup_address || "Doorstep Address";
 
-            void sendOrderCancellationEmail({
-              orderNumber: cancelledOrder.order_number,
-              customerName: cancelledOrder.customer_name || cancelledOrder.user?.full_name || "Valued Customer",
-              customerEmail,
-              customerPhone: cancelledOrder.customer_phone || undefined,
-              pickupDate: cancelledOrder.pickup_date,
-              pickupSlot: cancelledOrder.pickup_slot,
-              deliveryDate: cancelledOrder.delivery_date || undefined,
-              planName: cancelledOrder.pricing_mode === "per_bag"
-                ? `${cancelledOrder.bag_count} Bag(s) (13-Gal)`
-                : cancelledOrder.pricing_mode === "per_lb"
-                ? `By the Pound (${cancelledOrder.estimated_weight_lbs || 0} lbs)`
-                : "Wash & Fold Package",
-              address: fullAddress,
-              totalAmount: cancelledOrder.total_amount,
-              paymentStatus: cancelledOrder.payment_status || "pending",
-              paymentMethod: cancelledOrder.payment_method || "card",
-              reason: typeof cancelReason === "string" ? cancelReason : undefined,
-              notes: typeof cancelNotes === "string" ? cancelNotes : undefined,
-            }).catch((err) => {
+            try {
+              await sendOrderCancellationEmail({
+                orderNumber: cancelledOrder.order_number,
+                customerName: cancelledOrder.customer_name || cancelledOrder.user?.full_name || "Valued Customer",
+                customerEmail,
+                customerPhone: cancelledOrder.customer_phone || undefined,
+                pickupDate: cancelledOrder.pickup_date,
+                pickupSlot: cancelledOrder.pickup_slot,
+                deliveryDate: cancelledOrder.delivery_date || undefined,
+                planName: cancelledOrder.pricing_mode === "per_bag"
+                  ? `${cancelledOrder.bag_count} Bag(s) (13-Gal)`
+                  : cancelledOrder.pricing_mode === "per_lb"
+                  ? `By the Pound (${cancelledOrder.estimated_weight_lbs || 0} lbs)`
+                  : "Wash & Fold Package",
+                address: fullAddress,
+                totalAmount: cancelledOrder.total_amount,
+                paymentStatus: cancelledOrder.payment_status || "pending",
+                paymentMethod: cancelledOrder.payment_method || "card",
+                reason: typeof cancelReason === "string" ? cancelReason : undefined,
+                notes: typeof cancelNotes === "string" ? cancelNotes : undefined,
+              });
+            } catch (err) {
               console.error("[orders-api] Cancellation email failed:", err);
-            });
+            }
           }
         }
 

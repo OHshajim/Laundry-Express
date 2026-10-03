@@ -11,6 +11,18 @@ export const metadata: Metadata = {
   title: "Terms of Service & Guarantees — Laundry Express",
   description:
     "Review our Zero Lost-Garment Guarantee, 100% Satisfaction Free Re-Wash Policy, and Happiness Guarantee. Transparent doorstep laundry terms.",
+  alternates: {
+    canonical: "/terms",
+  },
+  openGraph: {
+    title: "Laundry Express — Terms of Service & Guarantees",
+    description: "Official customer satisfaction guarantees, safe garment policies, and service terms.",
+    url: `${APP_CONFIG.url}/terms`,
+    siteName: "Laundry Express",
+    images: [{ url: "/brand/logo-badge.jpg", width: 1200, height: 630, alt: "Laundry Express Terms" }],
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default async function TermsPage() {
